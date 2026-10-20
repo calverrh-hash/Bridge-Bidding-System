@@ -138,6 +138,20 @@ test('simulate: 1NT – 2♦ – 2♥ – pass', () => {
   same(sim.contract, '2H');
   same(sim.steps.map(s => s.ans.bid), ['2D', 'P']);
 });
+test('regression: after South passes, a partner with an opening is not shown as passing', () => {
+  // Reported deal: partner has 12 HCP 6-6 and would open 1♠.
+  const q = { partner: true, ...simulate(parseHand('J9852.54.A72.K92'), parseHand('AKQ643.-.K98543.5'), 'S', 'note') };
+  same(q.calls, ['P', 'P']);
+  same(q.contract, null);
+  check(!/passed out/.test(outcome(q)), outcome(q));
+});
+test('a deal where both partners pass is passed out with four passes', () => {
+  const sim = simulate(parseHand('J9852.54.A72.K92'), parseHand('Q743.J962.KQ3.J8'), 'S', 'note');
+  same(sim.calls, ['P', 'P', 'P', 'P']);
+  same(sim.contract, null);
+  same(sim.pn.map(x => x.call), ['P']);
+  same(outcome({ partner: true, ...sim }), 'Nobody opens: the hand is passed out.');
+});
 test('legal(): minimum bid and when X / XX are allowed', () => {
   same(legal('N', ['1H', '1S']), { min: bv('1S'), x: true, xx: false });
   same(legal('W', ['1C', 'X', 'P']), { min: bv('1C'), x: false, xx: false });
@@ -178,6 +192,11 @@ function checkQuestion(q, where) {
   });
   if (q.partner) q.pn.filter(x => !x.auto).forEach((x, k) => checkWhy(x.why, q.partner, `${where} partner call ${k}`));
   check(q.contract === null || /^[1-7][CDHSN]$/.test(q.contract), where + ' contract');
+  // A deal with no bid at all must really be passed out: four passes, partner has no opening.
+  if (q.partner && !q.calls.some(c => /^\d/.test(c))) {
+    same(q.calls, ['P', 'P', 'P', 'P'], where + ' passed-out auction');
+    same(openingBid(q.partner).bid, 'P', where + ' partner of a passed hand');
+  }
 }
 for (const d of SETS) {
   test(`set "${d.id}": 25 good hands for seeds 1-20, built quickly`, () => {

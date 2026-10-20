@@ -33,11 +33,12 @@ const Q = (dealer, calls, hand, ans, note) => ({ dealer, calls, hand, ans, note:
 // SO: South opens. South gets lensF lengths with lo..hi HCP (and must pass ok, if given).
 //     North gets pLo..pHi HCP with lengths from pSpec(rng, southHand) (default any shape).
 //     min = how many calls South must make for the hand to count.
-const SO = (lensF, lo, hi, pLo, pHi, min, pSpec, ok) => rng => {
+//     pOk is an optional extra test on North's hand.
+const SO = (lensF, lo, hi, pLo, pHi, min, pSpec, ok, pOk) => rng => {
   const h = deal(rng, lensF(rng), lo, hi);
   if (!h || (ok && !ok(h))) return null;
   if (!openingBid(h)) return null;
-  const n = dealOther(rng, h, pSpec ? pSpec(rng, h) : sp({}, [0, 6]), pLo, pHi);
+  const n = dealOther(rng, h, pSpec ? pSpec(rng, h) : sp({}, [0, 6]), pLo, pHi, pOk);
   return deep(h, n, 'S', 'You are dealer.', min);
 };
 // PO: Partner (North) opens. f(rng) returns
@@ -75,7 +76,7 @@ const SETS = [
       SO(r => balL(r), 20, 22, 0, 10, 2, majSpec),
       SO(r => balL(r), 23, 27, 0, 7),                        // 2♣
       SO(r => balL(r, [[5, 3, 3, 2]]), 11, 14, 6, 15),       // 5332
-      SO(r => balL(r), 3, 11, 0, 15, 1),                     // too weak: pass
+      SO(r => balL(r), 3, 11, 0, 15, 1, null, null, opensAs('P')),   // too weak: pass, and so does partner
     ],
   },
   {

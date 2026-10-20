@@ -193,7 +193,13 @@ function sysCall(seq, h) {
   const n = seq.length;
   if (n === 0) return openingBid(h);
   const o = seq[0];
-  if (o === 'P') return null;
+  // After a pass, partner may pass too (the hand is passed out). The chart has no
+  // passed-hand auctions, so an opening in second or fourth seat stops the auction.
+  if (o === 'P') {
+    if (n > 1) return null;
+    const c = openingBid(h);
+    return c && c.bid === 'P' ? c : null;
+  }
   if (n >= 2 && seq[n - 1] === 'P') return null;
   if (o === '1N') return after1NT(seq, h);
   if (o === '2N') return nt2(seq, h, 3);
@@ -221,13 +227,14 @@ function simulate(hS, hN, dealer, note) {
     if (seat === 'N') pn.push({ call: a.bid, why: a.why, auto: !!a.auto });
     calls.push(a.bid);
     seq.push(a.bid);
-    if (a.bid === 'P') { ended = seq.length > 1; break; }
+    if (a.bid === 'P' && seq.length > 1) { ended = true; break; }   // an opening pass lets partner speak
     si = (si + 1) % 4;
   }
   let contract = null;
   if (ended) {
     const b = [...seq].reverse().find(c => c !== 'P');
     contract = b || null;
+    if (!contract) calls.push('P');   // passed out: show the fourth pass
   }
   return { calls, steps, pn, contract };
 }

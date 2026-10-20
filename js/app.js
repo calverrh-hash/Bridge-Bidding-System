@@ -96,7 +96,7 @@ function legal(dealer, calls) {
 function outcome(q) {
   if (q.contract) return `Final contract: ${fmt(q.contract)}.`;
   if (!q.partner) return '';   // one-call competitive drill
-  if (!q.calls.some(c => /^\d/.test(c))) return 'Nobody opens: the hand is passed out.';
+  if (q.calls.length === 4 && q.calls.every(c => c === 'P')) return 'Nobody opens: the hand is passed out.';
   return 'The chart stops here, so the drill ends.';
 }
 const outHTML = q => { const o = outcome(q); return o ? `<p class="out">${o}</p>` : ''; };

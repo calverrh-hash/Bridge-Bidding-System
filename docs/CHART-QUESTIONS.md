@@ -26,8 +26,9 @@ For each one, either confirm it ("the chart says so") or change the rule in `js/
 11. **Opener with 13-14 after a limit raise** (1M – 3M). This one is already noted in the README.
 12. **After Jacoby 2NT, if opener shows shortness or a 5-card side suit** (3x or 4x), responder has no next call.
 13. **2♣ – 2♦ – 3NT, and 2♣ – 2♦ – (a suit).** Responder has no next call. Responder also has none after a positive response to 2♣.
-14. **No responses to weak 2♦ or to pre-empts** (3-level and 4-level openings), so those auctions stop after the opening.
-15. **RKCB:**
+14. **No passed-hand auctions.** If South passes and partner would open, the auction stops: the chart has no rules for responding as a passed hand (Drury, no Jacoby 2NT, and so on). The "too weak to open" drill avoids this by giving partner a hand that also passes.
+15. **No responses to weak 2♦ or to pre-empts** (3-level and 4-level openings), so those auctions stop after the opening.
+16. **RKCB:**
     - With all five key cards, there is no reply. The trainer used to answer 5♦ "1 or 4", which was wrong; it now stops.
     - After 5NT there is no king-ask reply.
     - When the reply is ambiguous to the asker (for example 5♣ = 0 or 3 while holding 2), the auction stops.

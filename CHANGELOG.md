@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-20: passed-out hands
+
+### Fixed
+- **"Partner passed" with an opening hand.** In the "too weak to open" drill, partner could hold an opening hand, but the trainer stopped after South's pass, and said the hand was passed out. Partner is now always dealt a hand that also passes; partner's pass is shown with its reason, and the auction shows all four passes.
+
 ## 2026-10-20: review and restructure
 
 ### Fixed
