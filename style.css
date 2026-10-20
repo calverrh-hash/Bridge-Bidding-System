@@ -50,9 +50,11 @@ button:focus-visible,summary:focus-visible{outline:3px solid var(--felt);outline
 .bar{display:flex;align-items:center;gap:10px;justify-content:space-between}
 .back{background:none;border:0;padding:6px 0;color:var(--muted);font-weight:600}
 .count{font-variant-numeric:tabular-nums;font-weight:600}
-.dots{display:grid;grid-template-columns:repeat(25,1fr);gap:3px}
-.dots i{height:6px;border-radius:2px;background:var(--line)}
-.dots i.ok{background:var(--good)} .dots i.no{background:var(--bad)} .dots i.cur{background:var(--ink)}
+/* Progress dots double as buttons: a tall tap target with a thin bar drawn in the middle */
+.dots{display:grid;grid-template-columns:repeat(25,1fr);gap:3px;margin-block:-8px}
+.dots .dot{height:22px;padding:8px 0;border:0;border-radius:3px;background:var(--line);background-clip:content-box;min-width:0}
+.dots .dot.ok{background-color:var(--good)} .dots .dot.no{background-color:var(--bad)} .dots .dot.cur{background-color:var(--ink)}
+.dots .dot:hover{padding-block:6px}
 .note{margin:0;font-size:14px}
 .table{background:var(--felt);color:var(--felt-ink);border-radius:12px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:6px}
 .auc{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;text-align:center}

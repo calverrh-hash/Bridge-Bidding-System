@@ -129,7 +129,12 @@ function start(id, order) {
 function play() {
   const i = S.order[S.pos], q = S.qs[i], d = SETS.find(x => x.id === S.id), st = q.steps[S.step], last = S.step === q.steps.length - 1;
   const nOk = countOk(S.order, S.res);
-  const dots = S.retry ? '' : `<div class="dots" style="grid-template-columns:repeat(${S.qs.length},1fr)">${S.qs.map((_, j) => `<i class="${j === i ? 'cur' : S.res[j] ? (S.res[j].ok ? 'ok' : 'no') : ''}"></i>`).join('')}</div>`;
+  // One dot per hand; click a dot to jump to that hand.
+  const dots = S.retry ? '' : `<div class="dots" style="grid-template-columns:repeat(${S.qs.length},1fr)">${S.qs.map((_, j) => {
+    const r = S.res[j], cls = j === i ? 'cur' : r ? (r.ok ? 'ok' : 'no') : '';
+    const label = `Hand ${j + 1}: ${j === i ? 'this hand' : r ? (r.ok ? 'correct, bid it again' : 'missed, bid it again') : 'not played'}`;
+    return `<button class="dot ${cls}" data-jump="${j}" title="${label}" aria-label="${label}"${j === i ? ' aria-current="true"' : ''}></button>`;
+  }).join('')}</div>`;
   const pips = q.steps.length > 1 ? `<div class="pips">${q.steps.map((_, k) => `<i class="${k < S.step ? (S.cur[k] === q.steps[k].ans.bid ? 'ok' : 'no') : k === S.step ? (S.answered ? (S.answered === st.ans.bid ? 'ok' : 'no') : 'cur') : ''}"></i>`).join('')}<span>Call ${S.step + 1} of ${q.steps.length}</span></div>` : '';
   const prevWrong = S.step > 0 && S.cur[S.step - 1] !== q.steps[S.step - 1].ans.bid;
   let lower;
@@ -143,7 +148,7 @@ function play() {
         ${q.partner ? handHTML(q.partner, true, "Partner's hand") : ''}
         ${pc.length ? `<div class="pcalls"><span class="eyebrow">Partner's calls</span>${pc.map(x => `<p><b>${fmt(x.call)}</b> ${rich(x.why)}</p>`).join('')}</div>` : ''}</div>`;
     }
-    const nextLabel = !last ? 'Continue the auction →' : S.pos === S.order.length - 1 ? 'See results' : 'Next hand →';
+    const nextLabel = !last ? 'Continue the auction →' : nextUnplayed() < 0 ? 'See results' : 'Next hand →';
     lower = `<div class="fb ${good ? 'ok' : 'no'}" role="status"><div class="verdict">${good ? 'Correct' : `Chart says ${fmt(a.bid)}`}</div>
       ${good ? '' : `<p>You bid ${fmt(S.answered)}.${last ? '' : ' The auction continues with the chart call.'}</p>`}<p>${rich(a.why)}</p><span class="ref">${rich(REF[a.ref] || '')}</span></div>
       ${fin}<div class="actions"><button class="primary" id="next">${nextLabel}</button></div>`;
@@ -163,6 +168,7 @@ function play() {
     ${dots}<div class="lead"><span class="eyebrow">${S.retry ? 'Retrying misses · ' : ''}${rich(d.name)}</span>${pips}<p class="note">${rich(st.note)}${prevWrong ? ' <span class="muted">(The auction went on with the chart call.)</span>' : ''}</p></div>
     ${auctionHTML(q.dealer, st.calls, S.answered || '?')}${handHTML(q.hand, !!S.answered)}${lower}`;
   document.getElementById('back').onclick = goHome;
+  app.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => jumpTo(+b.dataset.jump));
   app.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { S.level = +b.dataset.lv; render(); });
   app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => answer(S.level + ST[+b.dataset.st]));
   app.querySelectorAll('[data-call]').forEach(b => b.onclick = () => answer(b.dataset.call));
@@ -187,6 +193,15 @@ function answer(b) {
   render();
 }
 
+// Position (in S.order) of the next unplayed hand after the current one, wrapping round; -1 if none.
+function nextUnplayed() {
+  for (let k = 1; k <= S.order.length; k++) {
+    const pos = (S.pos + k) % S.order.length;
+    if (!S.res[S.order[pos]]) return pos;
+  }
+  return -1;
+}
+
 function next() {
   const q = S.qs[S.order[S.pos]];
   S.answered = null;
@@ -194,10 +209,20 @@ function next() {
   if (S.step < q.steps.length - 1) { S.step++; render(); return; }
   S.step = 0;
   S.cur = [];
-  if (S.pos < S.order.length - 1) S.pos++;
+  const pos = nextUnplayed();
+  if (pos >= 0) S.pos = pos;
   else S.view = 'done';
   render();
   window.scrollTo({ top: 0 });
+}
+
+// Jump to hand j of the set (from the dots). A hand already played can be bid again;
+// the new result replaces the old one when you finish it.
+function jumpTo(j) {
+  const pos = S.order.indexOf(j);
+  if (pos < 0) return;
+  Object.assign(S, { pos, step: 0, cur: [], answered: null, level: null });
+  render();
 }
 
 function done() {

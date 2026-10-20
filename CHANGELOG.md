@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-20: jump to any hand
+
+### Added
+- **Click a progress dot to jump to that hand.** Unplayed hands can be played in any order; a hand already played can be bid again, and the new result replaces the old one. "Next hand →" now goes to the next unplayed hand, and "See results" appears once every hand has been played.
+
 ## 2026-10-20: passed-out hands
 
 ### Fixed

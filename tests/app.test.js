@@ -69,6 +69,44 @@ test('app: progress resumes where you left off', () => {
   click('[data-set="comp"]');
   same(S.pos, 3);
 });
+test('app: clicking a dot jumps to that hand; "next" goes to the next unplayed hand', () => {
+  resetApp();
+  click('[data-set="comp"]');
+  click('[data-jump="9"]');
+  same(S.pos, 9);
+  bid(); click('#next');
+  same(S.pos, 10, 'next unplayed after 9');
+  click('[data-jump="24"]');
+  bid(); click('#next');
+  same(S.pos, 0, 'wraps round to the first unplayed hand');
+});
+test('app: playing hands out of order still finishes the set and saves the best score', () => {
+  resetApp();
+  click('[data-set="comp"]');
+  click('[data-jump="20"]');
+  playOut();
+  same(S.view, 'done');
+  same(S.res.filter(Boolean).length, SET_SIZE, 'every hand played');
+  same(loadDB().best.comp, SET_SIZE);
+});
+test('app: "See results" appears only when no hand is left unplayed', () => {
+  resetApp();
+  click('[data-set="comp"]');
+  click('[data-jump="24"]');
+  bid();
+  same($('#next').textContent, 'Next hand →');
+});
+test('app: a played hand can be bid again, and the new result replaces the old', () => {
+  resetApp();
+  click('[data-set="comp"]');
+  bid(wrongCall()); click('#next');
+  same(S.res[S.order[0]].ok, false);
+  click(`[data-jump="${S.order[0]}"]`);
+  same(S.pos, 0);
+  bid(); click('#next');
+  same(S.res[S.order[0]].ok, true);
+  same(loadDB().prog.comp.res[S.order[0]].ok, true, 'saved');
+});
 test('app: retry replays only the missed hands, then a fresh deal resets', () => {
   resetApp();
   click('[data-set="comp"]');
