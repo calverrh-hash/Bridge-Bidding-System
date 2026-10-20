@@ -1,0 +1,13 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # GitHub's Ubuntu runners come with Google Chrome installed.
+      - run: bash tests/run.sh
