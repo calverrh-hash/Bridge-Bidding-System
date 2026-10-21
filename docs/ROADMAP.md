@@ -11,9 +11,10 @@ Ideas, roughly in order of value for effort. Each one says what it would take.
 
 ## Bigger steps (a weekend each)
 
-- **Practise your weak spots.** Tag each rule with a topic (Stayman, transfers, Jacoby, RKCB, negative doubles…), record right and wrong answers per topic, and add a "Weakest topics" drill that deals more of what you get wrong. The chart letters (`'A'`-`'G'`) are a ready-made first grouping.
+- **Practise your weak spots.** Every rule already has an id (`'A.stayman'`, `'B.jacoby'`, …), and each answer carries it. Record right and wrong answers per id in saved progress, give the ids readable names, and add a "Weakest topics" drill that deals more of what you get wrong. The chart letters are a ready-made coarser grouping.
+- **Drill the rules nobody is asked.** The tests print which rule ids no drill ever asks of you (for example "new suit first, then support", and passing partner's opening with a weak hand). A recipe or two per set would close most of the list.
 - **The chart inside the app.** A reference page for each chart (A-G), linked from the "Chart A · …" line under each answer, so users can read the full rule they just got wrong.
-- **Opponents who bid.** Today opponents always pass, except in the one-call competitive drills. Letting them overcall now and then (using the `overcall` rule that already exists) would make the whole-auction drills far more realistic. It needs continuation rules for the partnership after interference, so start small: one overcall over a 1-level opening.
+- **Opponents who bid.** Today opponents always pass, except in the one-call competitive drills. The engine is ready for more: it keeps all four seats, sends contested auctions to chart F (`competitive` in auction.js), and `simulate` takes an `opponents(state)` function for East and West's calls (there is a test where East overcalls). What is missing: East and West's hands, so they overcall only when they should (the `overcall` rule already exists), and the partnership's continuations after interference. Start small: one overcall over a 1-level opening.
 - **Play the other seat.** Let the user sit North (opener) as well as South, or alternate. The engine already bids both seats, so this is mostly UI.
 
 ## Larger projects
@@ -26,5 +27,5 @@ Ideas, roughly in order of value for effort. Each one says what it would take.
 ## Engineering, as it grows
 
 - Keep running `tests/run.sh` (GitHub does this on every push). Add a test with every rule change.
-- If the code grows much beyond its current size, consider moving to ES modules with a small build step (for example Vite). It adds tooling, so it isn't worth it yet: today's "open `index.html`" simplicity is a real feature.
+- If the code grows much beyond its current size, consider ES modules (`<script type="module">`). They need no build step and work on GitHub Pages as they are. The cost is that browsers will not load modules from a file opened from disk, so local use would need Live Server (already recommended in the README). The gain is that each file says what it uses, so two files can no longer clash by defining the same name. Not worth it yet: today's "open `index.html`" simplicity is a real feature.
 - A code formatter and linter (Prettier and ESLint) would keep the style consistent once Node.js is installed.

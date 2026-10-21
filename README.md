@@ -30,20 +30,21 @@ From a terminal (Git Bash on Windows, or Linux/macOS), run `bash tests/run.sh`. 
 | `index.html` | The page. Loads the scripts below, in this order. |
 | `js/cards.js` | Building blocks: suits, calls, HCP, balanced shapes, the seeded random numbers and dealing. |
 | `js/rules.js` | The chart: one function per decision (openings, responses to 1NT/1M/1m, opener's rebid, competitive bids, 2NT/2♣/weak twos, Jacoby and RKCB). Change a range or a convention here. |
-| `js/auction.js` | Picks which rule applies at each point (`sysCall`) and plays a whole auction (`simulate`). |
+| `js/auction.js` | Keeps the whole auction, all four seats (`auctionState`), picks which rule applies at each point (`chartCall`, `sysCall`) and plays a whole auction (`simulate`). |
 | `js/drills.js` | The drill sets. Each recipe deals one kind of hand. Add a recipe to get more hands of that kind. |
 | `js/app.js` | The page itself: home screen, bidding box, feedback, results and saved progress. |
 | `style.css` | Colours (light and dark), type and layout. |
 | `tests/` | The tests (see above). |
 | `docs/` | How it works, open questions about the chart, and ideas for what to build next. |
 
-Each answer's explanation is written next to its rule, as the second argument of `R(bid, why, chartSection)`.
+Each answer's explanation is written next to its rule, as the second argument of `R(bid, why, ruleId)`. The rule id starts with the chart letter: `'A.stayman'` is the Stayman rule in chart A.
 
 More detail: [docs/HOW-IT-WORKS.md](docs/HOW-IT-WORKS.md) explains the code and walks through changing a rule or adding a drill. [docs/CHART-QUESTIONS.md](docs/CHART-QUESTIONS.md) lists places where the chart is silent or the trainer reads it one particular way. [docs/ROADMAP.md](docs/ROADMAP.md) has ideas for the future. [CHANGELOG.md](CHANGELOG.md) records what has changed.
 
 ## Notes on chart readings
 
-- A hand is only dealt if your **first** call is unambiguous. Later in the auction, if the chart allows more than one call (or gives none), the auction stops there and the drill says so.
+- A hand is only dealt if your **first** call is unambiguous. Later in the auction, if the chart allows more than one call (or gives none), the auction stops there and the drill says why.
+- Only your first attempt at a hand is scored. Bidding a played hand again (from the progress dots) is practice.
 - Auctions end where the chart gives no next step (for example, opener with 13-14 after a limit raise, or cue-bidding after Jacoby).
 - After Jacoby 2NT the trainer asks for key cards with about 31+ combined points. This is a trainer guide, not part of the chart.
 - Over a 2NT transfer, "4M with 4-5" is read as 4-5 HCP.

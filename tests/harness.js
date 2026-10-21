@@ -1,4 +1,5 @@
-// A tiny test harness: test(name, fn), check(condition, message), same(actual, expected, message).
+// A tiny test harness: test(name, fn), check(condition, message), same(actual, expected, message),
+// and info(name, text) for a line of information that is not a test.
 // Results are written to the page; the page title becomes "PASS n" or "FAIL n" for run.sh.
 'use strict';
 
@@ -7,6 +8,7 @@ function test(name, fn) {
   try { fn(); RESULTS.push({ name, ok: true }); }
   catch (e) { RESULTS.push({ name, ok: false, msg: e && e.message || String(e) }); }
 }
+function info(name, text) { RESULTS.push({ name, ok: true, info: text }); }
 function check(cond, msg) { if (!cond) throw new Error(msg || 'check failed'); }
 function same(actual, expected, msg) {
   const a = JSON.stringify(actual), b = JSON.stringify(expected);
@@ -24,15 +26,15 @@ function parseHand(str) {
   return h;
 }
 // The chart call for hand `str` after the partnership calls `seq` (space separated).
-const callFor = (seq, str) => { const c = sysCall(seq ? seq.split(' ') : [], parseHand(str)); return c ? c.bid : null; };
+const callFor = (seq, str) => { const c = sysCall(seq ? seq.split(' ') : [], parseHand(str)); return isCall(c) ? c.bid : null; };
 
 function report() {
-  const failed = RESULTS.filter(r => !r.ok);
-  const lines = RESULTS.map(r => (r.ok ? 'ok   ' : 'FAIL ') + r.name + (r.ok ? '' : '\n       ' + r.msg));
-  lines.push('', `${RESULTS.length - failed.length} passed, ${failed.length} failed`);
+  const tests = RESULTS.filter(r => !r.info), failed = tests.filter(r => !r.ok);
+  const lines = RESULTS.map(r => r.info ? `info ${r.name}\n       ${r.info}` : (r.ok ? 'ok   ' : 'FAIL ') + r.name + (r.ok ? '' : '\n       ' + r.msg));
+  lines.push('', `${tests.length - failed.length} passed, ${failed.length} failed`);
   const o = document.getElementById('o');
   o.textContent = lines.join('\n');
   o.className = failed.length ? 'fail' : 'pass';
-  document.title = failed.length ? `FAIL ${failed.length}` : `PASS ${RESULTS.length}`;
+  document.title = failed.length ? `FAIL ${failed.length}` : `PASS ${tests.length}`;
 }
 window.addEventListener('error', e => RESULTS.push({ name: 'uncaught error while loading', ok: false, msg: e.message + ' at ' + e.filename + ':' + e.lineno }));

@@ -7,8 +7,8 @@ This guide is for anyone changing the chart or the drills. You do not need to kn
 ```
 drills.js   a recipe deals South a hand (and North one that fits the drill)
    │
-auction.js  simulate() plays the auction: at each turn sysCall() picks the chart rule,
-   │        the rule in rules.js returns the call; opponents pass
+auction.js  simulate() plays the auction, all four seats: at each turn chartCall() picks
+   │        the chart rule, the rule in rules.js returns the call; opponents pass
    │
 drills.js   buildSet() keeps hands that work and collects 25 of them, from a seed
    │
@@ -25,20 +25,27 @@ The same set and seed always deal the same 25 hands. "Deal 25 new hands" moves t
 
 **A call** is a short string: `'1C'` … `'7N'`, `'P'` (pass), `'X'` (double), `'XX'` (redouble).
 
-**A chart answer** is `R(bid, why, chart)`, for example:
+**A chart answer** is `R(bid, why, ruleId)`, for example:
 
 ```js
-R('2C', `${p} HCP with a 4-card major: 2♣ Stayman (8+).`, 'A')
+R('2C', `${p} HCP with a 4-card major: 2♣ Stayman (8+).`, 'A.stayman')
 ```
 
-`why` is the explanation the user sees. `chart` is the chart letter shown under it (`A`-`G`, or `OB` for opening bids).
+`why` is the explanation the user sees. `ruleId` names the rule: the chart letter (`A`-`G`, or `OB` for opening bids), a dot, then a short name in lower case with hyphens. The letter is shown under the answer. The full id lets tests point at one rule, and is what per-topic scores will be kept against. Several lines can share an id when they are the same rule (Stayman with different hands, say); give a new rule a new id.
 
-**Returning `null`** means "the chart gives no single clear call here". This matters:
+**When there is no single call**, a rule returns one of these instead, with a reason the user will see:
 
-- If South's **first** call is `null`, the hand is thrown away and never dealt.
-- If any **later** call is `null`, the auction stops there ("The chart stops here").
+```js
+amb('With 5-5 in the majors, the chart allows a transfer to either major.')   // more than one call
+gap('With 13-14 opposite a limit raise, the chart gives no call.')            // no call at all
+```
 
-So when a hand could fairly be bid two ways, return `null` rather than guess. That is how the trainer stays unambiguous.
+This matters:
+
+- If South's **first** call is `amb` or `gap`, the hand is thrown away and never dealt.
+- If any **later** call is `amb` or `gap`, the auction stops there, and the drill shows the reason ("The drill ends here. …").
+
+So when a hand could fairly be bid two ways, return `amb(…)` rather than guess. That is how the trainer stays unambiguous. Write the reason so it makes sense whoever is to call: it can be shown on partner's turn, so say "opener" or "responder" rather than "you" or "partner".
 
 Small helpers used everywhere (all in `js/cards.js`):
 
@@ -52,14 +59,15 @@ Small helpers used everywhere (all in `js/cards.js`):
 | `bv(bid)` | bid order, so `bv(a) > bv(b)` means `a` outranks `b` |
 | `plain(bid)` | `'3H'` → `3♥`, for explanations |
 | `SY[s]`, `SN[s]`, `NUM[n]` | symbol `♥`, name `hearts`, number word `six` |
+| `isCall(x)` | is `x` a real call, rather than `amb(…)` or `gap(…)`? |
 
 ## Changing a rule
 
 Say partner opens 1NT and the chart changes Stayman from 8+ to 9+.
 
 1. Open `js/rules.js` and find `// ---------- A: responses to 1NT ----------`.
-2. In `r1NT`, change `if (p >= 8) return R('2C', …(8+)…` to `p >= 9`, and update the text.
-3. Look for the knock-on effects. What does a hand with exactly 8 and a 4-card major bid now? Make sure some line returns a call for it, or `null` on purpose.
+2. In `r1NT`, change `if (p >= 8) return R('2C', …(8+)…, 'A.stayman')` to `p >= 9`, and update the text.
+3. Look for the knock-on effects. What does a hand with exactly 8 and a 4-card major bid now? Make sure some line returns a call for it, or `amb(…)` / `gap(…)` on purpose.
 4. Run the tests (open `tests/index.html`). Fix the examples in `tests/engine.test.js` that expected the old chart, and add one for the new rule.
 
 Where each part of the auction is decided:
@@ -68,16 +76,34 @@ Where each part of the auction is decided:
 |---|---|
 | Opening bid | `openingBid` |
 | Responding to 1NT, then later calls | `r1NT`, `stayAns`, `afterStay`, `afterXfer`, `inv`, `inv4`, `smolenAns`, `rangeAns`, `rangeResp` |
-| Responding to 1♥/1♠ | `r1M`, then `jac` / `jacCont` for Jacoby |
+| Responding to 1♥/1♠ | `r1M`, then `jac` / `jacCont` for Jacoby, `supportAfterNewSuit` after "new suit first, then support" |
 | Responding to 1♣/1♦ | `r1m` |
 | Opener's rebid, responder's next call | `rebid`, `respAfterRebid` |
 | 2NT, 2♣, weak twos | `over2Nx`, `over2C`, `twoClubRebid`, `wtResp`, `wtAns` (and `nt2` in auction.js) |
-| Competitive | `overcall`, `negDbl`, `advance`, `vs1NT` |
+| Competitive | `overcall`, `negDbl`, `advance`, `vs1NT` (chosen by `competitive` in auction.js) |
 | RKCB | `rkReply`, `askDecide` |
 
 Simple raises and other short answers to partner's bids are written directly in `js/auction.js`, in the `after…` function for that opening (`after1NT`, `after1Major`, …).
 
 **To add a new continuation** (for example, opener's answer to an invitation that currently ends the auction), find the `after…` function for the opening. Each one checks `n`, the number of partnership calls so far: `n === 1` is the response, `n === 2` opener's rebid, and so on. Add a line for the new sequence.
+
+**To check what you bid earlier**, call your own rule again: your earlier calls were always the chart's, so `r1M(h, M).id === 'B.new-suit-then-support'` tells responder that their first call promised three-card support. `after1Major` uses exactly this.
+
+## The auction: all four seats
+
+`auction.js` keeps the whole auction, all four seats, starting with the dealer. `auctionState(dealer, calls)` describes it from the point of view of the player about to call:
+
+| Field | Means |
+|---|---|
+| `seat`, `partner`, `lho`, `rho` | whose turn it is, and the other three seats |
+| `ours` | our side's calls in order: the partnership sequence the `after…` functions read |
+| `theirs` | the opponents' calls |
+| `contested` | the opponents have made a call other than pass |
+| `tagged` | every call with the seat that made it: `{ call, by }` |
+
+`chartCall(state, hand)` picks the rule. Uncontested auctions go to `sysCall(ours, hand)`. Contested ones go to `competitive`, which covers chart F: your first call after the other side opens (overcalls, takeout doubles, Michaels, the Unusual 2NT, Cappelletti), a negative double after partner opens and RHO overcalls, and advancing partner's takeout double. Everything later in a contested auction is a `gap` for now.
+
+`simulate(south, north, dealer, note, opponents)` plays the auction until it ends (four passes, or a bid followed by three passes) or the chart stops. East and West call with `opponents(state)`; leave it out and they always pass. The competitive drills use `chartCall` directly, through `oneCall` in drills.js.
 
 ## Adding or changing a drill
 
@@ -87,25 +113,35 @@ Drills live in `js/drills.js`. Each set is:
 { id: 'nt-resp', name: 'Responding to 1NT', refs: 'A', blurb: '…', recipes: [ … ] }
 ```
 
-A **recipe** deals one kind of hand. There are two helpers.
+A **recipe** deals one kind of hand. There are two helpers, and both take named options.
 
-**`SO(...)`: South opens.**
-
-```js
-SO(r => balL(r), 15, 17, 6, 15, 2, majSpec)
-//   South's lengths,  South HCP 15-17,  North HCP 6-15,  South makes 2+ calls,  North's lengths
-```
-
-**`PO(...)`: Partner opens.** It returns South's hand spec and partner's:
+**`SO({...})`: South opens.**
 
 ```js
-PO(2, r => ({ s: [nmaj(r), 8, 8], p: ['bal', 15, 17, '1N'], note: 'Partner opened 1NT (15-17).' }))
-//  South: no 4-card major, exactly 8 HCP.  North: balanced 15-17 that opens 1NT.
+SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: majSpec, hcp: [6, 15] }, calls: 2 })
 ```
 
-Lengths are written with `sp`: `sp({2: [5, 6]}, [0, 5])` means 5-6 hearts and 0-5 in each other suit. `balL(r)` is any balanced pattern, and `'bal'` means the same for partner.
+- `south.lens(rng)` gives South's suit lengths; `south.hcp` is South's range; `south.ok(hand)` is an optional extra test.
+- `north.lens(rng, southHand)` gives North's length spec (leave it out for any shape); `north.hcp` is North's range; `north.ok(hand)` is an optional extra test.
+- `calls` is how many calls South must make for the hand to count. It can be left out: the default is 2.
 
-To get more hands of a kind, repeat its recipe in the list. Each recipe gets an equal share of the 25 hands.
+**`PO({...})`: Partner opens.** `setup(rng)` describes one deal. It is a function because partner's suit is often chosen at random and both hands depend on it:
+
+```js
+PO({ setup: r => ({
+  south: { lens: nmaj(r), hcp: [8, 8] },                   // no 4-card major, exactly 8 HCP
+  north: { lens: 'bal', hcp: [15, 17], opens: '1N' },      // balanced 15-17 that opens 1NT
+  note: 'Partner opened 1NT (15-17).',
+}) })
+```
+
+`NT1` holds the usual `north` and `note` for a 1NT opening, so many recipes are just `PO({ setup: r => ({ ...NT1, south: {…} }) })`.
+
+Lengths are written with `sp`: `sp({2: [5, 6]}, [0, 5])` means 5-6 hearts and 0-5 in each other suit. `balL` is any balanced pattern, and `'bal'` means the same for partner.
+
+To get more hands of a kind, repeat its recipe in the list. Each recipe gets an equal share of the 25 hands. Give a repeated recipe a name (`const nt = SO({...})`) and list the name twice.
+
+The tests end with a **rule coverage** line: which rule ids no drill ever asks of you. It is the quickest way to see what a new recipe should target.
 
 **Be aware:** changing, adding or reordering recipes changes which hands every seed deals. That is fine. The app notices, and resets unfinished progress for that set (best scores are kept). But it is why a small edit can change many hands.
 
@@ -121,7 +157,9 @@ Saved data lives in the browser under the key `bidtrainer.v2`:
 { seed: { setId: 1 }, best: { setId: 23 }, prog: { setId: { seed, sig, res: [...] } } }
 ```
 
-`sig` is a fingerprint of the dealt hands, so progress saved against old hands is never misread after the drills change. Damaged saved data is ignored. If something does go wrong, the page shows "Something went wrong", with buttons to go back or to reset saved progress, instead of a blank page.
+`sig` is a fingerprint of the dealt hands, so progress saved against old hands is never misread after the drills change.
+
+Only a hand's **first** attempt is scored. A hand already played can be bid again from the progress dots, but that is practice (the page says so): the feedback is shown, and the first result stands. This keeps the score and best score honest, since you have already seen the answer. Damaged saved data is ignored. If something does go wrong, the page shows "Something went wrong", with buttons to go back or to reset saved progress, instead of a blank page.
 
 ## Rules of the road
 

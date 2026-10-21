@@ -2,7 +2,7 @@
 //
 // Everything is drawn by render() from the state object S:
 //   { view: 'home' }
-//   { view: 'play', id, qs, order, pos, step, cur, res, retry, level, answered }
+//   { view: 'play', id, qs, order, pos, step, cur, res, retry, practice, level, answered }
 //   { view: 'done', id, qs, order, res, retry }
 'use strict';
 
@@ -97,7 +97,8 @@ function outcome(q) {
   if (q.contract) return `Final contract: ${fmt(q.contract)}.`;
   if (!q.partner) return '';   // one-call competitive drill
   if (q.calls.length === 4 && q.calls.every(c => c === 'P')) return 'Nobody opens: the hand is passed out.';
-  return 'The chart stops here, so the drill ends.';
+  // The auction stopped early: say why (the chart allows more than one call, or has none).
+  return `The drill ends here. ${q.stop ? q.stop.why : 'The chart has no next call.'}`;
 }
 const outHTML = q => { const o = outcome(q); return o ? `<p class="out">${o}</p>` : ''; };
 
@@ -122,7 +123,7 @@ function start(id, order) {
   const ord = order || [...Array(size).keys()];
   const pos = order ? 0 : ord.findIndex(i => !pr.res[i]);
   if (pos < 0) { S = { view: 'done', id, qs, order: ord, res: pr.res, retry: false }; return render(); }
-  S = { view: 'play', id, qs, order: ord, pos, step: 0, cur: [], res: order ? Array(size).fill(null) : pr.res, retry: !!order, level: null, answered: null };
+  S = { view: 'play', id, qs, order: ord, pos, step: 0, cur: [], res: order ? Array(size).fill(null) : pr.res, retry: !!order, practice: false, level: null, answered: null };
   render();
 }
 
@@ -132,7 +133,7 @@ function play() {
   // One dot per hand; click a dot to jump to that hand.
   const dots = S.retry ? '' : `<div class="dots" style="grid-template-columns:repeat(${S.qs.length},1fr)">${S.qs.map((_, j) => {
     const r = S.res[j], cls = j === i ? 'cur' : r ? (r.ok ? 'ok' : 'no') : '';
-    const label = `Hand ${j + 1}: ${j === i ? 'this hand' : r ? (r.ok ? 'correct, bid it again' : 'missed, bid it again') : 'not played'}`;
+    const label = `Hand ${j + 1}: ${j === i ? 'this hand' : r ? (r.ok ? 'correct; bid it again for practice' : 'missed; bid it again for practice') : 'not played'}`;
     return `<button class="dot ${cls}" data-jump="${j}" title="${label}" aria-label="${label}"${j === i ? ' aria-current="true"' : ''}></button>`;
   }).join('')}</div>`;
   const pips = q.steps.length > 1 ? `<div class="pips">${q.steps.map((_, k) => `<i class="${k < S.step ? (S.cur[k] === q.steps[k].ans.bid ? 'ok' : 'no') : k === S.step ? (S.answered ? (S.answered === st.ans.bid ? 'ok' : 'no') : 'cur') : ''}"></i>`).join('')}<span>Call ${S.step + 1} of ${q.steps.length}</span></div>` : '';
@@ -165,7 +166,7 @@ function play() {
       <p class="hint">${lv ? `Now pick a strain for level ${lv}.` : 'Pick a level, then a strain.'}</p></div>`;
   }
   app.innerHTML = `<div class="bar"><button class="back" id="back">‹ All drills</button><span class="count">Hand ${S.pos + 1} / ${S.order.length} · ${nOk} correct</span></div>
-    ${dots}<div class="lead"><span class="eyebrow">${S.retry ? 'Retrying misses · ' : ''}${rich(d.name)}</span>${pips}<p class="note">${rich(st.note)}${prevWrong ? ' <span class="muted">(The auction went on with the chart call.)</span>' : ''}</p></div>
+    ${dots}<div class="lead"><span class="eyebrow">${S.retry ? 'Retrying misses · ' : S.practice ? 'Practice: the first result stands · ' : ''}${rich(d.name)}</span>${pips}<p class="note">${rich(st.note)}${prevWrong ? ' <span class="muted">(The auction went on with the chart call.)</span>' : ''}</p></div>
     ${auctionHTML(q.dealer, st.calls, S.answered || '?')}${handHTML(q.hand, !!S.answered)}${lower}`;
   document.getElementById('back').onclick = goHome;
   app.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => jumpTo(+b.dataset.jump));
@@ -180,7 +181,10 @@ function answer(b) {
   const i = S.order[S.pos], q = S.qs[i];
   S.answered = b;
   S.cur[S.step] = b;
-  if (S.step === q.steps.length - 1) {
+  // Only a hand's first attempt is scored. Bidding a played hand again (from the dots) is
+  // practice: you see the feedback, but the first result stands, so the score and best
+  // score cannot be raised after seeing the answers.
+  if (S.step === q.steps.length - 1 && !S.practice) {
     const n = q.steps.filter((st, k) => S.cur[k] === st.ans.bid).length;
     S.res[i] = { bids: S.cur.slice(), n, ok: n === q.steps.length };
     if (!S.retry) {
@@ -209,6 +213,7 @@ function next() {
   if (S.step < q.steps.length - 1) { S.step++; render(); return; }
   S.step = 0;
   S.cur = [];
+  S.practice = false;
   const pos = nextUnplayed();
   if (pos >= 0) S.pos = pos;
   else S.view = 'done';
@@ -216,12 +221,12 @@ function next() {
   window.scrollTo({ top: 0 });
 }
 
-// Jump to hand j of the set (from the dots). A hand already played can be bid again;
-// the new result replaces the old one when you finish it.
+// Jump to hand j of the set (from the dots). A hand already played can be bid again for
+// practice; its first result stands.
 function jumpTo(j) {
   const pos = S.order.indexOf(j);
   if (pos < 0) return;
-  Object.assign(S, { pos, step: 0, cur: [], answered: null, level: null });
+  Object.assign(S, { pos, step: 0, cur: [], answered: null, level: null, practice: !!S.res[j] });
   render();
 }
 

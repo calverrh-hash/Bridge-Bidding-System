@@ -39,7 +39,7 @@ test('dealOther() never reuses a card', () => {
 });
 
 // ---------- Opening bids ----------
-const opening = str => { const c = openingBid(parseHand(str)); return c ? c.bid : null; };
+const opening = str => { const c = openingBid(parseHand(str)); return isCall(c) ? c.bid : null; };
 test('opening: 15-17 balanced opens 1NT', () => same(opening('AK2.QJ3.K842.Q73'), '1N'));
 test('opening: 12-14 balanced opens the longer minor', () => {
   same(opening('K32.Q32.AJ42.K32'), '1D');
@@ -111,7 +111,7 @@ test('Jacoby: opener shows shortness or strength', () => {
 });
 
 // ---------- G: RKCB ----------
-const rk = str => { const c = rkReply(parseHand(str), 2); return c ? c.bid : null; };
+const rk = str => { const c = rkReply(parseHand(str), 2); return isCall(c) ? c.bid : null; };
 test('RKCB replies (hearts trumps)', () => {
   same(rk('A32.K432.A32.432'), '5C');   // 3
   same(rk('A32.KQ32.432.432'), '5S');   // 2 with the queen
@@ -134,7 +134,7 @@ test('competitive: overcalls and doubles', () => {
 // ---------- Whole auctions ----------
 test('simulate: 1NT – 2♦ – 2♥ – pass', () => {
   const sim = simulate(parseHand('43.98765.Q53.J52'), parseHand('AK2.QJ3.K842.Q73'), 'N', 'note');
-  same(sim.calls, ['1N', 'P', '2D', 'P', '2H', 'P', 'P']);
+  same(sim.calls, ['1N', 'P', '2D', 'P', '2H', 'P', 'P', 'P']);
   same(sim.contract, '2H');
   same(sim.steps.map(s => s.ans.bid), ['2D', 'P']);
 });
@@ -158,10 +158,94 @@ test('legal(): minimum bid and when X / XX are allowed', () => {
   same(legal('E', ['1N']), { min: bv('1N'), x: true, xx: false });
   same(legal('S', []), { min: -1, x: false, xx: false });
 });
+test('the auction ends after three passes, and records its contract', () => {
+  const sim = simulate(parseHand('K32.Q32.K432.J32'), parseHand('AQ4.KJ4.A65.Q654'), 'N', 'note');
+  same(sim.calls, ['1N', 'P', '2N', 'P', '3N', 'P', 'P', 'P']);
+  same(sim.contract, '3N');
+  same(sim.steps.map(s => s.ans.bid), ['2N'], 'your pass after 3NT is automatic');
+  same(sim.stop, null);
+});
+test('obvious passes after game are automatic, so these auctions reach a contract', () => {
+  same(callFor('1H 1S 2S 4S', 'K2.AQJ32.K32.432'), 'P');
+  same(callFor('1N 2N 3N', 'K32.Q32.K432.J32'), 'P');
+  same(callFor('1N 4N 6N', 'K32.Q32.K432.J32'), 'P');
+  same(callFor('2C 2D 3N', '432.432.5432.432'), 'P');
+});
+test('when the chart stops, the auction says why', () => {
+  // Opener with 13 after a limit raise: the chart gives no call.
+  const q = { partner: true, ...simulate(parseHand('K2.AQJ32.K32.432'), parseHand('8743.K54.AQ5.K65'), 'S', 'note') };
+  same(q.calls, ['1H', 'P', '3H', 'P']);
+  same(q.contract, null);
+  same([q.stop.stop, q.stop.seat], ['gap', 'S']);
+  check(/limit raise/.test(outcome(q)), outcome(q));
+  // "More than one call" and "no call" are told apart.
+  same(r1NT(parseHand('AQ432.KJ432.32.2')).stop, 'ambiguous');   // 5-5 majors: transfer to either
+  same(rkReply(parseHand('A2.AK32.A32.A432'), 2).stop, 'gap');    // five key cards: no reply
+});
+test('regression: "new suit first, then support" keeps its promise', () => {
+  const h = 'AQ52.J63.K54.A92';   // 14 HCP, three hearts, four spades
+  same(callFor('1H', h), '1S');
+  same(callFor('1H 1S 1N', h), '4H', 'opposite a minimum 1NT: support hearts, not 3NT');
+  same(callFor('1H 1S 2C', h), '4H');
+  same(callFor('1H 1S 2S', h), '4S', 'opener raised spades: the 4-4 fit will do');
+  same(callFor('1H 1S 2N', h), null, 'opener has 18-19: slam is possible, and the chart stops');
+  same(callFor('1H 1S 1N', 'AQ52.Q63.KQ4.A92'), null, '17 HCP: slam is possible, and the chart stops');
+});
+test('regression: opposite an 18-19 2NT rebid, 7 HCP bids game after a 1NT response too', () => {
+  same(callFor('1C 1N 2N', 'Q75.Q63.K842.982'), '3N');   // 7 HCP
+  same(callFor('1C 1N 2N', 'Q75.J63.K842.982'), 'P');    // 6 HCP
+});
+
+// ---------- The four-seat auction ----------
+test('auctionState: whose turn, our calls and theirs', () => {
+  const st = auctionState('W', ['P', '1N', '2C']);   // W passes, N opens 1NT, E overcalls: South to call
+  same([st.seat, st.partner, st.lho, st.rho], ['S', 'N', 'W', 'E']);
+  same(st.ours, ['1N']);
+  same(st.theirs, ['P', '2C']);
+  same(st.contested, true);
+  same(auctionState('N', ['1N', 'P']).contested, false);
+});
+test('contested auctions go to chart F: overcalls, negative doubles, advances, Cappelletti', () => {
+  const h = parseHand('AQ32.2.KJ32.Q432');
+  same(chartCall(auctionState('E', ['1H']), h).bid, overcall(h, 2).bid);
+  same(chartCall(auctionState('N', ['1C', '1D']), parseHand('KJ32.Q432.432.54')).id, 'F.negative-double');
+  const a = parseHand('432.Q8432.J32.32');
+  same(chartCall(auctionState('W', ['1C', 'X', 'P']), a).bid, advance(a, 0).bid);
+  same(chartCall(auctionState('E', ['1N']), parseHand('AQ432.KJ32.32.32')).id, 'F.cappelletti-2d');
+  // After your own call, the chart has nothing more in a contested auction.
+  same(chartCall(auctionState('E', ['1H', 'X', '2H', 'P', 'P']), h).stop, 'gap');
+});
+test('simulate: an opponent who overcalls', () => {
+  // North opens 1♣, East overcalls 1♦: South has both majors and makes a negative double.
+  const sim = simulate(parseHand('KJ32.Q432.432.54'), parseHand('A54.K65.Q76.AJ32'), 'N', 'note', st => st.calls.length === 1 ? '1D' : 'P');
+  same(sim.calls, ['1C', '1D', 'X', 'P']);
+  same(sim.steps.map(s => s.ans.id), ['F.negative-double']);
+  same([sim.stop.stop, sim.stop.seat], ['gap', 'N']);
+});
+
+// ---------- Rule ids ----------
+const RULE_ID = /^(OB|[A-G])\.[a-z0-9]+(-[a-z0-9]+)*$/;
+// Every rule id written in the code, found by reading the source of each global function.
+function allRuleIds() {
+  const ids = new Set();
+  for (const k of Object.getOwnPropertyNames(window)) {
+    let f;
+    try { f = window[k]; } catch (e) { continue; }
+    if (typeof f === 'function') for (const m of String(f).matchAll(/'((?:OB|[A-G])\.[^']*)'/g)) ids.add(m[1]);
+  }
+  return ids;
+}
+test('rule ids: every chart answer has a well-formed id that starts with its chart letter', () => {
+  const ids = allRuleIds();
+  check(ids.size > 100, `found only ${ids.size} rule ids`);
+  for (const id of ids) check(RULE_ID.test(id), `badly formed rule id "${id}"`);
+  same(R('2C', 'why', 'A.stayman'), { bid: '2C', why: 'why', id: 'A.stayman', ref: 'A' });
+});
 
 // ---------- Invariants over every drill set ----------
 // Every "N HCP" in an explanation about your own hand must be your actual HCP.
 const HCP_CLAIM = /(?<![-\d]|under )(\d+) HCP/g;
+const ASKED = new Set();   // rule ids asked of South in some drill
 function checkWhy(why, h, where) {
   check(!/undefined|NaN|null|\[object/.test(why), `${where}: bad text "${why}"`);
   for (const m of why.matchAll(HCP_CLAIM)) check(+m[1] === hcp(h), `${where}: says ${m[1]} HCP, hand has ${hcp(h)}: "${why}"`);
@@ -187,11 +271,20 @@ function checkQuestion(q, where) {
     check(!/^\d/.test(b) || bv(b) > lg.min, `${where} step ${k}: answer ${b} is insufficient`);
     check(b !== 'X' || lg.x, `${where} step ${k}: answer X is not allowed`);
     check(['A', 'B', 'C', 'D', 'E', 'F', 'G', 'OB'].includes(st.ans.ref), `${where} step ${k}: chart ref "${st.ans.ref}"`);
+    check(RULE_ID.test(st.ans.id) && st.ans.id.split('.')[0] === st.ans.ref, `${where} step ${k}: rule id "${st.ans.id}"`);
     check(st.note, `${where} step ${k}: no note`);
     checkWhy(st.ans.why, q.hand, `${where} step ${k}`);
   });
   if (q.partner) q.pn.filter(x => !x.auto).forEach((x, k) => checkWhy(x.why, q.partner, `${where} partner call ${k}`));
   check(q.contract === null || /^[1-7][CDHSN]$/.test(q.contract), where + ' contract');
+  // A whole-auction drill ends exactly one way: a contract after three passes, passed out,
+  // or stopped by the chart with a reason.
+  if (q.partner) {
+    const passedOut = q.calls.length === 4 && q.calls.every(c => c === 'P');
+    same([!!q.contract, passedOut, !!q.stop].filter(Boolean).length, 1, `${where}: how the auction ends (${q.calls.join(' ')})`);
+    if (q.contract) same(q.calls.slice(-3), ['P', 'P', 'P'], where + ' ends with three passes');
+    if (q.stop) check(/^(ambiguous|gap)$/.test(q.stop.stop) && q.stop.why && /^[NS]$/.test(q.stop.seat), `${where}: stop ${JSON.stringify(q.stop)}`);
+  }
   // A deal with no bid at all must really be passed out: four passes, partner has no opening.
   if (q.partner && !q.calls.some(c => /^\d/.test(c))) {
     same(q.calls, ['P', 'P', 'P', 'P'], where + ' passed-out auction');
@@ -207,8 +300,13 @@ for (const d of SETS) {
       const keys = new Set(qs.map(q => JSON.stringify(q.hand)));
       check(keys.size === qs.length || d.id === 'comp' || d.id === 'mixed', `seed ${seed}: repeated hand`);
       qs.forEach((q, i) => checkQuestion(q, `${d.id}#${seed}/${i}`));
+      qs.forEach(q => q.steps.forEach(st => ASKED.add(st.ans.id)));
     }
   });
+}
+{
+  const all = allRuleIds(), never = [...all].filter(id => !ASKED.has(id)).sort();
+  info('rule coverage', `${all.size - never.length} of ${all.size} chart rules are asked of you in some drill (seeds 1-20).\n       Never asked: ${never.join(', ')}`);
 }
 test('buildSet is deterministic for a seed', () => {
   for (const d of SETS) same(JSON.stringify(buildSet(d, 3)), JSON.stringify(buildSet(d, 3)), d.id);
@@ -219,7 +317,7 @@ test('buildSet survives a recipe that never deals', () => {
 });
 
 // ---------- Fuzz: random deals through the whole chart ----------
-test('fuzz: 20,000 random deals never throw or bid illegally', () => {
+test('fuzz: 20,000 random deals never throw, bid illegally, or stop without a reason', () => {
   const rng = mulberry(2024);
   const deck = [];
   for (let s = 0; s < 4; s++) for (let r = 2; r <= 14; r++) deck.push([s, r]);
@@ -229,7 +327,11 @@ test('fuzz: 20,000 random deals never throw or bid illegally', () => {
     const seq = [];
     for (let g = 0, who = 0; g < 30; g++, who ^= 1) {
       const c = sysCall(seq, hs[who]);
-      if (!c) break;
+      if (!isCall(c)) {
+        check(/^(ambiguous|gap)$/.test(c.stop) && typeof c.why === 'string' && c.why.length > 10, `no call and no reason after ${seq.join(' ')}`);
+        break;
+      }
+      check(c.auto || RULE_ID.test(c.id), `rule id "${c.id}" after ${seq.join(' ')}`);
       const lb = [...seq].reverse().find(x => /^\d/.test(x));
       check(!/^\d/.test(c.bid) || !lb || bv(c.bid) > bv(lb), `insufficient ${c.bid} after ${seq.join(' ')}`);
       if (!c.auto) checkWhy(c.why, hs[who], seq.join(' ') + ' -> ' + c.bid);

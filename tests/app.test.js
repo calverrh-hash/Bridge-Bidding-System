@@ -96,16 +96,32 @@ test('app: "See results" appears only when no hand is left unplayed', () => {
   bid();
   same($('#next').textContent, 'Next hand →');
 });
-test('app: a played hand can be bid again, and the new result replaces the old', () => {
+test('app: a played hand can be bid again for practice; its first result stands', () => {
   resetApp();
   click('[data-set="comp"]');
   bid(wrongCall()); click('#next');
   same(S.res[S.order[0]].ok, false);
   click(`[data-jump="${S.order[0]}"]`);
   same(S.pos, 0);
-  bid(); click('#next');
-  same(S.res[S.order[0]].ok, true);
-  same(loadDB().prog.comp.res[S.order[0]].ok, true, 'saved');
+  check(/Practice/.test($('.lead').textContent), 'marked as practice');
+  bid();
+  check($('.fb.ok'), 'feedback is still shown');
+  click('#next');
+  same(S.res[S.order[0]].ok, false, 'first result stands');
+  same(loadDB().prog.comp.res[S.order[0]].ok, false, 'saved result unchanged');
+  same(S.pos, 1, 'next goes on to the next unplayed hand');
+});
+test('regression: bidding a missed hand again after seeing the answer does not raise the best score', () => {
+  resetApp();
+  click('[data-set="comp"]');
+  bid(wrongCall()); click('#next');   // miss the first hand
+  for (let guard = 0; guard < 100; guard++) { bid(); if (nextUnplayed() < 0) break; click('#next'); }
+  // Every hand is answered but "See results" has not been pressed, so the dots are still there.
+  same(loadDB().best.comp, SET_SIZE - 1);
+  click(`[data-jump="${S.order[0]}"]`);
+  bid();
+  same(loadDB().best.comp, SET_SIZE - 1, 'best score unchanged');
+  same(countOk(S.order, S.res), SET_SIZE - 1, 'score unchanged');
 });
 test('app: retry replays only the missed hands, then a fresh deal resets', () => {
   resetApp();

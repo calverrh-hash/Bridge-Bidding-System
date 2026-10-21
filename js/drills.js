@@ -2,9 +2,10 @@
 // returns a question, or null to try again. buildSet() turns a set into 25 questions.
 //
 // A question looks like:
-//   { dealer, hand, partner, steps: [{calls, ans, note}], calls, pn, contract }
+//   { dealer, hand, partner, steps: [{calls, ans, note}], calls, pn, contract, stop }
 // where steps are the calls the user must make, calls is the whole auction,
-// pn is partner's calls with reasons, and contract is the final contract (or null).
+// pn is partner's calls with reasons, contract is the final contract (or null), and
+// stop says why the auction ended early (an amb() or gap() with its seat), or is null.
 //
 // NOTE: the order of recipes matters. The deal for a given seed depends on it, so
 // reordering or editing recipes changes every user's hands (saved progress is reset).
@@ -14,70 +15,78 @@
 // Does hand h open with bid b (a call string, or a RegExp)?
 const opensAs = b => h => {
   const o = openingBid(h);
-  return !!o && (typeof b === 'string' ? o.bid === b : b.test(o.bid));
+  return isCall(o) && (typeof b === 'string' ? o.bid === b : b.test(o.bid));
 };
 // Play the auction; keep it only if South makes at least `min` calls.
 function deep(hS, hN, dealer, note, min) {
   if (!hS || !hN) return null;
   const sim = simulate(hS, hN, dealer, note);
   if (sim.steps.length < (min || 2)) return null;
-  return { dealer, hand: hS, partner: hN, steps: sim.steps, calls: sim.calls, pn: sim.pn, contract: sim.contract };
+  return { dealer, hand: hS, partner: hN, steps: sim.steps, calls: sim.calls, pn: sim.pn, contract: sim.contract, stop: sim.stop };
 }
 // A one-call question (competitive drills): partner's hand is not shown.
 function single(q) {
-  return q && { dealer: q.dealer, hand: q.hand, partner: null, steps: [{ calls: q.calls, ans: q.ans, note: q.note }], calls: q.calls.concat(q.ans.bid), pn: [], contract: null };
+  return q && { dealer: q.dealer, hand: q.hand, partner: null, steps: [{ calls: q.calls, ans: q.ans, note: q.note }], calls: q.calls.concat(q.ans.bid), pn: [], contract: null, stop: null };
 }
 const Q = (dealer, calls, hand, ans, note) => ({ dealer, calls, hand, ans, note: note || '' });
+// A one-call question in a contested auction: South's chart call after `calls`, or null to try again.
+function oneCall(dealer, calls, h, note) {
+  if (!h) return null;
+  const a = chartCall(auctionState(dealer, calls), h);
+  return isCall(a) ? single(Q(dealer, calls, h, a, note)) : null;
+}
 
 // ---------- Recipe helpers ----------
-// SO: South opens. South gets lensF lengths with lo..hi HCP (and must pass ok, if given).
-//     North gets pLo..pHi HCP with lengths from pSpec(rng, southHand) (default any shape).
-//     min = how many calls South must make for the hand to count.
-//     pOk is an optional extra test on North's hand.
-const SO = (lensF, lo, hi, pLo, pHi, min, pSpec, ok, pOk) => rng => {
-  const h = deal(rng, lensF(rng), lo, hi);
-  if (!h || (ok && !ok(h))) return null;
-  if (!openingBid(h)) return null;
-  const n = dealOther(rng, h, pSpec ? pSpec(rng, h) : sp({}, [0, 6]), pLo, pHi, pOk);
-  return deep(h, n, 'S', 'You are dealer.', min);
+// SO: South opens.
+//   south: { lens: rng => suit lengths, hcp: [lo, hi], ok: optional extra test on South's hand }
+//   north: { lens: (rng, southHand) => length spec or 'bal' (default: any shape), hcp: [lo, hi],
+//            ok: optional extra test on North's hand }
+//   calls: how many calls South must make for the hand to count (default 2).
+const SO = ({ south, north, calls = 2 }) => rng => {
+  const h = deal(rng, south.lens(rng), south.hcp[0], south.hcp[1]);
+  if (!h || (south.ok && !south.ok(h))) return null;
+  if (!isCall(openingBid(h))) return null;
+  const n = dealOther(rng, h, north.lens ? north.lens(rng, h) : sp({}, [0, 6]), north.hcp[0], north.hcp[1], north.ok);
+  return deep(h, n, 'S', 'You are dealer.', calls);
 };
-// PO: Partner (North) opens. f(rng) returns
-//     { s: [southLengths, lo, hi], p: [northSpec, lo, hi, northOpening], note }.
-const PO = (min, f) => rng => {
-  const c = f(rng);
+// PO: Partner (North) opens. setup(rng) describes one deal:
+//   { south: { lens: suit lengths, hcp: [lo, hi] },
+//     north: { lens: length spec or 'bal', hcp: [lo, hi], opens: North's opening bid }, note }
+//   calls: how many calls South must make for the hand to count (default 2).
+const PO = ({ setup, calls = 2 }) => rng => {
+  const c = setup(rng);
   if (!c) return null;
-  const h = deal(rng, c.s[0], c.s[1], c.s[2]);
+  const h = deal(rng, c.south.lens, c.south.hcp[0], c.south.hcp[1]);
   if (!h) return null;
-  const n = dealOther(rng, h, c.p[0], c.p[1], c.p[2], opensAs(c.p[3]));
-  return deep(h, n, 'N', c.note, min);
+  const n = dealOther(rng, h, c.north.lens, c.north.hcp[0], c.north.hcp[1], opensAs(c.north.opens));
+  return deep(h, n, 'N', c.note, calls);
 };
 
 const nmaj = r => rl(r, sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]));   // no 4-card major
 const majSpec = r => sp({ 2: [2, 6], 3: [2, 6] }, [0, 5]);
-const NT1 = { p: ['bal', 15, 17, '1N'], note: 'Partner opened 1NT (15-17).' };
+const NT1 = { north: { lens: 'bal', hcp: [15, 17], opens: '1N' }, note: 'Partner opened 1NT (15-17).' };
 const anyMajor = r => ri(r, 2, 3);
 // Partner of a weak-two opener: 14-17 HCP, 0-3 cards in opener's major.
 const wtPartner = (r, h) => { const M = L(h)[2] === 6 ? 2 : 3; return sp({ [M]: [0, 3] }, [1, 5]); };
 const sixCardMajor = r => { const s = ri(r, 2, 3); return rl(r, sp({ [s]: [6, 6] }, [0, 4])); };
+const weakTwo = SO({ south: { lens: sixCardMajor, hcp: [5, 10] }, north: { lens: wtPartner, hcp: [14, 17] } });
 
 const SETS = [
   {
     id: 'open-bal', name: 'Opening: balanced hands', refs: 'Opening · A · D · E',
     blurb: 'Open, then keep going: NT rebids, Stayman and transfer answers, 2NT and 2♣ follow-ups.',
-    recipes: [
-      SO(r => balL(r), 12, 14, 6, 15),                       // 1m, then rebid
-      SO(r => balL(r), 12, 14, 6, 15),
-      SO(r => balL(r), 15, 17, 0, 15, 2, majSpec),           // 1NT, then answer partner
-      SO(r => balL(r), 15, 17, 0, 15, 2, majSpec),
-      SO(r => balL(r), 15, 17, 0, 15, 2, majSpec),
-      SO(r => balL(r), 18, 19, 5, 12),                       // 1m, then 2NT/3NT rebid
-      SO(r => balL(r), 18, 19, 5, 12),
-      SO(r => balL(r), 20, 22, 0, 10, 2, majSpec),           // 2NT
-      SO(r => balL(r), 20, 22, 0, 10, 2, majSpec),
-      SO(r => balL(r), 23, 27, 0, 7),                        // 2♣
-      SO(r => balL(r, [[5, 3, 3, 2]]), 11, 14, 6, 15),       // 5332
-      SO(r => balL(r), 3, 11, 0, 15, 1, null, null, opensAs('P')),   // too weak: pass, and so does partner
-    ],
+    recipes: (() => {
+      const minor = SO({ south: { lens: balL, hcp: [12, 14] }, north: { hcp: [6, 15] } });                  // 1m, then rebid
+      const nt = SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: majSpec, hcp: [0, 15] } });     // 1NT, then answer partner
+      const minor1819 = SO({ south: { lens: balL, hcp: [18, 19] }, north: { hcp: [5, 12] } });             // 1m, then 2NT/3NT rebid
+      const nt2 = SO({ south: { lens: balL, hcp: [20, 22] }, north: { lens: majSpec, hcp: [0, 10] } });    // 2NT
+      return [
+        minor, minor, nt, nt, nt, minor1819, minor1819, nt2, nt2,
+        SO({ south: { lens: balL, hcp: [23, 27] }, north: { hcp: [0, 7] } }),                               // 2♣
+        SO({ south: { lens: r => balL(r, [[5, 3, 3, 2]]), hcp: [11, 14] }, north: { hcp: [6, 15] } }),     // 5332
+        SO({ south: { lens: balL, hcp: [3, 11] }, north: { hcp: [0, 15], ok: opensAs('P') }, calls: 1 }),  // too weak: pass, and so does partner
+      ];
+    })(),
   },
   {
     id: 'open-unbal', name: 'Opening: unbalanced hands', refs: 'Opening · B · D · E',
@@ -85,18 +94,18 @@ const SETS = [
     recipes: (() => {
       const ub = h => !isBal(h);
       const fiveMajor = r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [0, 5])); };
+      const major = SO({ south: { lens: fiveMajor, hcp: [11, 16], ok: ub }, north: { hcp: [4, 16] } });
+      const strong = SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [15, 19], ok: ub }, north: { hcp: [6, 12] } });   // reverses, jump rebids
       return [
-        SO(fiveMajor, 11, 16, 4, 16, 2, null, ub),
-        SO(fiveMajor, 11, 16, 4, 16, 2, null, ub),
-        SO(r => rl(r, sp({ 2: [5, 5], 3: [5, 5] }, [0, 3])), 10, 17, 4, 14, 2, null, ub),   // 5-5 majors
-        SO(r => rl(r, sp({ 2: [0, 4], 3: [0, 4] }, [0, 6])), 11, 14, 6, 14, 2, null, ub),   // minor openings
-        SO(r => rl(r, sp({}, [1, 6])), 15, 19, 6, 12, 2, null, ub),                        // reverses, jump rebids
-        SO(r => rl(r, sp({}, [1, 6])), 15, 19, 6, 12, 2, null, ub),
-        SO(r => rl(r, sp({}, [1, 6])), 20, 22, 4, 12, 2, null, ub),                        // jump shifts
-        SO(r => shuffle(r, [4, 4, 4, 1]), 12, 20, 6, 14, 2),
-        SO(sixCardMajor, 5, 10, 14, 17, 2, wtPartner),                                     // weak two, 2NT ask
-        SO(r => rl(r, sp({}, [0, 6])), 23, 26, 0, 7, 2, null, ub),                         // 2♣
-        SO(r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [7, 8] }, [0, 3])); }, 3, 10, 0, 15, 1),   // pre-empts
+        major, major,
+        SO({ south: { lens: r => rl(r, sp({ 2: [5, 5], 3: [5, 5] }, [0, 3])), hcp: [10, 17], ok: ub }, north: { hcp: [4, 14] } }),   // 5-5 majors
+        SO({ south: { lens: r => rl(r, sp({ 2: [0, 4], 3: [0, 4] }, [0, 6])), hcp: [11, 14], ok: ub }, north: { hcp: [6, 14] } }),   // minor openings
+        strong, strong,
+        SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [20, 22], ok: ub }, north: { hcp: [4, 12] } }),   // jump shifts
+        SO({ south: { lens: r => shuffle(r, [4, 4, 4, 1]), hcp: [12, 20] }, north: { hcp: [6, 14] } }),
+        weakTwo,                                                                                             // weak two, 2NT ask
+        SO({ south: { lens: r => rl(r, sp({}, [0, 6])), hcp: [23, 26], ok: ub }, north: { hcp: [0, 7] } }),    // 2♣
+        SO({ south: { lens: r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [7, 8] }, [0, 3])); }, hcp: [3, 10] }, north: { hcp: [0, 15] }, calls: 1 }),   // pre-empts
       ];
     })(),
   },
@@ -104,37 +113,38 @@ const SETS = [
     id: 'nt-resp', name: 'Responding to 1NT', refs: 'A',
     blurb: 'Stayman, transfers, Smolen, the 2♠ range-ask and what you bid next.',
     recipes: (() => {
-      // South holds `t` cards in one major M and `o` in the other.
-      const maj = (t, o, def, lo, hi) => PO(2, r => { const M = anyMajor(r); return { ...NT1, s: [rl(r, sp({ [M]: t, [5 - M]: o }, def)), lo, hi] }; });
+      // South holds `t` cards in one major M, `o` in the other, `def` in each minor, and lo..hi HCP.
+      const maj = (t, o, def, lo, hi) => PO({ setup: r => { const M = anyMajor(r); return { ...NT1, south: { lens: rl(r, sp({ [M]: t, [5 - M]: o }, def)), hcp: [lo, hi] } }; } });
+      const noMajor = PO({ setup: r => ({ ...NT1, south: { lens: nmaj(r), hcp: [9, 17] } }), calls: 1 });   // invite, game, quantitative
+      const stayman = maj([4, 4], [2, 4], [2, 5], 8, 15);
+      const fiveFour = maj([5, 5], [4, 4], [1, 3], 0, 13);                                                  // Stayman, Smolen
       return [
-        PO(1, r => ({ ...NT1, s: [nmaj(r), 9, 17] })),        // no major: invite, game, quantitative
-        PO(1, r => ({ ...NT1, s: [nmaj(r), 9, 17] })),
-        PO(2, r => ({ ...NT1, s: [nmaj(r), 8, 8] })),         // 2♠ range-ask
-        maj([4, 4], [2, 4], [2, 5], 8, 15),                   // Stayman
-        maj([4, 4], [2, 4], [2, 5], 8, 15),
+        noMajor, noMajor,
+        PO({ setup: r => ({ ...NT1, south: { lens: nmaj(r), hcp: [8, 8] } }) }),                           // 2♠ range-ask
+        stayman, stayman,
         maj([5, 5], [1, 3], [1, 5], 0, 14),                   // 5-card transfer
         maj([5, 5], [1, 3], [1, 5], 6, 14),
         maj([6, 6], [0, 3], [0, 4], 2, 9),                    // 6-card transfer
         maj([6, 7], [0, 3], [0, 4], 10, 15),                  // Texas
-        maj([5, 5], [4, 4], [1, 3], 0, 13),                   // 5-4 majors: Stayman, Smolen
-        maj([5, 5], [4, 4], [1, 3], 0, 13),
-        PO(2, r => { const m = ri(r, 0, 1); return { ...NT1, s: [rl(r, sp({ [m]: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3])), 0, 7] }; }),   // weak long minor
+        fiveFour, fiveFour,
+        PO({ setup: r => { const m = ri(r, 0, 1); return { ...NT1, south: { lens: rl(r, sp({ [m]: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3])), hcp: [0, 7] } }; } }),   // weak long minor
       ];
     })(),
   },
   {
     id: 'nt-open', name: 'Opening 1NT and 2NT', refs: 'A · E',
     blurb: 'You open and answer partner: Stayman, transfers, invitations, Smolen, range-ask.',
-    recipes: [
-      SO(r => balL(r), 15, 17, 6, 15, 2, majSpec),
-      SO(r => balL(r), 15, 17, 6, 15, 2, majSpec),
-      SO(r => balL(r), 15, 17, 6, 15, 2, majSpec),
-      SO(r => balL(r), 15, 17, 6, 15, 2, majSpec),
-      SO(r => balL(r), 15, 17, 8, 9, 2),                                                    // invitations
-      SO(r => balL(r), 15, 17, 0, 7, 2, r => { const m = ri(r, 0, 1); return sp({ [m]: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3]); }),   // weak long minor
-      SO(r => balL(r), 20, 22, 0, 10, 2, majSpec),                                          // 2NT
-      SO(r => balL(r), 20, 22, 0, 10, 2, majSpec),
-    ],
+    recipes: (() => {
+      const nt = SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: majSpec, hcp: [6, 15] } });
+      const nt2 = SO({ south: { lens: balL, hcp: [20, 22] }, north: { lens: majSpec, hcp: [0, 10] } });
+      const weakMinor = r => { const m = ri(r, 0, 1); return sp({ [m]: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3]); };
+      return [
+        nt, nt, nt, nt,
+        SO({ south: { lens: balL, hcp: [15, 17] }, north: { hcp: [8, 9] } }),                        // invitations
+        SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: weakMinor, hcp: [0, 7] } }),      // weak long minor
+        nt2, nt2,
+      ];
+    })(),
   },
   {
     id: 'major-resp', name: 'Responding to 1♥/1♠', refs: 'B · D · G',
@@ -142,12 +152,12 @@ const SETS = [
     recipes: (() => {
       // South has t = [min, max] cards in partner's major and lo..hi HCP.
       // h4s: partner opened 1♥ and South has 4-5 spades.
-      const M1 = (t, lo, hi, min, h4s) => PO(min, r => {
+      const M1 = (t, lo, hi, calls, h4s) => PO({ calls, setup: r => {
         const M = h4s ? 2 : anyMajor(r);
         const o = { [M]: t };
         if (h4s) o[3] = [4, 5];
-        return { s: [rl(r, sp(o, [0, 6])), lo, hi], p: [sp({ [M]: [5, 6] }, [0, 5]), 11, 19, B(1, M)], note: `Partner opened 1${SY[M]} (5+ cards).` };
-      });
+        return { south: { lens: rl(r, sp(o, [0, 6])), hcp: [lo, hi] }, north: { lens: sp({ [M]: [5, 6] }, [0, 5]), hcp: [11, 19], opens: B(1, M) }, note: `Partner opened 1${SY[M]} (5+ cards).` };
+      } });
       return [
         M1([3, 3], 6, 9, 2),          // simple raise
         M1([3, 3], 6, 9, 2),
@@ -169,16 +179,17 @@ const SETS = [
     id: 'minor-resp', name: 'Responding to 1♣/1♦', refs: 'C · D',
     blurb: 'Your first response, then your second call after opener rebids.',
     recipes: (() => {
-      // pp: partner is balanced 18-19 (so opener rebids 2NT).
-      const m1 = (lf, lo, hi, min, pp) => PO(min, r => {
+      // South gets lengths lf(rng) and lo..hi HCP. pp: partner is balanced 18-19 (so opener rebids 2NT).
+      const m1 = (lf, lo, hi, calls, pp) => PO({ calls, setup: r => {
         const m = ri(r, 0, 1);
-        return { s: [lf(r), lo, hi], p: pp ? ['bal', 18, 19, B(1, m)] : [sp({}, [0, 6]), 11, 19, B(1, m)], note: `Partner opened 1${SY[m]}.` };
-      });
+        const north = pp ? { lens: 'bal', hcp: [18, 19] } : { lens: sp({}, [0, 6]), hcp: [11, 19] };
+        return { south: { lens: lf(r), hcp: [lo, hi] }, north: { ...north, opens: B(1, m) }, note: `Partner opened 1${SY[m]}.` };
+      } });
       return [
         m1(nmaj, 6, 10, 2, true),
         m1(nmaj, 6, 10, 2, true),
-        m1(r => balL(r), 6, 12, 2),
-        m1(r => balL(r), 6, 12, 2),
+        m1(balL, 6, 12, 2),
+        m1(balL, 6, 12, 2),
         m1(r => rl(r, sp({ 2: [4, 5], 3: [0, 4] }, [0, 5])), 6, 15, 2),   // hearts
         m1(r => rl(r, sp({ 3: [4, 5], 2: [0, 4] }, [0, 5])), 6, 15, 2),   // spades
         m1(r => rl(r, sp({}, [0, 6])), 6, 14, 2),
@@ -195,10 +206,7 @@ const SETS = [
       // Overcall: RHO opens 1x.
       const OV = (lf, lo, hi) => rng => {
         const x = ri(rng, 0, 3);
-        const h = deal(rng, lf(rng, x), lo, hi);
-        if (!h) return null;
-        const a = overcall(h, x);
-        return a ? Q('E', [B(1, x)], h, a, `RHO opened 1${SY[x]}.`) : null;
+        return oneCall('E', [B(1, x)], deal(rng, lf(rng, x), lo, hi), `RHO opened 1${SY[x]}.`);
       };
       // Negative double: partner opens 1o, RHO overcalls 1v.
       const NEG = weak => rng => {
@@ -212,25 +220,15 @@ const SETS = [
           else o2 = { 0: [4, 6], 1: [4, 6], 3: [0, 3] };
         }
         const h = deal(rng, rl(rng, sp(o2, [0, 5])), weak ? 0 : 6, weak ? 5 : 11);
-        if (!h) return null;
-        const a = negDbl(h, o, v);
-        return a ? Q('N', [B(1, o), B(1, v)], h, a, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`) : null;
+        return oneCall('N', [B(1, o), B(1, v)], h, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`);
       };
       // Advancing a takeout double: LHO opens 1x, partner doubles, RHO passes.
       const ADV = rng => {
         const x = ri(rng, 0, 3);
-        const h = deal(rng, rl(rng, sp({ [x]: [0, 3] }, [0, 6])), 0, 14);
-        if (!h) return null;
-        const a = advance(h, x);
-        return a ? Q('W', [B(1, x), 'X', 'P'], h, a, `LHO opened 1${SY[x]}; partner made a takeout double.`) : null;
+        return oneCall('W', [B(1, x), 'X', 'P'], deal(rng, rl(rng, sp({ [x]: [0, 3] }, [0, 6])), 0, 14), `LHO opened 1${SY[x]}; partner made a takeout double.`);
       };
       // Cappelletti: RHO opens 1NT.
-      const CAP = (lf, lo, hi) => rng => {
-        const h = deal(rng, lf(rng), lo, hi);
-        if (!h) return null;
-        const a = vs1NT(h);
-        return a ? Q('E', ['1N'], h, a, 'RHO opened a strong 1NT. You play Cappelletti.') : null;
-      };
+      const CAP = (lf, lo, hi) => rng => oneCall('E', ['1N'], deal(rng, lf(rng), lo, hi), 'RHO opened a strong 1NT. You play Cappelletti.');
       // A 5-5 two-suiter for Michaels or the Unusual 2NT over 1x.
       const two = (r, x) => {
         const un = [0, 1, 2, 3].filter(s => s !== x);
@@ -257,7 +255,7 @@ const SETS = [
         CAP(r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [6, 7] }, [0, 3])); }, 8, 13),
         CAP(r => balL(r), 8, 18),
         CAP(r => rl(r, sp({ 0: [5, 6], 1: [5, 6] }, [0, 3])), 8, 13),
-      ].map(f => rng => single(f(rng)));
+      ];
     })(),
   },
   {
@@ -265,37 +263,39 @@ const SETS = [
     blurb: 'Jacoby 2NT to RKCB from both sides, key-card decisions, quantitative 4NT.',
     recipes: (() => {
       // JR: partner opens 1M, South bids Jacoby 2NT with lo..hi.
-      const JR = (lo, hi) => PO(2, r => {
+      const JR = (lo, hi) => PO({ setup: r => {
         const M = anyMajor(r);
-        return { s: [rl(r, sp({ [M]: [4, 5] }, [1, 5])), lo, hi], p: [sp({ [M]: [5, 6] }, [1, 5]), 11, 21, B(1, M)], note: `Partner opened 1${SY[M]}.` };
-      });
+        return { south: { lens: rl(r, sp({ [M]: [4, 5] }, [1, 5])), hcp: [lo, hi] }, north: { lens: sp({ [M]: [5, 6] }, [1, 5]), hcp: [11, 21], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` };
+      } });
       // JO: South opens 1M and partner bids Jacoby 2NT.
       const fiveMajor = r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [2, 4])); };
       const jacobyPartner = (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 5]); };
-      const JO = SO(fiveMajor, 12, 21, 13, 22, 3, jacobyPartner, opensAs(/^1[HS]$/));
-      const JO2 = SO(fiveMajor, 11, 21, 13, 22, 2, jacobyPartner, opensAs(/^1[HS]$/));
+      const JO = SO({ south: { lens: fiveMajor, hcp: [12, 21], ok: opensAs(/^1[HS]$/) }, north: { lens: jacobyPartner, hcp: [13, 22] }, calls: 3 });
+      const JO2 = SO({ south: { lens: fiveMajor, hcp: [11, 21], ok: opensAs(/^1[HS]$/) }, north: { lens: jacobyPartner, hcp: [13, 22] } });
       return [
         JR(13, 22), JR(16, 22), JR(18, 22), JR(20, 22),
         JO, JO, JO2,
-        PO(1, r => ({ ...NT1, s: [nmaj(r), 16, 17] })),                        // quantitative 4NT
-        SO(r => balL(r), 15, 17, 16, 17, 2, r => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5])),   // answer 4NT
+        PO({ setup: r => ({ ...NT1, south: { lens: nmaj(r), hcp: [16, 17] } }), calls: 1 }),                     // quantitative 4NT
+        SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [16, 17] } }),   // answer 4NT
       ];
     })(),
   },
   {
     id: 'big', name: 'Strong openings & weak twos', refs: 'E',
     blurb: '2NT and 2♣ auctions from both sides, and the weak-two 2NT ask.',
-    recipes: [
-      PO(2, r => ({ s: [rl(r, sp({}, [0, 6])), 0, 10], p: ['bal', 20, 22, '2N'], note: 'Partner opened 2NT (20-22).' })),
-      PO(2, r => { const M = anyMajor(r); return { s: [rl(r, sp({ [M]: [5, 6], [5 - M]: [0, 3] }, [0, 4])), 0, 10], p: ['bal', 20, 22, '2N'], note: 'Partner opened 2NT (20-22).' }; }),
-      PO(2, r => ({ s: [rl(r, sp({}, [0, 6])), 0, 7], p: ['bal', 23, 24, '2C'], note: 'Partner opened 2♣ (23+).' })),
-      PO(2, r => ({ s: [rl(r, sp({}, [0, 6])), 0, 7], p: ['bal', 23, 24, '2C'], note: 'Partner opened 2♣ (23+).' })),
-      SO(r => rl(r, sp({}, [1, 6])), 23, 27, 0, 7, 2),
-      SO(r => balL(r), 23, 26, 0, 7, 2),
-      SO(sixCardMajor, 5, 10, 14, 17, 2, wtPartner),
-      SO(sixCardMajor, 5, 10, 14, 17, 2, wtPartner),
-      SO(r => balL(r), 20, 22, 0, 10, 2, majSpec),
-    ],
+    recipes: (() => {
+      const NT2 = { north: { lens: 'bal', hcp: [20, 22], opens: '2N' }, note: 'Partner opened 2NT (20-22).' };
+      const twoClubs = PO({ setup: r => ({ south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 7] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }) });
+      return [
+        PO({ setup: r => ({ ...NT2, south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 10] } }) }),
+        PO({ setup: r => { const M = anyMajor(r); return { ...NT2, south: { lens: rl(r, sp({ [M]: [5, 6], [5 - M]: [0, 3] }, [0, 4])), hcp: [0, 10] } }; } }),
+        twoClubs, twoClubs,
+        SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [23, 27] }, north: { hcp: [0, 7] } }),
+        SO({ south: { lens: balL, hcp: [23, 26] }, north: { hcp: [0, 7] } }),
+        weakTwo, weakTwo,
+        SO({ south: { lens: balL, hcp: [20, 22] }, north: { lens: majSpec, hcp: [0, 10] } }),
+      ];
+    })(),
   },
 ];
 SETS.push({

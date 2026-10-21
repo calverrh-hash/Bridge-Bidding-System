@@ -40,7 +40,15 @@ function shuffle(rng, a) {
 // ---------- Calls ----------
 const B = (l, s) => l + ST[s];                         // B(2, 3) -> '2S'
 const bv = b => (+b[0] - 1) * 5 + ST.indexOf(b[1]);    // bid rank: 1C = 0 ... 7N = 34
-const R = (bid, why, ref) => ({ bid, why, ref });      // a chart answer; ref is the chart letter
+// A chart answer. id names the rule and starts with its chart letter (the ref shown to the user):
+// R('2C', why, 'A.stayman') is the Stayman rule in chart A.
+const R = (bid, why, id) => ({ bid, why, id, ref: id.split('.')[0] });
+// When the chart gives no single call, a rule returns one of these instead, saying why:
+//   amb(why)  the chart allows more than one call here (ambiguous)
+//   gap(why)  the chart has no call here at all
+const amb = why => ({ stop: 'ambiguous', why });
+const gap = why => ({ stop: 'gap', why });
+const isCall = a => !!a && !a.stop;
 const plain = b => b === 'P' ? 'Pass' : b === 'X' || b === 'XX' ? b : (b[1] === 'N' ? b[0] + 'NT' : b[0] + SY[ST.indexOf(b[1])]);
 // Cheapest level at which strain s can be bid over the bid `after`.
 function cheapest(s, after) {
