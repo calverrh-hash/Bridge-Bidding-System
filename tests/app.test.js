@@ -5,16 +5,28 @@
 const $ = sel => document.querySelector('#app ' + sel);
 const click = sel => { const b = $(sel); check(b, 'no button ' + sel); check(!b.disabled, 'disabled ' + sel); b.click(); };
 function resetApp() { localStorage.removeItem(KEY); DB = loadDB(); goHome(); }
-// Make the current call in the bidding box: the chart's answer, or `wrong` instead.
+const curStep = () => S.qs[S.order[S.pos]].steps[S.step];
+// Answer the current step: the chart's answer, or `wrong` instead. Number steps use the pad.
 function bid(wrong) {
-  const b = wrong || S.qs[S.order[S.pos]].steps[S.step].ans.bid;
-  if (/^\d/.test(b)) { click(`[data-lv="${b[0]}"]`); click(`[data-st="${ST.indexOf(b[1])}"]`); }
+  const st = curStep(), b = wrong || st.ans.bid;
+  if (st.kind === 'num') click(`[data-num="${b}"]`);
+  else if (/^\d/.test(b)) { click(`[data-lv="${b[0]}"]`); click(`[data-st="${ST.indexOf(b[1])}"]`); }
   else click(`[data-call="${b}"]`);
 }
-// A legal call that differs from the chart's answer.
+// An allowed answer that differs from the chart's.
 function wrongCall() {
-  const st = S.qs[S.order[S.pos]].steps[S.step];
+  const st = curStep();
+  if (st.kind === 'num') return st.opts.find(v => v !== st.ans.bid);
   return st.ans.bid === 'P' ? '7N' : 'P';
+}
+// Answer every step of the current hand (getting the first wrong if asked), stopping on the
+// last step's feedback.
+function playHand(wrongFirst) {
+  const q = S.qs[S.order[S.pos]];
+  for (let k = 0; k < q.steps.length; k++) {
+    bid(wrongFirst && k === 0 ? wrongCall() : null);
+    if (k < q.steps.length - 1) click('#next');
+  }
 }
 // Play every remaining call; missHands lists hand positions to get wrong.
 function playOut(missHands = []) {
@@ -63,7 +75,7 @@ test('regression: best score is saved even if you leave before "See results"', (
 test('app: progress resumes where you left off', () => {
   resetApp();
   click('[data-set="comp"]');
-  for (let i = 0; i < 3; i++) { bid(); click('#next'); }
+  for (let i = 0; i < 3; i++) { playHand(); click('#next'); }
   click('#back');
   check(/3 \/ 25 played/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home shows 3 played');
   click('[data-set="comp"]');
@@ -74,10 +86,10 @@ test('app: clicking a dot jumps to that hand; "next" goes to the next unplayed h
   click('[data-set="comp"]');
   click('[data-jump="9"]');
   same(S.pos, 9);
-  bid(); click('#next');
+  playHand(); click('#next');
   same(S.pos, 10, 'next unplayed after 9');
   click('[data-jump="24"]');
-  bid(); click('#next');
+  playHand(); click('#next');
   same(S.pos, 0, 'wraps round to the first unplayed hand');
 });
 test('app: playing hands out of order still finishes the set and saves the best score', () => {
@@ -93,18 +105,18 @@ test('app: "See results" appears only when no hand is left unplayed', () => {
   resetApp();
   click('[data-set="comp"]');
   click('[data-jump="24"]');
-  bid();
+  playHand();
   same($('#next').textContent, 'Next hand →');
 });
 test('app: a played hand can be bid again for practice; its first result stands', () => {
   resetApp();
   click('[data-set="comp"]');
-  bid(wrongCall()); click('#next');
+  playHand(true); click('#next');
   same(S.res[S.order[0]].ok, false);
   click(`[data-jump="${S.order[0]}"]`);
   same(S.pos, 0);
   check(/Practice/.test($('.lead').textContent), 'marked as practice');
-  bid();
+  playHand();
   check($('.fb.ok'), 'feedback is still shown');
   click('#next');
   same(S.res[S.order[0]].ok, false, 'first result stands');
@@ -114,12 +126,12 @@ test('app: a played hand can be bid again for practice; its first result stands'
 test('regression: bidding a missed hand again after seeing the answer does not raise the best score', () => {
   resetApp();
   click('[data-set="comp"]');
-  bid(wrongCall()); click('#next');   // miss the first hand
-  for (let guard = 0; guard < 100; guard++) { bid(); if (nextUnplayed() < 0) break; click('#next'); }
+  playHand(true); click('#next');   // miss the first hand
+  for (let guard = 0; guard < 100; guard++) { playHand(); if (nextUnplayed() < 0) break; click('#next'); }
   // Every hand is answered but "See results" has not been pressed, so the dots are still there.
   same(loadDB().best.comp, SET_SIZE - 1);
   click(`[data-jump="${S.order[0]}"]`);
-  bid();
+  playHand();
   same(loadDB().best.comp, SET_SIZE - 1, 'best score unchanged');
   same(countOk(S.order, S.res), SET_SIZE - 1, 'score unchanged');
 });
@@ -141,8 +153,8 @@ test('app: retry replays only the missed hands, then a fresh deal resets', () =>
 });
 test('app: damaged saved data is ignored, not fatal', () => {
   localStorage.setItem(KEY, '{not json');
-  same(loadDB(), { seed: {}, best: {}, prog: {} });
-  localStorage.setItem(KEY, JSON.stringify({ seed: 'x', best: [1], prog: { comp: { seed: 1, res: 'oops' } } }));
+  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false } });
+  localStorage.setItem(KEY, JSON.stringify({ seed: 'x', best: [1], prog: { comp: { seed: 1, res: 'oops' } }, opts: 'bad' }));
   DB = loadDB();
   same(seedOf('comp'), 1);
   same(progressFor('comp'), null);
@@ -170,7 +182,54 @@ test('app: every set opens and renders its first hand', () => {
     resetApp();
     click(`[data-set="${d.id}"]`);
     same(S.view, 'play', d.id);
-    check($('.hand') && $('.box'), d.id + ' shows hand and bidding box');
+    check($('.hand') && $('.box'), d.id + ' shows hand and the bidding box or number pad');
   }
+  resetApp();
+});
+test('app: the home screen does not deal the sets (so it opens quickly)', () => {
+  resetApp();
+  const real = window.getSet;
+  let calls = 0;
+  window.getSet = id => { calls++; return real(id); };
+  try { goHome(); } finally { window.getSet = real; }
+  same(calls, 0);
+});
+test('app: Mixed is listed last', () => {
+  resetApp();
+  const ids = [...document.querySelectorAll('#app .set')].map(b => b.dataset.set);
+  same(ids[ids.length - 1], 'mixed');
+});
+test('app: the Helvic switch changes the system and keeps separate progress', () => {
+  resetApp();
+  click('[data-set="our-nt"]');
+  playHand(); click('#next');
+  click('#back');
+  click('#m-helvic');
+  same(loadDB().opts.helvic, true);
+  check(/Playing Helvic Wriggle/.test($('[data-set="our-nt"]').textContent), 'card says Helvic');
+  check(/25 hands/.test($('[data-set="our-nt"]').textContent), 'Helvic progress starts empty');
+  click('[data-set="our-nt"]');
+  check(S.qs.some(q => q.steps.some(st => st.ans.ref === 'H')), 'Helvic hands are dealt');
+  click('#back');
+  click('#m-chart');
+  check(/1 \/ 25 played/.test($('[data-set="our-nt"]').textContent), 'chart progress kept');
+  resetApp();
+});
+test('app: LTC steps use the number pad, then the bidding box', () => {
+  resetApp();
+  click('[data-set="ltc"]');
+  check($('[data-num]') && !$('[data-lv]'), 'number pad first');
+  bid(); click('#next');
+  check($('[data-num]'), 'number pad for tricks');
+  bid();
+  const q = S.qs[S.order[S.pos]];
+  if (q.steps.length === 3) { click('#next'); check($('[data-lv]'), 'then the bidding box'); }
+  resetApp();
+});
+test('app: the whole hand shows the opponents\' calls in four-hand drills', () => {
+  resetApp();
+  click('[data-set="pen"]');
+  playHand();
+  check(/Opponents' calls/.test(app.textContent), 'opponents listed');
   resetApp();
 });

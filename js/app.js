@@ -1,13 +1,14 @@
-// The page: home screen, bidding box, feedback, results and saved progress.
+// The page: home screen, system switch, bidding box, number pad, feedback, results and saved progress.
 //
 // Everything is drawn by render() from the state object S:
 //   { view: 'home' }
-//   { view: 'play', id, qs, order, pos, step, cur, res, retry, practice, level, answered }
-//   { view: 'done', id, qs, order, res, retry }
+//   { view: 'play', id, key, qs, order, pos, step, cur, res, retry, practice, level, answered }
+//   { view: 'done', id, key, qs, order, res, retry }
 'use strict';
 
 // ---------- Saved progress (localStorage) ----------
-// DB = { seed: {setId: n}, best: {setId: score}, prog: {setId: {seed, sig, res}} }
+// DB = { seed: {key: n}, best: {key: score}, prog: {key: {seed, sig, res}}, opts: {helvic} }
+// key is the set id, plus '~helvic' for sets whose hands depend on the Helvic option.
 // res[i] is null until hand i is finished, then { bids, n, ok }.
 // The tests set window.BIDTRAINER_KEY so they never touch real saved progress.
 const KEY = window.BIDTRAINER_KEY || 'bidtrainer.v2';
@@ -17,19 +18,20 @@ const store = {
 };
 const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 function loadDB() {
-  const d = store.get();
-  return { seed: isObj(d.seed) ? d.seed : {}, best: isObj(d.best) ? d.best : {}, prog: isObj(d.prog) ? d.prog : {} };
+  const d = store.get(), o = (k) => isObj(d[k]) ? d[k] : {};
+  return { seed: o('seed'), best: o('best'), prog: o('prog'), opts: { helvic: o('opts').helvic === true } };
 }
 let DB = loadDB();
 const save = () => store.set(DB);
-const seedOf = id => Number.isInteger(DB.seed[id]) && DB.seed[id] > 0 ? DB.seed[id] : 1;
-const bestOf = id => Number.isInteger(DB.best[id]) ? DB.best[id] : null;
+const keyOf = id => { const d = SETS.find(x => x.id === id); return d && d.helvic && DB.opts.helvic ? id + '~helvic' : id; };
+const seedOf = key => Number.isInteger(DB.seed[key]) && DB.seed[key] > 0 ? DB.seed[key] : 1;
+const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 
 // ---------- Sets ----------
 const cache = {};
 function getSet(id) {
-  const seed = seedOf(id), k = id + '#' + seed;
-  if (!cache[k]) cache[k] = buildSet(SETS.find(d => d.id === id), seed);
+  const key = keyOf(id), seed = seedOf(key), k = key + '#' + seed;
+  if (!cache[k]) cache[k] = buildSet(SETS.find(d => d.id === id), seed, { helvic: DB.opts.helvic });
   return cache[k];
 }
 // A fingerprint of the dealt hands and answers. If the drills change, so does this,
@@ -40,18 +42,24 @@ function setSig(qs) {
   for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
   return String(h >>> 0);
 }
-// Saved progress for a set, or null if there is none or it belongs to other hands.
+// Saved progress for a set, or null if there is none or it belongs to other hands. Deals the set.
 function progressFor(id) {
-  const pr = DB.prog[id], qs = getSet(id);
-  if (!isObj(pr) || pr.seed !== seedOf(id) || pr.sig !== setSig(qs) || !Array.isArray(pr.res) || pr.res.length !== qs.length) return null;
+  const key = keyOf(id), pr = DB.prog[key], qs = getSet(id);
+  if (!isObj(pr) || pr.seed !== seedOf(key) || pr.sig !== setSig(qs) || !Array.isArray(pr.res) || pr.res.length !== qs.length) return null;
   return pr;
+}
+// Hands played, for the home screen. Cheap: it doesn't deal the set (progressFor checks it on opening).
+function playedCount(id) {
+  const key = keyOf(id), pr = DB.prog[key];
+  return isObj(pr) && pr.seed === seedOf(key) && Array.isArray(pr.res) ? pr.res.filter(Boolean).length : 0;
 }
 
 // ---------- Formatting ----------
 const REF = {
   A: 'Chart A · Responses to 1NT', B: 'Chart B · Responses to 1♥/♠', C: 'Chart C · Responses to 1♣/♦',
   D: "Chart D · Opener's rebid", E: 'Chart E · 2NT, 2♣, weak twos, pre-empts', F: 'Chart F · Competitive auctions',
-  G: 'Chart G · Slam tools', OB: 'Chart · Opening bids',
+  G: 'Chart G · Slam tools', H: 'Chart H · Support doubles, cue bids, Helvic, after a penalty double',
+  LTC: 'Chart G · Losing trick count', OB: 'Chart · Opening bids', GUIDE: 'Trainer guide (the chart is silent here)',
 };
 const SEATS = ['W', 'N', 'E', 'S'];
 const app = document.getElementById('app');
@@ -67,12 +75,14 @@ function fmt(b) {
   const s = ST.indexOf(b[1]);
   return b[0] + (s === 4 ? 'NT' : `<span class="${suitClass(s)}">${SY[s]}</span>`);
 }
+// An answer: a call, or a number for the LTC counting steps.
+const showA = (st, b) => st.kind === 'num' ? String(b) : fmt(b);
 const ok = r => !!(r && r.ok);
 const countOk = (order, res) => order.filter(j => ok(res[j])).length;
 
-function handHTML(h, showStats, label) {
+function handHTML(h, showStats, label, ltc) {
   const rows = [3, 2, 1, 0].map(s => `<div class="row"><span class="s ${suitClass(s)}">${SY[s]}</span><span class="cards">${h[s].length ? h[s].map(r => RANK[r] || r).join(' ') : '<span class="void">—</span>'}</span></div>`).join('');
-  const stats = showStats ? `<div class="stats"><span>${hcp(h)} HCP</span><span>Shape ${shapeStr(h)} (♠-♥-♦-♣)</span></div>` : '';
+  const stats = showStats ? `<div class="stats"><span>${hcp(h)} HCP</span><span>Shape ${shapeStr(h)} (♠-♥-♦-♣)</span>${ltc ? `<span>${losers(h)} losers</span>` : ''}</div>` : '';
   return `<div class="hand">${label ? `<span class="eyebrow">${label}</span>` : ''}${rows}${stats}</div>`;
 }
 // you: undefined = no extra cell, '?' = your turn, a call = your call.
@@ -94,41 +104,58 @@ function legal(dealer, calls) {
   return { min: lb ? bv(lb) : -1, x: !!last && /^\d/.test(last) && opp, xx: last === 'X' && opp };
 }
 function outcome(q) {
-  if (q.contract) return `Final contract: ${fmt(q.contract)}.`;
+  if (q.contract) return `Final contract: ${fmt(q.contract)}${q.cdbl === 'X' ? ' doubled' : q.cdbl === 'XX' ? ' redoubled' : ''}${q.ours === false ? ', played by the opponents' : ''}.`;
   if (!q.partner) return '';   // one-call competitive drill
   if (q.calls.length === 4 && q.calls.every(c => c === 'P')) return 'Nobody opens: the hand is passed out.';
   // The auction stopped early: say why (the chart allows more than one call, or has none).
   return `The drill ends here. ${q.stop ? q.stop.why : 'The chart has no next call.'}`;
 }
 const outHTML = q => { const o = outcome(q); return o ? `<p class="out">${o}</p>` : ''; };
+// For LTC hands: what both hands' real losers say, which neither player could see.
+function ltcLine(q) {
+  if (!q.ltc || !q.partner || !q.contract || q.ours === false) return '';
+  const s = ST.indexOf(q.contract[1]);
+  if (s > 3 || q.hand[s].length + q.partner[s].length < 8) return '';
+  const a = losers(q.hand), b = losers(q.partner), t = 24 - a - b, need = +q.contract[0] + 6;
+  return `<p class="ltcl"><b>Full-deal LTC:</b> you ${a} losers, partner ${b}. 24 − (${a} + ${b}) = ${t} tricks in ${SN[s]}; ${fmt(q.contract)} needs ${need}. ${t === need ? 'The auction found exactly the LTC level.' : `During the auction neither of you could see this: each counted your own losers and the losers the other had <i>shown</i>.`}</p>`;
+}
+const callsHTML = (title, list) => list.length ? `<div class="pcalls"><span class="eyebrow">${title}</span>${list.map(x => `<p><b>${x.who ? x.who + ' ' : ''}${fmt(x.call)}</b> ${rich(x.why)}</p>`).join('')}</div>` : '';
 
 // ---------- Views ----------
 function home() {
-  const cards = SETS.map(d => {
-    const qs = getSet(d.id), pr = progressFor(d.id), size = qs.length;
-    const done = pr ? pr.res.filter(Boolean).length : 0, best = bestOf(d.id);
-    return `<button class="set" data-set="${d.id}"><div class="set-top"><h3>${rich(d.name)}</h3><span class="chip">${rich(d.refs)}</span></div><p>${rich(d.blurb)}</p>
-    <div class="meter"><i style="width:${size ? done / size * 100 : 0}%"></i></div><div class="set-foot"><span>${done ? `${done} / ${size} played` : `${size} hands`}</span><span>${best != null ? `Best ${best}/${size}` : 'Not finished yet'}</span></div></button>`;
+  const sets = [...SETS].sort((a, b) => (a.last ? 1 : 0) - (b.last ? 1 : 0));
+  const cards = sets.map(d => {
+    const key = keyOf(d.id), done = playedCount(d.id), best = bestOf(key), size = SET_SIZE;
+    const sys = d.helvic ? ` <b>${DB.opts.helvic ? 'Playing Helvic Wriggle.' : 'Playing the chart system.'}</b>` : '';
+    return `<button class="set" data-set="${d.id}"><div class="set-top"><h3>${rich(d.name)}</h3><span class="chip">${rich(d.refs)}</span></div><p>${rich(d.blurb)}${sys}</p>
+    <div class="meter"><i style="width:${done / size * 100}%"></i></div><div class="set-foot"><span>${done ? `${done} / ${size} played` : `${size} hands`}</span><span>${best != null ? `Best ${best}/${size}` : 'Not finished yet'}</span></div></button>`;
   }).join('');
-  app.innerHTML = `<div class="intro"><span class="eyebrow">5-card majors · strong NT</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart.</p></div><div class="sets">${cards}</div>`;
+  const hv = DB.opts.helvic;
+  app.innerHTML = `<div class="intro"><span class="eyebrow">5-card majors · strong NT</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart. In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.</p></div>
+    <div class="sys"><div><span class="eyebrow">When our 1NT is doubled</span><p>${hv ? 'Helvic Wriggle: pass = values or a wriggle (partner redoubles), XX = weak one-suiter (partner bids 2♣), 2♣/2♦/2♥ = that suit and the next one up.' : 'Chart: 2♦/2♥/2♠ natural sign-off (transfers off), redouble with 7+.'}</p></div>
+    <div class="seg" role="group" aria-label="System when our 1NT is doubled"><button id="m-chart" class="${hv ? '' : 'on'}" aria-pressed="${!hv}">Chart</button><button id="m-helvic" class="${hv ? 'on' : ''}" aria-pressed="${hv}">Helvic</button></div></div>
+    <div class="sets">${cards}</div>`;
   app.querySelectorAll('.set').forEach(b => b.onclick = () => start(b.dataset.set));
+  const mode = helvic => { DB.opts.helvic = helvic; save(); render(); };
+  document.getElementById('m-chart').onclick = () => mode(false);
+  document.getElementById('m-helvic').onclick = () => mode(true);
 }
 
 // Start or resume a set. With `order` (a list of hand indexes), replay just those hands.
 function start(id, order) {
-  const qs = getSet(id), seed = seedOf(id), size = qs.length;
+  const qs = getSet(id), key = keyOf(id), seed = seedOf(key), size = qs.length;
   if (!size) throw new Error(`Drill "${id}" dealt no hands.`);
   let pr = progressFor(id);
-  if (!pr) { pr = { seed, sig: setSig(qs), res: Array(size).fill(null) }; DB.prog[id] = pr; }
+  if (!pr) { pr = { seed, sig: setSig(qs), res: Array(size).fill(null) }; DB.prog[key] = pr; }
   const ord = order || [...Array(size).keys()];
   const pos = order ? 0 : ord.findIndex(i => !pr.res[i]);
-  if (pos < 0) { S = { view: 'done', id, qs, order: ord, res: pr.res, retry: false }; return render(); }
-  S = { view: 'play', id, qs, order: ord, pos, step: 0, cur: [], res: order ? Array(size).fill(null) : pr.res, retry: !!order, practice: false, level: null, answered: null };
+  if (pos < 0) { S = { view: 'done', id, key, qs, order: ord, res: pr.res, retry: false }; return render(); }
+  S = { view: 'play', id, key, qs, order: ord, pos, step: 0, cur: [], res: order ? Array(size).fill(null) : pr.res, retry: !!order, practice: false, level: null, answered: null };
   render();
 }
 
 function play() {
-  const i = S.order[S.pos], q = S.qs[i], d = SETS.find(x => x.id === S.id), st = q.steps[S.step], last = S.step === q.steps.length - 1;
+  const i = S.order[S.pos], q = S.qs[i], d = SETS.find(x => x.id === S.id), st = q.steps[S.step], last = S.step === q.steps.length - 1, num = st.kind === 'num';
   const nOk = countOk(S.order, S.res);
   // One dot per hand; click a dot to jump to that hand.
   const dots = S.retry ? '' : `<div class="dots" style="grid-template-columns:repeat(${S.qs.length},1fr)">${S.qs.map((_, j) => {
@@ -136,23 +163,27 @@ function play() {
     const label = `Hand ${j + 1}: ${j === i ? 'this hand' : r ? (r.ok ? 'correct; bid it again for practice' : 'missed; bid it again for practice') : 'not played'}`;
     return `<button class="dot ${cls}" data-jump="${j}" title="${label}" aria-label="${label}"${j === i ? ' aria-current="true"' : ''}></button>`;
   }).join('')}</div>`;
-  const pips = q.steps.length > 1 ? `<div class="pips">${q.steps.map((_, k) => `<i class="${k < S.step ? (S.cur[k] === q.steps[k].ans.bid ? 'ok' : 'no') : k === S.step ? (S.answered ? (S.answered === st.ans.bid ? 'ok' : 'no') : 'cur') : ''}"></i>`).join('')}<span>Call ${S.step + 1} of ${q.steps.length}</span></div>` : '';
-  const prevWrong = S.step > 0 && S.cur[S.step - 1] !== q.steps[S.step - 1].ans.bid;
+  const word = q.steps.some(x => x.kind === 'num') ? 'Step' : 'Call';
+  const pips = q.steps.length > 1 ? `<div class="pips">${q.steps.map((_, k) => `<i class="${k < S.step ? (S.cur[k] === q.steps[k].ans.bid ? 'ok' : 'no') : k === S.step ? (S.answered ? (S.answered === st.ans.bid ? 'ok' : 'no') : 'cur') : ''}"></i>`).join('')}<span>${word} ${S.step + 1} of ${q.steps.length}</span></div>` : '';
+  const prevWrong = S.step > 0 && q.steps[S.step - 1].kind !== 'num' && S.cur[S.step - 1] !== q.steps[S.step - 1].ans.bid;
   let lower;
   if (S.answered) {
-    // Feedback on the call just made, and on the last call the whole hand.
+    // Feedback on the answer just given, and on the last step the whole hand.
     const a = st.ans, good = S.answered === a.bid;
     let fin = '';
     if (last) {
-      const pc = q.pn.filter(x => !x.auto);
-      fin = `<div class="reveal"><span class="eyebrow">The whole hand</span>${auctionHTML(q.dealer, q.calls)}${outHTML(q)}
-        ${q.partner ? handHTML(q.partner, true, "Partner's hand") : ''}
-        ${pc.length ? `<div class="pcalls"><span class="eyebrow">Partner's calls</span>${pc.map(x => `<p><b>${fmt(x.call)}</b> ${rich(x.why)}</p>`).join('')}</div>` : ''}</div>`;
+      const pc = q.pn.filter(x => !x.auto), oc = (q.on || []).map(x => ({ ...x, who: x.seat === 'W' ? 'LHO' : 'RHO' }));
+      fin = `<div class="reveal"><span class="eyebrow">The whole hand</span>${auctionHTML(q.dealer, q.calls)}${outHTML(q)}${ltcLine(q)}
+        ${q.partner ? handHTML(q.partner, true, "Partner's hand", q.ltc) : ''}
+        ${callsHTML("Partner's calls", pc)}${callsHTML("Opponents' calls", oc)}</div>`;
     }
-    const nextLabel = !last ? 'Continue the auction →' : nextUnplayed() < 0 ? 'See results' : 'Next hand →';
-    lower = `<div class="fb ${good ? 'ok' : 'no'}" role="status"><div class="verdict">${good ? 'Correct' : `Chart says ${fmt(a.bid)}`}</div>
-      ${good ? '' : `<p>You bid ${fmt(S.answered)}.${last ? '' : ' The auction continues with the chart call.'}</p>`}<p>${rich(a.why)}</p><span class="ref">${rich(REF[a.ref] || '')}</span></div>
+    const nextLabel = !last ? (num ? 'Next step →' : 'Continue the auction →') : nextUnplayed() < 0 ? 'See results' : 'Next hand →';
+    lower = `<div class="fb ${good ? 'ok' : 'no'}" role="status"><div class="verdict">${good ? 'Correct' : num ? `It's ${a.bid}` : `Chart says ${fmt(a.bid)}`}</div>
+      ${good ? '' : `<p>You ${num ? 'said' : 'bid'} ${showA(st, S.answered)}.${last || num ? '' : ' The auction continues with the chart call.'}</p>`}<p>${rich(a.why)}</p><span class="ref">${rich(REF[a.ref] || '')}</span></div>
       ${fin}<div class="actions"><button class="primary" id="next">${nextLabel}</button></div>`;
+  } else if (num) {
+    // The number pad, for counting losers and tricks.
+    lower = `<div class="box"><div class="brow np">${st.opts.map(v => `<button class="bc" data-num="${v}">${v}</button>`).join('')}</div><p class="hint">${st.opts[0] === '0' ? 'Losers in your hand' : 'Tricks LTC predicts'}</p></div>`;
   } else {
     // The bidding box: pick a level, then a strain; or Pass / X / XX.
     const lg = legal(q.dealer, st.calls), lv = S.level;
@@ -167,12 +198,13 @@ function play() {
   }
   app.innerHTML = `<div class="bar"><button class="back" id="back">‹ All drills</button><span class="count">Hand ${S.pos + 1} / ${S.order.length} · ${nOk} correct</span></div>
     ${dots}<div class="lead"><span class="eyebrow">${S.retry ? 'Retrying misses · ' : S.practice ? 'Practice: the first result stands · ' : ''}${rich(d.name)}</span>${pips}<p class="note">${rich(st.note)}${prevWrong ? ' <span class="muted">(The auction went on with the chart call.)</span>' : ''}</p></div>
-    ${auctionHTML(q.dealer, st.calls, S.answered || '?')}${handHTML(q.hand, !!S.answered)}${lower}`;
+    ${auctionHTML(q.dealer, st.calls, num ? '?' : S.answered || '?')}${handHTML(q.hand, !!S.answered, '', q.ltc && !!S.answered)}${lower}`;
   document.getElementById('back').onclick = goHome;
   app.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => jumpTo(+b.dataset.jump));
   app.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { S.level = +b.dataset.lv; render(); });
   app.querySelectorAll('[data-st]').forEach(b => b.onclick = () => answer(S.level + ST[+b.dataset.st]));
   app.querySelectorAll('[data-call]').forEach(b => b.onclick = () => answer(b.dataset.call));
+  app.querySelectorAll('[data-num]').forEach(b => b.onclick = () => answer(b.dataset.num));
   const nx = document.getElementById('next');
   if (nx) { nx.onclick = next; nx.focus({ preventScroll: true }); }
 }
@@ -190,7 +222,7 @@ function answer(b) {
     if (!S.retry) {
       // Record the best score as soon as the last hand is answered, even if the
       // user leaves before pressing "See results".
-      if (S.res.every(Boolean)) DB.best[S.id] = Math.max(bestOf(S.id) || 0, countOk(S.order, S.res));
+      if (S.res.every(Boolean)) DB.best[S.key] = Math.max(bestOf(S.key) || 0, countOk(S.order, S.res));
       save();
     }
   }
@@ -237,21 +269,21 @@ function done() {
   const rows = S.order.map(j => {
     const q = S.qs[j], r = S.res[j], good = ok(r);
     const stepRows = q.steps.map((st, k) => {
-      const yb = r && r.bids[k], g = yb === st.ans.bid;
-      return `<div class="srow"><span class="mk ${g ? 'ok' : 'no'}">${g ? '✓' : '✗'}</span><div><b>${fmt(st.ans.bid)}</b>${g ? '' : ` <span class="muted">(you: ${yb ? fmt(yb) : '—'})</span>`} ${rich(st.ans.why)}</div></div>`;
+      const yb = r && r.bids[k], g = yb === st.ans.bid, lbl = st.kind === 'num' ? (st.opts[0] === '0' ? 'Losers: ' : 'Tricks: ') : '';
+      return `<div class="srow"><span class="mk ${g ? 'ok' : 'no'}">${g ? '✓' : '✗'}</span><div><b>${lbl}${showA(st, st.ans.bid)}</b>${g ? '' : ` <span class="muted">(you: ${yb ? showA(st, yb) : '—'})</span>`} ${rich(st.ans.why)}</div></div>`;
     }).join('');
-    return `<details><summary><span class="mk ${good ? 'ok' : 'no'}">${good ? '✓' : '✗'}</span><span class="sm">${rich(q.steps[0].note)}</span><span class="cmp">${r ? r.n : 0}/${q.steps.length} calls</span></summary>
-    <div class="det">${auctionHTML(q.dealer, q.calls)}${outHTML(q)}<div class="pair">${handHTML(q.hand, true, 'Your hand')}${q.partner ? handHTML(q.partner, true, "Partner's hand") : ''}</div>${stepRows}</div></details>`;
+    return `<details><summary><span class="mk ${good ? 'ok' : 'no'}">${good ? '✓' : '✗'}</span><span class="sm">${rich(q.steps[0].note)}</span><span class="cmp">${r ? r.n : 0}/${q.steps.length}</span></summary>
+    <div class="det">${auctionHTML(q.dealer, q.calls)}${outHTML(q)}${ltcLine(q)}<div class="pair">${handHTML(q.hand, true, 'Your hand', q.ltc)}${q.partner ? handHTML(q.partner, true, "Partner's hand", q.ltc) : ''}</div>${stepRows}</div></details>`;
   }).join('');
-  app.innerHTML = `<div class="bar"><button class="back" id="back">‹ All drills</button><span class="count">${S.retry ? 'Retry' : `Best ${bestOf(S.id) ?? sc}/${size}`}</span></div>
+  app.innerHTML = `<div class="bar"><button class="back" id="back">‹ All drills</button><span class="count">${S.retry ? 'Retry' : `Best ${bestOf(S.key) ?? sc}/${size}`}</span></div>
     <div class="intro"><span class="eyebrow">${rich(d.name)}</span><div class="score">${sc}<span class="muted" style="font-size:24px"> / ${S.order.length} hands</span></div>
-    <p class="muted">${callsOk} of ${calls} calls matched the chart. ${miss.length ? `${miss.length} hands to review. Tap one to see both hands and every call.` : 'Every hand was bid perfectly.'}</p></div>
+    <p class="muted">${callsOk} of ${calls} answers matched the chart. ${miss.length ? `${miss.length} hands to review. Tap one to see both hands and every call.` : 'Every hand was bid perfectly.'}</p></div>
     <div class="actions">${miss.length ? '<button class="primary" id="retry">Retry the hands I missed</button>' : ''}<button class="ghost" id="fresh">Deal ${size} new hands</button></div>
     <div class="review">${rows}</div>`;
   document.getElementById('back').onclick = goHome;
   const rt = document.getElementById('retry');
   if (rt) rt.onclick = () => start(S.id, miss);
-  document.getElementById('fresh').onclick = () => { DB.seed[S.id] = seedOf(S.id) + 1; delete DB.prog[S.id]; save(); start(S.id); };
+  document.getElementById('fresh').onclick = () => { DB.seed[S.key] = seedOf(S.key) + 1; delete DB.prog[S.key]; save(); start(S.id); };
 }
 
 function goHome() { S = { view: 'home' }; render(); }
@@ -263,7 +295,7 @@ function crashed(e) {
     <div class="actions"><button class="primary" id="home">Back to the drills</button><button class="ghost" id="reset">Reset saved progress</button></div>
     <p class="muted"><small>${String(e && e.message || e).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</small></p>`;
   document.getElementById('home').onclick = goHome;
-  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {} }; save(); goHome(); };
+  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false } }; save(); goHome(); };
 }
 
 function render() {

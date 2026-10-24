@@ -15,6 +15,8 @@ const RANK = { 14: 'A', 13: 'K', 12: 'Q', 11: 'J', 10: '10' };
 // Suit lengths as words for explanations: NUM[6] = 'six', Num(6) = 'Six'.
 const NUM = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen'];
 const Num = n => NUM[n][0].toUpperCase() + NUM[n].slice(1);
+// 'one club', 'two clubs', 'no clubs'
+const cardsOf = (n, s) => `${NUM[n]} ${n === 1 ? SN[s].slice(0, -1) : SN[s]}`;
 
 // ---------- Random numbers ----------
 // Seeded generator, so the same seed always deals the same 25 hands.
@@ -55,6 +57,10 @@ function cheapest(s, after) {
   const al = +after[0], as = ST.indexOf(after[1]);
   return s > as ? al : al + 1;
 }
+// The last bid (not pass or double) in a list of calls, or undefined.
+const lastBid = calls => [...calls].reverse().find(c => /^\d/.test(c));
+// Cheapest level for strain s after the calls so far.
+const cheapIn = (s, calls) => { const lb = lastBid(calls); return lb ? cheapest(s, lb) : 1; };
 
 // ---------- Hand evaluation ----------
 const hcp = h => h.reduce((a, s) => a + s.reduce((b, r) => b + (r > 10 ? r - 10 : 0), 0), 0);
@@ -73,6 +79,25 @@ const stop = (h, s) => {
 };
 // A good suit: two of the top four honours.
 const good = (h, s) => [14, 13, 12, 11].filter(r => has(h, s, r)).length >= 2;
+// Longest suit, the higher-ranking one if tied; suits in excl are skipped.
+function longest(h, excl) {
+  let b = -1;
+  for (let s = 3; s >= 0; s--) {
+    if (excl && excl.includes(s)) continue;
+    if (b < 0 || h[s].length > h[b].length) b = s;
+  }
+  return b;
+}
+// Losing Trick Count: in each suit, the missing A, K and Q among your top three cards
+// (top two in a doubleton, top one in a singleton).
+function suitLosers(s) {
+  const n = s.length;
+  if (!n) return 0;
+  return [14, 13, 12].slice(0, Math.min(n, 3)).filter(r => !s.includes(r)).length;
+}
+const losers = h => h.reduce((a, s) => a + suitLosers(s), 0);
+// '♠AK52 1 · ♥Q3 2 · ♦void 0 · ♣J9742 3'
+const loserBreak = h => [3, 2, 1, 0].map(s => `${SY[s]}${h[s].length ? h[s].map(r => RANK[r] || r).join('') : 'void'} ${suitLosers(h[s])}`).join(' · ');
 
 // ---------- Dealing ----------
 // Random suit lengths that add to 13. spec is [[min,max] x 4]; null if none found.
@@ -111,6 +136,13 @@ function deal(rng, lens, lo, hi) {
     if (p >= lo && p <= hi) return h;
   }
   return null;
+}
+// All the cards of several hands together, suit by suit.
+const merge = (...hs) => [0, 1, 2, 3].map(s => hs.flatMap(h => h[s]));
+// The 13 cards left over once three hands are dealt (the fourth hand).
+function restHand(...hs) {
+  const u = merge(...hs);
+  return [0, 1, 2, 3].map(s => [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2].filter(r => !u[s].includes(r)));
 }
 // Deal a second hand from the cards not in `used`.
 // spec is a length spec or 'bal'; ok is an optional extra test on the hand.

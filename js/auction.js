@@ -33,16 +33,34 @@ function nt2(seq, h, pm) {
     if (r === '3D' || r === '3H') {
       const M = r === '3D' ? 2 : 3;
       if (p <= pm) return R('P', `${p} HCP: pass the completion.`, 'E.2nt-transfer-continue');
-      return R(B(4, M), `${p} HCP: raise to 4${SY[M]}.`, 'E.2nt-transfer-continue');
+      if (choice2N(h, M)) return R('3N', `${p} HCP with exactly five ${SN[M]} and no singleton: 3NT offers a choice of games. Partner passes with two ${SN[M]}, or bids 4${SY[M]} with three or more.`, 'E.2nt-transfer-choice');
+      return R(B(4, M), `${p} HCP${l[M] >= 6 ? ` with ${l[M]} ${SN[M]}` : ' with a singleton or void'}: the major is the right game, so raise to 4${SY[M]}.`, 'E.2nt-transfer-continue');
     }
     if (r === '4D' || r === '4H') return R('P', 'Texas was a sign-off: pass.', 'E.2nt-texas-pass');
     return gap('The chart has no continuation here.');
   }
   if (n === 4) {
     const a = seq[3];
+    if ((r === '3D' || r === '3H') && a === '3N') {
+      const M = r === '3D' ? 2 : 3;
+      return l[M] >= 3 ? R(B(4, M), `Partner's 3NT shows exactly five ${SN[M]} and offers a choice. With ${l[M]} ${SN[M]}, correct to 4${SY[M]}.`, 'E.2nt-choice-answer')
+        : R('P', `Partner's 3NT shows five ${SN[M]} and offers a choice. With only ${l[M]}, pass 3NT.`, 'E.2nt-choice-answer');
+    }
     if (a === '3N' || /^4[HS]$/.test(a)) return AP('Partner chose the contract.');
   }
+  if (n === 5 && /^4[HS]$/.test(seq[4])) return AP('Partner chose the contract.');   // corrected the 3NT choice
   return gap('The chart has no further calls in this 2NT auction.');
+}
+
+// Everything after 4NT RKCB with trumps T: replies, the decision, 5NT for kings, the grand.
+// strong: partner opened 2NT or 2♣, so an unclear reply is read high.
+function afterRKCB(seq, h, T, strong) {
+  const i4 = seq.indexOf('4N'), k = seq.length - 1 - i4;
+  if (k === 0) return rkReply(h, T);
+  if (k === 1) return askDecide(h, T, seq[i4 + 1], strong);
+  if (k === 2) return seq[i4 + 2] === '5N' ? kingReply(h, T) : AP('Partner placed the contract after RKCB.');
+  if (k === 3 && seq[i4 + 2] === '5N') return grandDecide(h, T, seq[i4 + 3]);
+  return AP('The contract is set.');
 }
 
 // ---------- One function per opening bid ----------
@@ -115,34 +133,95 @@ function after1NT(seq, h) {
 }
 
 function after2C(seq, h) {
-  const n = seq.length;
+  const n = seq.length, l = L(h), x = seq[2];
   if (n === 1) return over2C(h);
   if (seq[1] !== '2D') return gap('The chart has no continuation after a positive response to 2♣.');
   if (n === 2) return twoClubRebid(h);
-  if (seq[2] === '2N') return nt2(seq.slice(2), h, 1);
-  if (n === 3 && seq[2] === '3N') return AP('Partner bid game.');
+  if (x === '2N') return nt2(seq.slice(2), h, 1);
+  if (n === 3 && x === '3N') return AP('Partner bid game.');
+  // The chart stops after opener's suit rebid; this continuation is a trainer guide.
+  if (n === 3 && /^(2[HS]|3[CD])$/.test(x)) {
+    const s = ST.indexOf(x[1]);
+    if (s >= 2 && l[s] >= 3) return R(B(4, s), `Partner's ${plain(x)} shows 5+ ${SN[s]} and 2♣ forced to game. With ${l[s]} ${SN[s]} and a weak hand, raise to game: 4${SY[s]}.`, 'GUIDE.2c-rebid-answer');
+    return R('3N', `Partner's ${plain(x)} shows 5+ ${SN[s]} and 2♣ forced to game. ${s >= 2 ? `With only ${cardsOf(l[s], s)}, bid 3NT.` : 'A minor-suit game needs eleven tricks, so bid 3NT.'}`, 'GUIDE.2c-rebid-answer');
+  }
+  if (n === 4 && gameBid(seq[3])) return AP('Partner chose the game.');
   return gap('The chart has no continuation after this 2♣ rebid.');
 }
 
 function afterWeakTwo(seq, h) {
-  const n = seq.length, M = ST.indexOf(seq[0][1]), r = seq[1];
+  const n = seq.length, p = hcp(h), M = ST.indexOf(seq[0][1]), t = L(h)[M], r = seq[1];
   if (n === 1) return wtResp(h, M);
   if (n === 2) {
     if (r === '2N') return wtAns(h, M);
     if (r === B(3, M) || r === B(4, M)) return AP('Partner raised: pass.');
+    return gap('The chart has no further calls after a weak two here.');
   }
+  // Responder after the answer to the 2NT ask. The chart stops here; trainer guides.
+  if (n === 3 && r === '2N') {
+    const a = seq[2], game = t >= 2 ? B(4, M) : '3N', where = t >= 2 ? `with ${t} ${SN[M]} the major is the game: ${plain(game)}` : `with only ${t} ${SN[M]}, ${plain(game)}`;
+    if (a === '3N') return R('P', `Opener's 3NT shows a solid AKQ suit: that's the contract. Pass.`, 'GUIDE.weak-two-after-ask');
+    if (a === B(3, M)) return p >= 17 ? R(game, `Opener's 3${SY[M]} shows a minimum or no feature. With ${p} (17+) there's still game; ${where}.`, 'GUIDE.weak-two-after-ask') : R('P', `Opener's 3${SY[M]} shows a minimum or no feature. With ${p} (14-16) game is unlikely: pass.`, 'GUIDE.weak-two-after-ask');
+    return R(game, `Opener's ${plain(a)} shows a feature and a maximum (8-10), so bid game; ${where}.`, 'GUIDE.weak-two-after-ask');
+  }
+  if (n === 4 && gameBid(seq[3])) return AP('Partner chose the game.');
   return gap('The chart has no further calls after a weak two here.');
 }
 
+// Responder to a 3-level or 4-level pre-empt (chart E): change suit only if longer;
+// with 3-4 top honours raise to game. Read here as 3+ aces and kings.
+function afterPreempt(seq, h) {
+  const n = seq.length, l = L(h), s = ST.indexOf(seq[0][1]), lv = +seq[0][0];
+  if (n === 1) {
+    const top = [0, 1, 2, 3].reduce((a, t) => a + (has(h, t, 14) ? 1 : 0) + (has(h, t, 13) ? 1 : 0), 0);
+    if (l.some((n2, t) => t !== s && n2 >= lv + 5)) return gap('With a longer suit of your own, the chart says change suit, but not at what level.');
+    if (top >= 3) return lv === 3 && s >= 2 ? R(B(4, s), `Partner's ${plain(seq[0])} is a pre-empt (7-card suit, 0-10). With ${top} aces and kings, raise to game: 4${SY[s]}.`, 'E.preempt-raise')
+      : gap('With 3+ top honours opposite a minor or 4-level pre-empt, the chart does not say which game.');
+    return R('P', `Partner's ${plain(seq[0])} is a pre-empt (${lv + 4}-card suit, 0-10). You hold ${top === 0 ? 'no' : `only ${top}`} of the top honours (aces and kings) and no longer suit: pass.`, 'E.preempt-pass');
+  }
+  if (n === 2 && gameBid(seq[1])) return AP('Partner raised to game.');
+  return gap('The chart has no further calls after a pre-empt.');
+}
+
+// The suit agreed when responder's suit (seq[1]) was raised by opener (seq[2]); else -1.
+function raisedSuit(seq) {
+  const r = seq[1], x = seq[2];
+  if (!x || !/^\d[CDHS]$/.test(r) || !/^\d/.test(x)) return -1;
+  return x[1] === r[1] && x !== r ? ST.indexOf(r[1]) : -1;
+}
+// Opener's answer when responder invites after opener's 1NT rebid (2NT) or simple raise (3M).
+// The chart doesn't say; by analogy with chart C, accept with 13-14 (trainer guide).
+function openerAfterInvite(h, seq) {
+  const p = hcp(h), x = seq[2], a = seq[3], rs = raisedSuit(seq);
+  if (x === '1N' && a === '2N') return p >= 13 ? R('3N', `Partner's 2NT invites opposite your 12-14. With ${p} (13-14), accept: 3NT.`, 'GUIDE.invite-answer') : R('P', `Partner's 2NT invites opposite your 12-14. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
+  if (rs >= 2 && +x[0] === 2 && a === B(3, rs)) return p >= 13 ? R(B(4, rs), `Partner's 3${SY[rs]} invites opposite your simple raise (11-14). With ${p} (13-14), accept: 4${SY[rs]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[rs]} invites opposite your simple raise (11-14). With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
+  return undefined;
+}
+// Opener passes once responder has bid a game.
+const gameBid = a => /^(3N|4[HS]|5[CD])$/.test(a);
+// Responder gave preference to opener's first suit at the 2-level after a minimum rebid.
+const preference = seq => seq[3] && seq[3][1] === seq[0][1] && +seq[3][0] === 2 && seq[2][1] !== seq[0][1];
+
 function after1Major(seq, h) {
   const n = seq.length, p = hcp(h), M = ST.indexOf(seq[0][1]), r = seq[1];
+  if (seq.includes('4N')) return afterRKCB(seq, h, raisedSuit(seq) >= 0 ? raisedSuit(seq) : M);
   if (n === 1) return r1M(h, M);
   if (n === 2) {   // opener's rebid
     if (r === B(2, M)) return p <= 15 ? R('P', `Partner's 2${SY[M]} shows 6-9 with 3 trumps. With ${p} (11-15), pass.`, 'B.after-raise') : p <= 18 ? R(B(3, M), `Partner's 2${SY[M]} shows 6-9. With ${p} (16-18), try for game with 3${SY[M]}.`, 'B.after-raise') : R(B(4, M), `Partner's 2${SY[M]} shows 6-9. With ${p} (19+), bid 4${SY[M]}.`, 'B.after-raise');
-    if (r === B(3, M)) return p >= 15 ? R(B(4, M), `Partner's 3${SY[M]} shows 10-12. With ${p} (15+), bid 4${SY[M]}.`, 'B.after-limit-raise') : p <= 12 ? R('P', `Partner's 3${SY[M]} shows 10-12. With ${p} (11-12), pass.`, 'B.after-limit-raise') : gap('With 13-14 opposite a limit raise, the chart gives no call.');
+    if (r === B(3, M)) {
+      const s = slamTry(h, M, 10, `Partner's limit raise (10-12)`);
+      if (s) return s;
+      if (p >= 15) return R(B(4, M), `Partner's 3${SY[M]} shows 10-12. With ${p} (15+), bid 4${SY[M]}.`, 'B.after-limit-raise');
+      if (p <= 12) return R('P', `Partner's 3${SY[M]} shows 10-12. With ${p} (11-12), pass.`, 'B.after-limit-raise');
+      return ltcLimit(h, M);
+    }
     if (r === '3D') return p <= 15 ? R(B(3, M), `Partner's 3♦ shows 4+ trumps, 7-9. With ${p} (11-15), sign off in 3${SY[M]}.`, 'B.after-bergen') : R(B(4, M), `Partner's 3♦ shows 4+ trumps, 7-9. With ${p} (16+), bid 4${SY[M]}.`, 'B.after-bergen');
-    if (r === '3C') return p <= 13 ? R(B(3, M), `Partner's 3♣ shows 4+ trumps, 10-12. With ${p} (11-13), sign off in 3${SY[M]}.`, 'B.after-bergen') : R(B(4, M), `Partner's 3♣ shows 4+ trumps, 10-12. With ${p} (14+), bid 4${SY[M]}.`, 'B.after-bergen');
-    if (r === '2N') return jac(h, M);
+    if (r === '3C') return slamTry(h, M, 10, `Partner's 3♣ raise (10-12)`) || (p <= 13 ? R(B(3, M), `Partner's 3♣ shows 4+ trumps, 10-12. With ${p} (11-13), sign off in 3${SY[M]}.`, 'B.after-bergen') : R(B(4, M), `Partner's 3♣ shows 4+ trumps, 10-12. With ${p} (14+), bid 4${SY[M]}.`, 'B.after-bergen'));
+    if (r === '2N') {
+      // 18+ with 2+ key cards: 4NT at once (chart B). 18 + Jacoby's 13 = 31.
+      if (p >= 18 && kcList(h, M).length >= 2) return slamTry(h, M, 13, `Partner's Jacoby 2NT (13+)`);
+      return jac(h, M);
+    }
     if (r === B(4, M)) return AP('Partner\'s weak 4-level raise is to play.');
     if (r === '1N') return gap('The chart gives opener no rebid after a 1NT response.');
     return rebid(h, M, ST.indexOf(r[1]), +r[0]);
@@ -158,18 +237,19 @@ function after1Major(seq, h) {
     return respAfterRebid(h, seq);
   }
   if (n === 4) {
-    const a = seq[3];
-    if (r === '2N' && a === '4N') return rkReply(h, M);
-    if (a === B(4, M) || a === '3N' || (/^4[HS]$/.test(a) && a[1] === r[1])) return AP('Partner bid game.');
+    const a = seq[3], inv = openerAfterInvite(h, seq);
+    if (preference(seq)) return AP('Partner gave preference to your first suit: pass.');
+    if (inv !== undefined) return inv;
+    if (gameBid(a)) return AP('Partner bid game.');
     return gap('The chart has no further calls in this auction.');
   }
-  if (n === 5 && r === '2N' && seq[3] === '4N') return askDecide(h, M, seq[4]);
-  if (n === 6 && r === '2N' && (seq[5] === B(5, M) || seq[5] === B(6, M))) return AP('Partner signed off after RKCB.');
+  if (n === 5 && gameBid(seq[4])) return AP('Partner accepted the invitation.');
   return gap('The chart has no further calls in this auction.');
 }
 
 function after1Minor(seq, h) {
   const n = seq.length, p = hcp(h), m = ST.indexOf(seq[0][1]), r = seq[1];
+  if (seq.includes('4N')) { const T = raisedSuit(seq); return T >= 0 ? afterRKCB(seq, h, T) : gap('The chart has no 4NT here.'); }
   if (n === 1) return r1m(h, m);
   if (n === 2) {   // opener's rebid
     if (r === '1N') return isBal(h) && p >= 18 && p <= 19 ? R('2N', `Balanced 18-19 after partner's 1NT: 2NT.`, 'C.after-1nt') : gap('After a 1NT response, the chart gives opener a call only with balanced 18-19.');
@@ -188,9 +268,12 @@ function after1Minor(seq, h) {
     return respAfterRebid(h, seq);
   }
   if (n === 4) {
-    const a = seq[3];
-    if (a === '3N' || /^4[HS]$/.test(a)) return AP('Partner bid game.');
+    const a = seq[3], inv = openerAfterInvite(h, seq);
+    if (preference(seq)) return AP('Partner gave preference to your first suit: pass.');
+    if (inv !== undefined) return inv;
+    if (gameBid(a)) return AP('Partner bid game.');
   }
+  if (n === 5 && gameBid(seq[4])) return AP('Partner accepted the invitation.');
   return gap('The chart has no further calls in this auction.');
 }
 
@@ -214,6 +297,7 @@ function sysCall(seq, h) {
   if (o === '2H' || o === '2S') return afterWeakTwo(seq, h);
   if (o === '1H' || o === '1S') return after1Major(seq, h);
   if (o === '1C' || o === '1D') return after1Minor(seq, h);
+  if (/^[34][CDHS]$/.test(o)) return afterPreempt(seq, h);
   return gap('The chart has no auctions after this opening.');
 }
 
@@ -286,4 +370,41 @@ function simulate(hS, hN, dealer, note, opponents) {
   }
   const contract = auctionOver(calls) ? [...calls].reverse().find(c => /^[1-7]/.test(c)) || null : null;
   return { calls, steps, pn, contract, stop };
+}
+
+// ---------- Four-hand drills: the opponents bid by script ----------
+const WHO = { W: 'LHO', E: 'RHO', N: 'partner', S: 'you' };
+// "Then: LHO pass, partner 2♥, RHO pass." for the calls since South's last call.
+function since(calls, from, dealer) {
+  const p = [];
+  for (let i = from + 1; i < calls.length; i++) p.push(`${WHO[seatAfter(dealer, i)]} ${plain(calls[i])}`);
+  return p.length ? `Then: ${p.join(', ')}.` : '';
+}
+// Play a scripted four-hand auction (contested.js). H = {N, E, S, W} hands. F(seat, calls, hand, n)
+// returns each call (n = calls so far): our side's from the rules, the opponents' from a script.
+// Anything but a call (null, amb(), gap()) abandons the deal. Returns a question like
+// simulate()'s, plus on (opponents' calls with reasons), cdbl ('X' or 'XX' if the contract is
+// doubled) and ours (false if the opponents play it).
+function sim4(H, dealer, F, note) {
+  const calls = [], steps = [], pn = [], on = [];
+  let lastS = -1;
+  while (!auctionOver(calls) && calls.length < 40) {
+    const seat = seatAfter(dealer, calls.length), a = F(seat, calls, H[seat], calls.length);
+    if (!isCall(a)) return null;
+    if (seat === 'S') {
+      if (!a.auto) steps.push({ calls: calls.slice(), ans: a, note: steps.length ? since(calls, lastS, dealer) : note });
+      lastS = calls.length;
+    } else if (seat === 'N') pn.push({ call: a.bid, why: a.why, auto: !!a.auto });
+    else if (!a.auto) on.push({ seat, call: a.bid, why: a.why });
+    calls.push(a.bid);
+  }
+  if (!auctionOver(calls) || !steps.length) return null;
+  const lb = lastBid(calls);
+  let cdbl = '', ours = true;
+  if (lb) {
+    const i = calls.lastIndexOf(lb), d = calls.slice(i + 1).filter(x => x === 'X' || x === 'XX');
+    cdbl = d.length ? d[d.length - 1] : '';
+    ours = 'NS'.includes(seatAfter(dealer, i));
+  }
+  return { dealer, hand: H.S, partner: H.N, steps, calls, pn, on, contract: lb || null, cdbl, ours, stop: null };
 }

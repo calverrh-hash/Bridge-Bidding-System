@@ -1,5 +1,6 @@
 // The drill sets. Each set is a list of recipes; a recipe deals one kind of hand and
-// returns a question, or null to try again. buildSet() turns a set into 25 questions.
+// returns a question, or null to try again. buildSet() deals a pool of 100 and picks the
+// 25 that cover the most different situations. Four-hand drills are in contested.js.
 //
 // A question looks like:
 //   { dealer, hand, partner, steps: [{calls, ans, note}], calls, pn, contract, stop }
@@ -17,7 +18,10 @@ const opensAs = b => h => {
   const o = openingBid(h);
   return isCall(o) && (typeof b === 'string' ? o.bid === b : b.test(o.bid));
 };
-// Play the auction; keep it only if South makes at least `min` calls.
+// Play the auction; keep it only if South makes at least `min` calls. If the chart stops
+// early (sim.stop), the hand is still kept, and the drill shows why it ends: dropping those
+// hands would lose whole topics (reverses, jump shifts, Jacoby shortness), where the chart
+// covers South's call but not partner's next one.
 function deep(hS, hN, dealer, note, min) {
   if (!hS || !hN) return null;
   const sim = simulate(hS, hN, dealer, note);
@@ -65,6 +69,8 @@ const PO = ({ setup, calls = 2 }) => rng => {
 const nmaj = r => rl(r, sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]));   // no 4-card major
 const majSpec = r => sp({ 2: [2, 6], 3: [2, 6] }, [0, 5]);
 const NT1 = { north: { lens: 'bal', hcp: [15, 17], opens: '1N' }, note: 'Partner opened 1NT (15-17).' };
+const NT17 = { north: { lens: 'bal', hcp: [17, 17], opens: '1N' }, note: 'Partner opened 1NT (15-17).' };   // a maximum
+const weakMinorSpec = r => { const m = ri(r, 0, 1); return sp({ [m]: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3]); };
 const anyMajor = r => ri(r, 2, 3);
 // Partner of a weak-two opener: 14-17 HCP, 0-3 cards in opener's major.
 const wtPartner = (r, h) => { const M = L(h)[2] === 6 ? 2 : 3; return sp({ [M]: [0, 3] }, [1, 5]); };
@@ -121,6 +127,9 @@ const SETS = [
       return [
         noMajor, noMajor,
         PO({ setup: r => ({ ...NT1, south: { lens: nmaj(r), hcp: [8, 8] } }) }),                           // 2♠ range-ask
+        PO({ setup: r => ({ ...NT17, south: { lens: nmaj(r), hcp: [8, 8] } }) }),                          // range-ask opposite a maximum
+        PO({ setup: r => ({ ...NT17, south: { lens: rl(r, sp({ 0: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3])), hcp: [0, 7] } }) }),   // weak clubs opposite 17
+        PO({ setup: r => ({ ...NT17, south: { lens: rl(r, sp({ 1: [6, 7], 2: [0, 3], 3: [0, 3] }, [0, 3])), hcp: [0, 7] } }) }),   // weak diamonds opposite 17
         stayman, stayman,
         maj([5, 5], [1, 3], [1, 5], 0, 14),                   // 5-card transfer
         maj([5, 5], [1, 3], [1, 5], 6, 14),
@@ -142,6 +151,8 @@ const SETS = [
         nt, nt, nt, nt,
         SO({ south: { lens: balL, hcp: [15, 17] }, north: { hcp: [8, 9] } }),                        // invitations
         SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: weakMinor, hcp: [0, 7] } }),      // weak long minor
+        SO({ south: { lens: balL, hcp: [17, 17] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [8, 8] } }),   // range-ask with a maximum
+        SO({ south: { lens: balL, hcp: [17, 17] }, north: { lens: weakMinorSpec, hcp: [0, 7] } }),  // weak minor opposite a maximum
         nt2, nt2,
       ];
     })(),
@@ -201,7 +212,7 @@ const SETS = [
   },
   {
     id: 'comp', name: 'Competitive bidding', refs: 'F',
-    blurb: 'One call per hand: overcalls, takeout and negative doubles, Michaels, Cappelletti.',
+    blurb: "Overcalls, takeout and negative doubles, the cue bid after partner's double, Michaels, Cappelletti.",
     recipes: (() => {
       // Overcall: RHO opens 1x.
       const OV = (lf, lo, hi) => rng => {
@@ -259,8 +270,8 @@ const SETS = [
     })(),
   },
   {
-    id: 'slam', name: 'Slam bidding', refs: 'B · G',
-    blurb: 'Jacoby 2NT to RKCB from both sides, key-card decisions, quantitative 4NT.',
+    id: 'slam', name: 'Slam bidding', refs: 'B · G', slam: true,
+    blurb: 'Jacoby 2NT to RKCB from both sides, key-card decisions, kings and grand slams, quantitative 4NT.',
     recipes: (() => {
       // JR: partner opens 1M, South bids Jacoby 2NT with lo..hi.
       const JR = (lo, hi) => PO({ setup: r => {
@@ -272,9 +283,13 @@ const SETS = [
       const jacobyPartner = (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 5]); };
       const JO = SO({ south: { lens: fiveMajor, hcp: [12, 21], ok: opensAs(/^1[HS]$/) }, north: { lens: jacobyPartner, hcp: [13, 22] }, calls: 3 });
       const JO2 = SO({ south: { lens: fiveMajor, hcp: [11, 21], ok: opensAs(/^1[HS]$/) }, north: { lens: jacobyPartner, hcp: [13, 22] } });
+      // SR: South opens 1M with 18-22 and partner raises. SRP: the other way round.
+      const SR = SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [0, 4])); }, hcp: [18, 22], ok: opensAs(/^1[HS]$/) },
+        north: { lens: (r, h) => { const M = L(h)[3] >= 5 ? 3 : 2; return sp({ [M]: [3, 4] }, [1, 5]); }, hcp: [6, 12] } });
+      const SRP = PO({ setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: [3, 4] }, [1, 5])), hcp: [6, 12] }, north: { lens: sp({ [M]: [5, 6] }, [0, 4]), hcp: [18, 22], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` }; } });
       return [
         JR(13, 22), JR(16, 22), JR(18, 22), JR(20, 22),
-        JO, JO, JO2,
+        JO, JO, JO2, SR, SR, SRP,
         PO({ setup: r => ({ ...NT1, south: { lens: nmaj(r), hcp: [16, 17] } }), calls: 1 }),                     // quantitative 4NT
         SO({ south: { lens: balL, hcp: [15, 17] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [16, 17] } }),   // answer 4NT
       ];
@@ -298,34 +313,138 @@ const SETS = [
     })(),
   },
 ];
+
+// ---------- Losing Trick Count ----------
+// Partner's shown losers, from the chart's LTC table (the minimum of the range shown).
+const RAISE_LOSERS = {
+  '2': [9, 'a simple raise (6-9)'], '3D': [9, 'a 3♦ raise (4+ trumps, 7-9)'],
+  '3C': [8, 'a 3♣ raise (4+ trumps, 10-12)'], '3': [8, 'a limit raise (10-12)'],
+};
+const numOpts = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => String(a + i));
+// Two counting steps, answered on a number pad: your losers, then the tricks LTC predicts.
+function ltcSteps(h, calls, pl, label, note) {
+  const k = losers(h), t = 24 - (k + pl);
+  if (t < 6 || t > 13) return null;
+  return [
+    { kind: 'num', opts: numOpts(0, 12), calls, note: `${note} Count the losers in your hand.`,
+      ans: { bid: String(k), why: `${loserBreak(h)} = ${k} losers. In each suit, count the missing A, K and Q among your top three cards (top two in a doubleton, top one in a singleton).`, ref: 'LTC' } },
+    { kind: 'num', opts: numOpts(6, 13), calls, note: `You have ${k} losers. Partner showed ${label}, which counts as ${pl} losers. How many tricks does LTC predict?`,
+      ans: { bid: String(t), why: `24 − (${k} + ${pl}) = ${t} tricks: ${t >= 12 ? 'slam territory' : t >= 10 ? 'game in a major' : t === 9 ? 'the 3-level' : `only the ${Math.max(t - 6, 1)}-level`}.`, ref: 'LTC' } },
+  ];
+}
+// You open 1M and partner raises (kind '2', '3D', '3C', or '3' for the limit raise).
+// After a limit raise with 13-14 the chart says use LTC, so you also make the call.
+const LTO = (kind, lo, hi) => rng => {
+  const M = ri(rng, 2, 3), h = deal(rng, rl(rng, sp({ [M]: [5, 6] }, [0, 5])), lo, hi);
+  if (!h) return null;
+  const ob = openingBid(h);
+  if (!ob || ob.bid !== B(1, M)) return null;
+  const ps = { '2': [[3, 3], 6, 9], '3D': [[4, 5], 7, 9], '3C': [[4, 5], 10, 12], '3': [[3, 3], 10, 12] }[kind];
+  const n = dealOther(rng, h, sp({ [M]: ps[0] }, [0, 6]), ps[1], ps[2]);
+  if (!n) return null;
+  const want = kind === '3D' || kind === '3C' ? kind : B(+kind, M);
+  const sim = simulate(h, n, 'S', 'You are dealer.');
+  if (!sim.contract || sim.calls[2] !== want) return null;
+  const [pl, label] = RAISE_LOSERS[kind];
+  const st = ltcSteps(h, sim.calls.slice(0, 4), pl, label, `You opened 1${SY[M]}; partner bid ${plain(want)}.`);
+  if (!st) return null;
+  const d = sim.steps[1];
+  if (d && d.ans.ref === 'LTC') st.push({ ...d, note: 'Now make your call.' });
+  return { dealer: 'S', hand: h, partner: n, steps: st, calls: sim.calls, pn: sim.pn, contract: sim.contract, ltc: true };
+};
+// Partner opens 1M and you have a fit: count with partner's opening as 7 losers.
+const LTR = (t, lo, hi) => rng => {
+  const M = ri(rng, 2, 3), h = deal(rng, rl(rng, sp({ [M]: t }, [0, 5])), lo, hi);
+  if (!h) return null;
+  const n = dealOther(rng, h, sp({ [M]: [5, 6] }, [0, 5]), 11, 19, opensAs(B(1, M)));
+  if (!n) return null;
+  const sim = simulate(h, n, 'N', '');
+  if (!sim.contract) return null;
+  const st = ltcSteps(h, sim.calls.slice(0, 2), 7, 'a 1-level opening (count it as 7 until you learn more)', `Partner opened 1${SY[M]} and you have ${L(h)[M]}-card support.`);
+  if (!st) return null;
+  return { dealer: 'N', hand: h, partner: n, steps: st, calls: sim.calls, pn: sim.pn, contract: sim.contract, ltc: true };
+};
 SETS.push({
-  id: 'mixed', name: 'Mixed auctions', refs: 'All',
-  blurb: 'Hands drawn from every uncontested drill, shuffled together.',
-  recipes: SETS.filter(d => d.id !== 'comp').flatMap(d => d.recipes),
+  id: 'ltc', name: 'Losing Trick Count', refs: 'LTC · B',
+  blurb: 'Count your losers and the tricks LTC predicts. With 13-14 after a limit raise, the chart says use LTC to decide: pass or game.',
+  recipes: [LTO('3', 13, 14), LTO('3', 13, 14), LTO('3', 13, 14), LTO('3', 13, 14), LTO('2', 11, 18), LTO('3D', 11, 16), LTO('3C', 11, 16), LTR([3, 3], 5, 12), LTR([4, 5], 4, 12)],
 });
 
-const SET_SIZE = 25;
-// A recipe that fails this many times in a row is skipped for this turn, so one broken
-// recipe cannot stall the whole set. Working recipes need well under 100 tries.
-const MAX_MISSES = 2000;
+// ---------- Mixed ----------
+// One recipe per drill (each picks one of that drill's recipes at random), so every drill is
+// represented equally. Its recipe list is made when first used, after contested.js has added its sets.
+const MIXED = {
+  id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true,
+  blurb: 'Hands from every drill except LTC, shuffled together: openings, responses, rebids, NT auctions, slam, doubles and competition.',
+  get recipes() {
+    return SETS.filter(d => d !== MIXED && d.id !== 'ltc').map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts));
+  },
+};
+SETS.push(MIXED);
 
-// Deal the questions for one set. The same (set, seed) always gives the same hands.
-// Returns SET_SIZE questions unless the recipes are broken (then fewer; tests catch this).
-function buildSet(def, seed) {
+// ---------- Building a set ----------
+const SET_SIZE = 25;
+const POOL = 100;          // hands dealt before picking the SET_SIZE with the most variety
+const MAX_TRIES = 20000;   // recipe attempts per set, at most
+// A recipe that fails this many times in a row is skipped for this turn, so one broken recipe
+// cannot stall the whole set. Working recipes succeed at least one time in ten.
+const MAX_MISSES = 300;
+
+// Non-slam drills skip slam hands (31+ between you, a 4NT ask, or a slam contract),
+// so they stay about game decisions. Slam is practised in the slam drill.
+const slamHand = q => !!q.partner && q.ours !== false && (q.calls.includes('4N') || /^[67]/.test(q.contract || '') || hcp(q.hand) + hcp(q.partner) >= 31);
+
+// The situations a hand practises; the set is chosen to cover as many as possible.
+function features(q) {
+  const f = new Set(), bids = c => c.filter(x => x !== 'P');
+  f.add('rec:' + q.rec);
+  f.add('ctx:' + bids(q.steps[0].calls).join(' '));
+  q.steps.forEach((s, k) => {
+    f.add('call' + k + ':' + s.ans.bid);
+    f.add('call:' + s.ans.bid);
+    f.add('path:' + q.steps.slice(0, k + 1).map(x => x.ans.bid).join('-'));
+  });
+  (q.pn || []).filter(x => !x.auto).forEach(x => f.add('pcall:' + x.call));
+  (q.on || []).forEach(x => f.add('opp:' + x.call));
+  f.add('len:' + q.steps.length);
+  if (q.contract) f.add('res:' + (/^[67]/.test(q.contract) ? 'slam' : /^(4[HS]|5[CD]|3N)$/.test(q.contract) ? 'game' : q.ours === false ? 'theirs' : 'part') + (q.cdbl || ''));
+  return f;
+}
+const weight = k => k.startsWith('rec:') ? 4 : /^(call|pcall|res):/.test(k) ? 3 : /^(path|ctx):/.test(k) ? 2 : 1;
+
+// Deal the questions for one set. The same (set, seed, opts) always gives the same hands, on
+// any device: everything depends on the seeded random numbers, nothing on timing.
+// opts.helvic: our side plays Helvic Wriggle when 1NT is doubled.
+function buildSet(def, seed, opts) {
+  opts = opts || {};
   let hsh = 0;
   for (const c of def.id) hsh = (hsh * 31 + c.charCodeAt(0)) | 0;
-  const rng = mulberry(seed * 7919 + hsh);
-  const out = [], seen = new Set();
+  const rng = mulberry(seed * 7919 + hsh), recipes = def.recipes;
+  const pool = [], seen = new Set();
   let i = 0, g = 0, misses = 0;
-  const order = shuffle(rng, def.recipes.map((_, k) => k));
-  while (out.length < SET_SIZE && g < 60000) {
+  const order = shuffle(rng, recipes.map((_, k) => k));
+  while (pool.length < POOL && g < MAX_TRIES) {
     g++;
-    const q = def.recipes[order[i % order.length]](rng);
-    if (q && q.steps && q.steps.length) {
+    const rec = order[i % order.length], q = recipes[rec](rng, opts);
+    if (q && q.steps && q.steps.length && (def.slam || !slamHand(q))) {
       const key = q.hand.map(s => s.join('.')).join('|') + q.steps[0].calls.join();
-      if (!seen.has(key)) { seen.add(key); out.push(q); i++; misses = 0; continue; }
+      if (!seen.has(key)) { seen.add(key); q.rec = rec; pool.push(q); i++; misses = 0; continue; }
     }
     if (++misses >= MAX_MISSES) { i++; misses = 0; }
+  }
+  if (pool.length <= SET_SIZE) return shuffle(rng, pool);
+  // Greedy: repeatedly take the hand that adds the most situations not yet covered.
+  const cands = pool.map(q => ({ q, f: features(q) })), got = new Set(), out = [];
+  while (out.length < SET_SIZE) {
+    let best = -1, bi = 0;
+    cands.forEach((c, k) => {
+      let sc = rng() * 0.5;
+      for (const x of c.f) if (!got.has(x)) sc += weight(x);
+      if (sc > best) { best = sc; bi = k; }
+    });
+    const c = cands.splice(bi, 1)[0];
+    out.push(c.q);
+    c.f.forEach(x => got.add(x));
   }
   return shuffle(rng, out);
 }
