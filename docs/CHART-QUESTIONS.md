@@ -1,47 +1,52 @@
-# Open questions about the chart
+# The chart and the trainer: answered, guessed, and still open
 
-These are places where the code is consistent with itself, but the bridge is worth checking against the written chart. Some are choices that differ from common practice; others are gaps, where the chart gives no next call so the auction just stops. None of them crash anything.
+The chart is [5CM_SNT_Bidding_Flowchart_A3.pdf](5CM_SNT_Bidding_Flowchart_A3.pdf), updated 23 Oct 2026. This page lists every place where the trainer had to go beyond it, so the two can be kept in step.
 
-For each one, either confirm it ("the chart says so") or change the rule in `js/rules.js` / `js/auction.js` and add a test for it.
+## Answered by the October chart (now in the trainer)
 
-## Readings that differ from common practice
+- 5-5 hands open the higher-ranking suit: 1♠ with both majors, 1♦ with both minors.
+- 1M – 3♦ = 4+ trumps, 7-9; 1M – 3♣ = 4+ trumps, 10-12 (reverse Bergen, as the chart says).
+- Over 1♣ with four diamonds and a 4-card major, respond in the major.
+- Advancing a takeout double: a 4-card major comes ahead of a longer minor. With 12+, cue-bid their suit (game forcing); the doubler shows a major, then 2NT with a stopper, then a minor.
+- 1♥ – (1♠) – X shows both minors, as the chart says.
+- 1M – 4M is a weak raise with 5+ trumps, at any strength up to 6.
+- Opener with 13-14 after a limit raise uses LTC: 10+ tricks bid game, fewer pass. With 12+ tricks the slam rule applies.
+- Slam: once a fit is found, 31+ between you asks 4NT, but only holding 2+ key cards. A Jacoby opener with 18+ and 2+ key cards bids 4NT at once. An unclear reply is read low, unless partner opened 2NT or 2♣.
+- Over 2NT, a transfer with 4-5 points and exactly five cards (no singleton) bids 3NT to offer a choice.
+- Responder after opener's rebid (chart D): with 10 or less, pass or give preference; after a jump rebid in a major, 10+ bids game and 6-9 signs off.
+- Partner of a pre-empt: change suit only if longer; with 3-4 top honours raise to game.
+- Support doubles and redoubles, the unassuming cue bid, Helvic Wriggle, opener's reopening, and bidding on after a penalty double (all chart H).
 
-1. **5-5 in the majors opens 1♥.** Most 5-card-major systems open 1♠ with 5-5, planning to bid hearts next. (`openingBid`)
-2. **1M – 3♦ = 4+ trumps 7-9, and 1M – 3♣ = 4+ trumps 10-12.** This is reverse Bergen; standard Bergen is the other way round. (`r1M`)
-3. **2NT – 3♣ – 3♥: responder with four spades bids 3NT.** Opener could also hold four spades, so a 4-4 spade fit can be missed. The 1NT version handles this (1NT – 2♣ – 2♥ – 2♠); the 2NT version does not. (`nt2`)
-4. **1♥ – (1♠) – X shows both minors, even with heart support.** The drill deals responder 0-6 hearts, so some hands that would normally raise hearts are taught to double. (`negDbl`, `NEG` in drills.js)
-5. **Advancing a takeout double with 12+ and a long minor bids 5 of the minor**, never 3NT. (`advance`)
-6. **A 5-card weak raise (1M – 4M) is taught even with 0 HCP.** (`r1M`)
-7. **Responding to 1♣ with four diamonds and a 4-card major bids 1♦** (up the line), not the major. (`r1m`)
-8. **Opposite opener's 18-19 2NT rebid, responder bids 3NT with 7+**, whether the first response was a suit or 1NT (18 + 7 = 25). Before 2026-10-21 the code said 7+ after 1m – 1M – 2NT but 8+ after 1m – 1NT – 2NT; one threshold had to give, and 7 matches the 25-point rule. If the chart says 8 after 1NT, change it back in `after1Minor`. (`after1Minor`, `respAfterRebid`)
-9. **"New suit first, then support" (3-card support, 13+).** When opener's rebid shows a minimum (1NT, 2NT after a 2-level response, a rebid of the major, or a new suit below the barrier), responder with 13-16 now bids game in opener's major. With 17+ (opposite a minimum), or when opener shows extra values, the auction stops, as there is no slam route in the chart. If opener raises responder's new suit, responder treats it as a normal raise (so 1♥ – 1♠ – 2♠ – 4♠). The 16 cut-off is the same trainer guide as after Jacoby (at most 30 combined). (`supportAfterNewSuit`)
+## Trainer readings and guides: the chart is silent, so the trainer chose
 
-## Gaps: the chart gives no next call, so the auction stops
+Answers marked **Trainer guide** in the app come from this list. Readings 1 and 2 aren't labelled, because they apply a chart rule rather than invent one. If any is wrong, change the rule and add the answer to the chart.
 
-When an auction stops, the drill now shows the reason written in the code (the text of the `gap(…)` or `amb(…)`), so these gaps are visible to users too.
+1. **Opposite opener's 18-19 2NT rebid, responder bids 3NT with 7+**, whether the first response was a suit or 1NT (18 + 7 = 25). Before 2026-10-21 the code said 7+ after 1m – 1M – 2NT but 8+ after 1m – 1NT – 2NT; one threshold had to give, and 7 matches the 25-point rule. If the chart says 8 after 1NT, change it back in `after1Minor`. (`after1Minor`, `respAfterRebid`)
+2. **"New suit first, then support" (3-card support, 13+).** When opener's rebid shows a minimum (1NT, 2NT after a 2-level response, a rebid of the major, or a new suit below the barrier), responder with 13-16 bids game in opener's major. After opener's jump rebid in the major (15-19), the fit is known, so chart D ("10+ game") and chart G (31+ asks 4NT) decide. With 17+ opposite a minimum, or when opener shows other extra values, the auction stops: there's no slam route in the chart. If opener raises responder's new suit, it's a normal raise (so 1♥ – 1♠ – 2♠ – 4♠). The 16 cut-off is the same trainer guide as after Jacoby (at most 30 combined). (`supportAfterNewSuit`)
+3. **Opener's answer to an invitation** after 1NT rebid – 2NT or simple raise – 3M: accept with 13-14, pass with 11-12 (by analogy with chart C).
+4. **Responder after the weak-two 2NT ask:** after a solid suit (3NT), pass. After a feature, bid game: 4M with 2+ trumps, else 3NT. After 3M (minimum or no feature), game only with 17+.
+5. **2♣ – 2♦ – (suit):** responder raises a major with 3+ cards to 4M, else bids 3NT. (2♣ – 2♦ – 3NT ends with responder's automatic pass.)
+6. **After opener's jump rebid in a major** with 10+, "game" is 4M with 2+ trumps, else 3NT.
+7. **Preference with equal length** in opener's two suits: go back to the first suit (opener holds more of it).
+8. **"3-4 top honours"** for raising a pre-empt is read as 3+ aces and kings. Partner raises a 3-level major to game; otherwise passes.
+9. **Doubling a 4-level overcall** for penalties wants about 8+ HCP (the chart gives no figure).
+10. **After our redouble, if they run and we find a fit:** with 3+ support raise one level (an invitation); the redoubler bids game with 13+.
+11. **Our 1NT doubled, chart system, weak with no 5-card diamond or major suit:** the chart gives no escape, so pass and play 1NT doubled. Helvic exists to fix this hand.
+12. **5NT asks for kings only when the asker knows of the trump queen** (holding it, or after a 5♠ reply). The chart says "all five → 5NT", but also that a grand needs the trump queen. Asking without it could only end in 6, and when a king is shown above the trump suit (say ♠K with hearts trumps, 6♠) the asker would have no legal way back to 6♥. Asking only with the queen means any king shown leads straight to the grand.
 
-10. **Opener's answer to an invitation**, in several auctions:
-   - 1M – new suit – 2M (simple raise) – 3M (invite)
-   - 1m – 1M – 1NT – 2NT
-   - 1NT – 2♣ – 2♥ – 2NT when opener also holds four spades
-   - 1NT – 2♦/2♥ – 2M – 2NT when opener has 3-card support
-11. **1m – 1NT with a balanced 12-14 opener.** The obvious call is pass, but the chart gives none, so these hands are never dealt to South as opener.
-12. **1M – 1NT.** Opener has no rebid at all, so this auction always stops after the response.
-13. **Opener with 13-14 after a limit raise** (1M – 3M). This one is already noted in the README.
-14. **After Jacoby 2NT, if opener shows shortness or a 5-card side suit** (3x or 4x), responder has no next call.
-15. **2♣ – 2♦ – (a suit).** Responder has no next call. Responder also has none after a positive response to 2♣. (2♣ – 2♦ – 3NT now ends with responder's automatic pass.)
-16. **No passed-hand auctions.** If South passes and partner would open, the auction stops: the chart has no rules for responding as a passed hand (Drury, no Jacoby 2NT, and so on). The "too weak to open" drill avoids this by giving partner a hand that also passes.
-17. **No responses to weak 2♦ or to pre-empts** (3-level and 4-level openings), so those auctions stop after the opening.
-18. **Contested auctions after the first call.** Chart F covers only the first call over an opponent's opening. Opponents always pass in the whole-auction drills, so this only matters once they start bidding (see ROADMAP).
-19. **RKCB:**
-    - With all five key cards, there is no reply. The trainer used to answer 5♦ "1 or 4", which was wrong; it now stops.
-    - After 5NT there is no king-ask reply.
-    - When the reply is ambiguous to the asker (for example 5♣ = 0 or 3 while holding 2), the auction stops.
+## Still open: where auctions stop
 
-## Already fixed in this review
+Where the chart gives no next call and there's no safe guess, the auction stops, and the drill shows the reason written in the code (the text of the `gap(…)` or `amb(…)`). Answering any of these lets those auctions go on to a contract.
 
-- **1NT – 2♠ (range-ask) with 8 HCP and a six-card minor.** Responder used to treat this hand as the weak long-minor sign-off, bidding "3♦ to play" opposite a 17-count. It now passes 2NT, or bids 3NT opposite 3♣, as the range-ask explanation promised.
-- **Explanations that misdescribed the hand.** "Six hearts" was shown for seven-card suits, "no long suit" for a hand with a five-card suit, and "With 12 (11-12)" for an opener who must hold exactly 12.
-- **Responder forgot the support they had promised.** With 3-card support and 13+, responder bids a new suit "then support", but then bid 3NT over opener's 1NT (missing the 5-3 major fit), or had no call at all after other minimum rebids. See reading 9 above.
-- **Two thresholds for the same 2NT rebid.** See reading 8 above.
-- **Game auctions that never ended.** 1♥ – 1♠ – 2♠ – 4♠, 1NT – 2NT – 3NT, 1NT – 4NT – 6NT and 2♣ – 2♦ – 3NT stopped without a final contract. The obvious pass is now automatic, so they show "Final contract".
+1. **1M – 1NT:** opener's rebid ("see D", but D covers new-suit responses).
+2. **1m – 1NT with a balanced 12-14 opener:** the obvious call is pass, but the chart lists only 2NT with 18-19. These hands are never dealt to South as opener.
+3. **Responder after a weak rebid with 11-12 or 13+** when no raise or NT fits: which invitation, which game?
+4. **After a reverse or a jump shift:** "6-9 sign off" and "never pass" don't say which call.
+5. **After Jacoby, when opener shows shortness or a side suit:** responder's next call.
+6. **2NT – 3♣ – 3♥ with four spades:** responder bids 3NT, so a 4-4 spade fit can be missed (the 1NT route has 2♠ for this).
+7. **After a transfer to a major, 2NT invite, opener with 3-card support:** the chart says "16-17 3NT, or 3M with 3+". Is that 3M with a minimum and 4M with a maximum?
+8. **Passed-hand auctions:** if South passes and partner would open. The "too weak to open" drill gives partner a hand that also passes.
+9. **Weak 2♦:** there are no responses on the chart.
+10. **RKCB with all five key cards:** there's no reply. **The trump-queen ask** ("cheapest non-trump bid") isn't used yet: a trainer guide would be needed for the replies.
+11. **Advancing a takeout double with 4-4 in the majors** and under 12 points: which major?
+12. **Contested auctions after the first call**, in the whole-auction drills. Chart F covers only the first call over an opponent's opening, and the opponents always pass there. (The four-hand drills script their own continuations from chart F and H.)

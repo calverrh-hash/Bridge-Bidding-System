@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-10-24: merged the friend's version
+
+His version (the bridge-bidding-trainer zip) added a lot of system content, and the corrected chart itself. It's now part of this structure, built on the 21 Oct work below (rule ids, `amb`/`gap` reasons, the four-seat engine), with tests. His code wasn't copied as it was: it kept three copies of the bidding logic, and had the bugs listed below. Every new answer has a rule id: `H.…` for chart H, `LTC.…`, and `GUIDE.…` for trainer guides.
+
+### Added
+- **The chart:** `docs/5CM_SNT_Bidding_Flowchart_A3.pdf` and `docs/build_chart.py`, which generates it.
+- **Four-hand drills** where the opponents bid (`js/contested.js`): Penalty doubles (1NT overcall, 4-level jump, trap pass and reopening, redouble), Doubling their 1NT, Our 1NT doubled (chart or Helvic Wriggle, chosen with a switch on the home screen), Unassuming cue bid, Support doubles. Also the cue-bid route after partner's takeout double, added to Competitive bidding. The whole hand shows the opponents' calls and whether the contract is doubled.
+- **Losing Trick Count drill:** count your losers and the tricks on a number pad, then make the chart's LTC decision after a limit raise.
+- **Sets picked for variety:** each set deals 100 hands and keeps the 25 covering the most situations.
+- **New hands:** the range-ask and weak minors opposite a 17-count, and Jacoby and raises with an 18-22 opener.
+
+### Changed (to match the October chart)
+- 5-5 hands open the higher-ranking suit (1♠ with both majors, 1♦ with both minors).
+- Over 1♣, four diamonds and a 4-card major respond in the major.
+- Advancing a takeout double: a 4-card major first; 12+ cue-bids their suit.
+- Over 2NT, a transfer with 4-5 points and exactly five cards offers 3NT.
+- Slam: with a fit and 31+, ask 4NT only with 2+ key cards, otherwise bid game. A Jacoby opener with 18+ and 2+ key cards bids 4NT at once. An unclear reply is read low. Kings and grand slams added.
+- Opener with 13-14 after a limit raise decides by LTC.
+- Responder after opener's rebid passes or gives preference with 10 or less; after a jump rebid in a major, bids game with 10+.
+- Partner of a pre-empt passes, or raises to game with 3+ aces and kings.
+- Trainer guides fill the commonest gaps in the chart, so fewer auctions stop early (when one does, the drill still says why). Non-slam drills skip slam hands.
+- Mixed draws equally from every drill except LTC, and is listed last.
+- The home screen no longer deals every set, so it opens quickly.
+
+### Fixed (bugs in the friend's version, not carried over)
+- **The same set dealt different hands on different devices.** Dealing stopped after 500 ms, so a slow phone got a different set (often 0-5 of the same 10 hands), and saved results attached to the wrong hands. Dealing now depends only on the seed.
+- **An illegal bid was asked for.** After 5NT, a king shown above the trump suit (6♠ with hearts trumps) was followed by "sign off in 6♥". 5NT is now only asked when the side holds the trump queen, so a king shown leads to the grand.
+- His version still had the three bugs fixed here on 20 Oct (range-ask sign-off, five key cards, best score lost), copied into each of its three engines.
+- New trainer guides fill gaps where his version silently dropped whole kinds of hand (weak-two asks, 2♣ with a long suit, pre-empts). They're all listed in `docs/CHART-QUESTIONS.md`.
+
 ## 2026-10-21: rule ids, four-seat auctions, reasons for stopping
 
 ### Fixed
