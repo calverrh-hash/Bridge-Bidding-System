@@ -409,6 +409,14 @@ test('our 1NT doubled, chart system: weak and 5-5 runs to the lower suit', () =>
   const h2 = [[7, 2], [11, 10, 9, 6, 3], [4], [12, 10, 8, 5, 2]];
   same(ntDoubledResp(h2, false).bid, '2D', 'diamonds and spades: 2D');
 });
+test('after our redouble and their run, 5-5 bids the better suit when the lower is clearly better', () => {
+  // The auction from the screenshot: 1C (X) XX (1H) P (P) to South. Hands are [clubs, diamonds, hearts, spades].
+  const calls = ['1C', 'X', 'XX', '1H', 'P', 'P'];
+  const q = [[11], [14, 13, 12, 10, 6], [8, 5], [11, 10, 5, 4, 3]];   // spades J10543, diamonds AKQ106
+  same(penaltyFollow('S', calls, q, 'N').bid, '2D', 'AKQ diamonds beat J-high spades');
+  const r = [[11], [14, 10, 6, 4, 2], [8, 5], [13, 10, 5, 4, 3]];     // spades K10543, diamonds A10642
+  same(penaltyFollow('S', calls, r, 'N').bid, '1S', 'similar suits: higher-ranking first');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });

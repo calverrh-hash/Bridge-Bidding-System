@@ -194,8 +194,20 @@ function penaltyFollow(seat, calls, h, dealer) {
       const nb = B(cheapest(4, lb), 4);
       return R(nb, `They ran to ${plain(lb)} and partner's pass is forcing (we have the balance of the points). No 5-card suit but a ${SN[s]} stopper: ${plain(nb)}.`, 'F.redouble-follow');
     }
-    const top = cands.filter(u => l[u] === mx), t = top.sort((a, b) => b - a)[0], nb = B(cheapest(t, lb), t);
-    return R(nb, `They ran to ${plain(lb)} and partner's pass is forcing: after our redouble we must not let them play undoubled. You can't double with ${cardsOf(h[s].length, s)}, so bid your ${mx >= 5 && top.length > 1 ? 'higher-ranking 5-card suit' : 'longest suit'}: ${plain(nb)}.`, 'F.redouble-follow');
+    const top = cands.filter(u => l[u] === mx).sort((a, b) => b - a), pre = `They ran to ${plain(lb)} and partner's pass is forcing: after our redouble we must not let them play undoubled. You can't double with ${cardsOf(h[s].length, s)}, so`;
+    if (mx >= 5 && top.length > 1) {
+      // 5-5: the higher-ranking suit, unless the lower one is clearly better
+      // (two of the top three honours against none).
+      const hi = top[0], lo = top[1], honours = u => h[u].filter(r => r >= 12).length;
+      if (honours(lo) >= 2 && honours(hi) === 0) {
+        const nb = B(cheapest(lo, lb), lo);
+        return R(nb, `${pre} with 5-5 bid the better suit: ${plain(nb)}. Your ${SN[lo]} have ${honours(lo)} of the top three honours and your ${SN[hi]} have none, so show the suit you want partner to value and lead.`, 'F.redouble-follow');
+      }
+      const nb = B(cheapest(hi, lb), hi);
+      return R(nb, `${pre} with 5-5 bid the higher-ranking suit: ${plain(nb)}. That leaves room to show ${SN[lo]} next, and partner can choose between them cheaply. (Bid the lower suit first only when it is clearly better: two of the top three honours against none.)`, 'F.redouble-follow');
+    }
+    const t = top[0], nb = B(cheapest(t, lb), t);
+    return R(nb, `${pre} bid your longest suit: ${plain(nb)}.`, 'F.redouble-follow');
   }
   if (calls.some((v, k) => k < i && (v === 'X' || v === 'XX') && us(k)) && s < 4) {
     return h[s].length >= 4 ? R('X', `They ran to ${plain(lb)}. We have already shown we want a penalty, so double their escape with ${h[s].length} ${SN[s]}.`, 'H.double-escape')

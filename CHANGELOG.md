@@ -5,6 +5,7 @@
 ### Changed
 - **Set sizes:** topic drills are 10 hands, chosen for the widest coverage; Mixed is 50 hands. A set can set its own size with `size:`.
 - **Our 1NT doubled (chart system):** weak and 5-5 in two of ♦/♥/♠, bid the lower suit (you can still run to the higher one at the 2-level if that is doubled too). The chart says so too.
+- **After our redouble and their run, 5-5:** bid the higher-ranking suit unless the lower one is clearly better (two of the top three honours against none), e.g. ♠J10543 ♦AKQ106 bids 2♦. On the chart too.
 - **Continue button** sits above the bidding table, so you don't have to scroll down to move on.
 
 ### Added
