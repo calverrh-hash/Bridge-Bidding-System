@@ -13,13 +13,13 @@ auction.js     simulate() plays the auction, all four seats: at each turn chartC
    │           sim4() plays a scripted four-hand auction: the recipe gives each call, ours from
    │           competitive.js, the opponents' by simple rules.
    │
-drills.js      buildSet() deals a pool of 100 hands from a seed and keeps the 25 that cover
+drills.js      buildSet() deals a pool of 100 hands (200 for Mixed) from a seed and keeps the 10 (50 for Mixed) that cover
    │           the most different situations
    │
 app.js         shows each of South's calls as a question and checks the answer
 ```
 
-The same set and seed always deal the same 25 hands, on any device: nothing depends on timing. "Deal 25 new hands" moves the set to the next seed.
+The same set and seed always deal the same hands, on any device: nothing depends on timing. "Deal 10 new hands" moves the set to the next seed; "New hands for every drill" on the home screen moves every set (chart and Helvic versions) to its next seed and keeps best scores.
 
 ## How things are written
 
@@ -155,7 +155,7 @@ Lengths are written with `sp`: `sp({2: [5, 6]}, [0, 5])` means 5-6 hearts and 0-
 
 **Counting steps** (the LTC drill) are steps with `kind: 'num'` and `opts: ['0', '1', …]`. The app shows a number pad instead of the bidding box.
 
-**How a set of 25 is chosen:** `buildSet` deals recipes in turn until it has 100 good hands. Then it picks 25 that cover the most different situations: recipes, auctions, your calls, partner's calls and results. To get more hands of a kind, repeat its recipe in the list (name it, `const nt = SO({...})`, and list the name twice). A recipe gets skipped after 300 failures in a row, so one broken recipe can't freeze the app; the tests check every set still deals 25.
+**How a set is chosen:** `buildSet` deals recipes in turn until it has 100 good hands (at least four times the set size). Then it picks `setSize(def)` hands (10, or `def.size`: 50 for Mixed) that cover the most different situations: recipes, auctions, your calls, partner's calls and results. To get more hands of a kind, repeat its recipe in the list (name it, `const nt = SO({...})`, and list the name twice). A recipe gets skipped after 300 failures in a row, so one broken recipe can't freeze the app; the tests check every set still deals its full size.
 
 The tests end with a **rule coverage** line: which rule ids no drill ever asks of you. It's the quickest way to see what a new recipe should target.
 

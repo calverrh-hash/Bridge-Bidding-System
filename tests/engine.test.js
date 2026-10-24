@@ -366,10 +366,10 @@ function checkQuestion(q, where) {
 const SEEDS = 8;
 for (const d of SETS) for (const helvic of d.helvic ? [false, true] : [false]) {
   const name = d.id + (helvic ? ' (Helvic)' : '');
-  test(`set "${name}": 25 good hands for seeds 1-${SEEDS}, built quickly`, () => {
+  test(`set "${name}": ${setSize(d)} good hands for seeds 1-${SEEDS}, built quickly`, () => {
     for (let seed = 1; seed <= SEEDS; seed++) {
       const t0 = performance.now(), qs = buildSet(d, seed, { helvic }), ms = performance.now() - t0;
-      same(qs.length, SET_SIZE, `seed ${seed} size`);
+      same(qs.length, setSize(d), `seed ${seed} size`);
       check(ms < 1000, `seed ${seed} took ${ms.toFixed(0)} ms`);
       const keys = new Set(qs.map(q => JSON.stringify(q.hand)));
       check(keys.size === qs.length || d.id === 'comp' || d.id === 'mixed', `seed ${seed}: repeated hand`);
@@ -397,6 +397,17 @@ test('regression: the same seed deals the same hands on a slow device', () => {
     try { same(JSON.stringify(buildSet(d, 2)), fast, d.id); }
     finally { Date.now = realNow; performance.now = realPerf; }
   }
+});
+test('topic drills deal 10 hands and Mixed deals 50', () => {
+  for (const d of SETS) same(setSize(d), d.id === 'mixed' ? 50 : 10, d.id);
+});
+test('our 1NT doubled, chart system: weak and 5-5 runs to the lower suit', () => {
+  // Hands are [clubs, diamonds, hearts, spades]. ♠Q10852 ♥J10963 ♦4 ♣72: 3 HCP.
+  const h = [[7, 2], [4], [11, 10, 9, 6, 3], [12, 10, 8, 5, 2]];
+  const r = ntDoubledResp(h, false);
+  same(r.bid, '2H', 'hearts and spades: 2H');
+  const h2 = [[7, 2], [11, 10, 9, 6, 3], [4], [12, 10, 8, 5, 2]];
+  same(ntDoubledResp(h2, false).bid, '2D', 'diamonds and spades: 2D');
 });
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);

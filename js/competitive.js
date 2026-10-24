@@ -247,8 +247,8 @@ function ntDoubledResp(h, helvic) {
   if (!helvic) {
     if (p >= 7) return R('XX', `${p} HCP: redouble (7+). We have the balance of the points.`, 'F.nt-doubled');
     if ([1, 2, 3].some(s => l[s] >= 5)) {
-      const s = longest(h, [0]);
-      if (l[s] < 5) return amb('Five clubs and another five-card suit: the chart does not say which to show.');
+      const c = [1, 2, 3].filter(u => l[u] >= 5), mx = Math.max(...c.map(u => l[u])), ties = c.filter(u => l[u] === mx), s = ties[0];
+      if (ties.length > 1) return R(B(2, s), `Weak and 5-5 in ${SN[ties[0]]} and ${SN[ties[1]]}: bid the lower suit, ${plain(B(2, s))}, as a natural sign-off (transfers are off). If they double that too, you can run to 2${SY[ties[1]]} and still be at the 2-level.`, 'F.nt-doubled');
       return R(B(2, s), `Weak with ${l[s]} ${SN[s]}: ${plain(B(2, s))} is a natural sign-off (transfers are off).`, 'F.nt-doubled');
     }
     if (l[0] >= 5) return gap('The chart has no club escape when our 1NT is doubled (2♣ is not on the list).');

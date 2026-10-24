@@ -374,7 +374,7 @@ SETS.push({
 // One recipe per drill (each picks one of that drill's recipes at random), so every drill is
 // represented equally. Its recipe list is made when first used, after contested.js has added its sets.
 const MIXED = {
-  id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true,
+  id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true, size: 50,
   blurb: 'Hands from every drill except LTC, shuffled together: openings, responses, rebids, NT auctions, slam, doubles and competition.',
   get recipes() {
     return SETS.filter(d => d !== MIXED && d.id !== 'ltc').map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts));
@@ -383,8 +383,9 @@ const MIXED = {
 SETS.push(MIXED);
 
 // ---------- Building a set ----------
-const SET_SIZE = 25;
-const POOL = 100;          // hands dealt before picking the SET_SIZE with the most variety
+const SET_SIZE = 10;        // hands in a topic drill; a set can override it with def.size (Mixed has 50)
+const setSize = def => (def && def.size) || SET_SIZE;
+const POOL = 100;          // hands dealt before picking the set (at least 4x the set size) with the most variety
 const MAX_TRIES = 20000;   // recipe attempts per set, at most
 // A recipe that fails this many times in a row is skipped for this turn, so one broken recipe
 // cannot stall the whole set. Working recipes succeed at least one time in ten.
@@ -420,10 +421,11 @@ function buildSet(def, seed, opts) {
   let hsh = 0;
   for (const c of def.id) hsh = (hsh * 31 + c.charCodeAt(0)) | 0;
   const rng = mulberry(seed * 7919 + hsh), recipes = def.recipes;
+  const size = setSize(def), poolSize = Math.max(POOL, size * 4);
   const pool = [], seen = new Set();
   let i = 0, g = 0, misses = 0;
   const order = shuffle(rng, recipes.map((_, k) => k));
-  while (pool.length < POOL && g < MAX_TRIES) {
+  while (pool.length < poolSize && g < MAX_TRIES) {
     g++;
     const rec = order[i % order.length], q = recipes[rec](rng, opts);
     if (q && q.steps && q.steps.length && (def.slam || !slamHand(q))) {
@@ -432,10 +434,10 @@ function buildSet(def, seed, opts) {
     }
     if (++misses >= MAX_MISSES) { i++; misses = 0; }
   }
-  if (pool.length <= SET_SIZE) return shuffle(rng, pool);
+  if (pool.length <= size) return shuffle(rng, pool);
   // Greedy: repeatedly take the hand that adds the most situations not yet covered.
   const cands = pool.map(q => ({ q, f: features(q) })), got = new Set(), out = [];
-  while (out.length < SET_SIZE) {
+  while (out.length < size) {
     let best = -1, bi = 0;
     cands.forEach((c, k) => {
       let sc = rng() * 0.5;

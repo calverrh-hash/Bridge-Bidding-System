@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-24 (later): latest rules from the trainer
+
+### Changed
+- **Set sizes:** topic drills are 10 hands, chosen for the widest coverage; Mixed is 50 hands. A set can set its own size with `size:`.
+- **Our 1NT doubled (chart system):** weak and 5-5 in two of ♦/♥/♠, bid the lower suit (you can still run to the higher one at the 2-level if that is doubled too). The chart says so too.
+- **Continue button** sits above the bidding table, so you don't have to scroll down to move on.
+
+### Added
+- **"New hands for every drill"** on the home screen: every drill, chart and Helvic, moves to new hands. Best scores are kept.
+- Tests for all of the above.
+
 ## 2026-10-24: merged the friend's version
 
 His version (the bridge-bidding-trainer zip) added a lot of system content, and the corrected chart itself. It's now part of this structure, built on the 21 Oct work below (rule ids, `amb`/`gap` reasons, the four-seat engine), with tests. His code wasn't copied as it was: it kept three copies of the bidding logic, and had the bugs listed below. Every new answer has a rule id: `H.…` for chart H, `LTC.…`, and `GUIDE.…` for trainer guides.
