@@ -204,7 +204,7 @@ function penaltyFollow(seat, calls, h, dealer) {
         return R(nb, `${pre} with 5-5 bid the better suit: ${plain(nb)}. Your ${SN[lo]} have ${honours(lo)} of the top three honours and your ${SN[hi]} have none, so show the suit you want partner to value and lead.`, 'F.redouble-follow');
       }
       const nb = B(cheapest(hi, lb), hi);
-      return R(nb, `${pre} with 5-5 bid the higher-ranking suit: ${plain(nb)}. That leaves room to show ${SN[lo]} next, and partner can choose between them cheaply. (Bid the lower suit first only when it is clearly better: two of the top three honours against none.)`, 'F.redouble-follow');
+      return R(nb, `${pre} with 5-5 bid the higher-ranking suit first: ${plain(nb)}, then ${SN[lo]} next. That order shows at least as many ${SN[hi]} as ${SN[lo]}. If you bid ${SN[lo]} first and ${SN[hi]} second, partner would read you for only four ${SN[hi]}, and with three of them would not know there is a fit. (Bid the lower suit first only when it is clearly better: two of the top three honours against none.)`, 'F.redouble-follow');
     }
     const t = top[0], nb = B(cheapest(t, lb), t);
     return R(nb, `${pre} bid your longest suit: ${plain(nb)}.`, 'F.redouble-follow');
