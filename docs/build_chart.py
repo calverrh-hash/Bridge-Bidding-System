@@ -106,7 +106,7 @@ C = f'''
 # ---------------- D ----------------
 D = ''.join([
  box('reb','<b>Balanced:</b> 12-14 → 1NT (2NT after a 2-level response) · 18-19 → 2NT (3NT after a 2-level response).'),
- box('reb','<b>Unbalanced 11-14 "weak":</b> simple raise (4+) 1♣-1♥-2♥ · new suit below the barrier 1♣-1♥-1♠ · simple rebid of a 5+ suit 1♠-2♥-2♠.'),
+ box('reb','<b>Unbalanced 11-14 "weak":</b> simple raise (4+) 1♣-1♥-2♥ · new suit below the barrier 1♣-1♥-1♠ (<b>6-4: major first</b>) · simple rebid of a 5+ suit 1♠-2♥-2♠.'),
  box('reb','<b>Unbalanced 15-19 "strong":</b> double raise 1♣-1♥-3♥ · reverse (above the barrier) 1♦-1♠-2♥ · jump rebid of a 6+ suit 1♠-2♥-3♠.'),
  box('reb','<b>Unbalanced 20-22:</b> jump shift 1♣-1♥-2♠, game forcing.'),
  box('rsp','<b>Responder then:</b> after weak: 13+ game, 11-12 invite, ≤10 pass or correct · after strong: 10+ game, 6-9 sign off · after jump shift: never pass · after 1NT (12-14): 11-12 2NT, 13+ 3NT, ≤10 pass · after 2NT (18-19): 7+ game, else pass. With a fit and 31+ combined: 4NT (G).'),

@@ -306,7 +306,14 @@ function rebid(h, o, r, lvl) {
   }
   if (p <= 14) {
     if (l[r] >= 4) return R(B(lvl + 1, r), `Unbalanced 11-14 with ${l[r]} ${SN[r]}: simple raise to ${plain(B(lvl + 1, r))}.`, 'D.raise');
-    if (l[o] >= 6) return R(B(2, o), `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]}: simple rebid of 2${SY[o]}.`, 'D.rebid-suit');
+    // 6-4 with a 4-card major you can show below the barrier: show the major first. A major
+    // fit is worth more than repeating the long suit, and you can rebid that suit later.
+    const mj = others.filter(s => s >= 2 && l[s] >= 4 && bv(B(cheapest(s, resp), s)) < bv(bar));
+    if (l[o] >= 6 && mj.length === 1) {
+      const s = mj[0], b = B(cheapest(s, resp), s);
+      return R(b, `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]} and four ${SN[s]}: show the major first, ${plain(b)}, so a 4-4 ${SN[s].replace(/s$/, '')} fit isn't lost. It sits below the barrier (2${SY[o]}), so it shows no extra strength, and you can still rebid your ${SN[o]} later.`, 'D.new-suit');
+    }
+    if (l[o] >= 6) return R(B(2, o), `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]}: simple rebid of 2${SY[o]}.${others.some(s => s >= 2 && l[s] >= 4) ? ' Your 4-card major would be a reverse here (above the barrier, 16+), so rebid the long suit.' : ''}`, 'D.rebid-suit');
     const below = others.filter(s => l[s] >= 4 && bv(B(cheapest(s, resp), s)) <= bv(bar));
     if (below.length > 1) return amb('More than one four-card suit could be shown below the barrier.');
     if (below.length === 1) {

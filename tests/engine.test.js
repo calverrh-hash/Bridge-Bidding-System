@@ -417,6 +417,17 @@ test('after our redouble and their run, 5-5 bids the better suit when the lower 
   const r = [[11], [14, 10, 6, 4, 2], [8, 5], [13, 10, 5, 4, 3]];     // spades K10543, diamonds A10642
   same(penaltyFollow('S', calls, r, 'N').bid, '1S', 'similar suits: higher-ranking first');
 });
+test('opener 11-14 with 6-4: show a 4-card major below the barrier, otherwise rebid the six', () => {
+  // Hands are [clubs, diamonds, hearts, spades].
+  const a = [[13, 4], [14, 12, 10, 7, 6, 3], [5], [13, 11, 8, 4]];          // 4-1-6-2, 13 HCP
+  same(rebid(a, 1, 2, 1).bid, '1S', '1D-1H: 1S');
+  const b = [[13, 4], [14, 12, 10, 7, 6, 3], [13, 11, 8, 4], [5]];          // 1-4-6-2
+  same(rebid(b, 1, 3, 1).bid, '2D', '1D-1S: 2H would be a reverse, so 2D');
+  const c = [[4], [7, 5], [13, 11, 8, 4], [14, 12, 10, 7, 6, 3]];           // 6-4-2-1 in the majors
+  same(rebid(c, 3, 0, 2).bid, '2H', '1S-2C: 2H is below 2S');
+  const d = [[14, 12, 10, 7, 6, 3], [13, 4], [5], [13, 11, 8, 4]];          // 4-1-2-6 clubs
+  same(rebid(d, 0, 2, 1).bid, '1S', '1C-1H: 1S');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });
