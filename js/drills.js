@@ -371,14 +371,13 @@ SETS.push({
 });
 
 // ---------- Mixed ----------
-// One recipe per drill (each picks one of that drill's recipes at random), so every drill is
-// represented equally. Its recipe list is made when first used, after contested.js has added its sets.
+// Ten hands, each from a different drill (every drill except LTC). Each new deal moves on to the
+// drills the last deal left out, so a few deals in a row cover them all. See buildMixed.
 const MIXED = {
-  id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true, size: 50,
-  blurb: 'Hands from every drill except LTC, shuffled together: openings, responses, rebids, NT auctions, slam, doubles and competition.',
-  get recipes() {
-    return SETS.filter(d => d !== MIXED && d.id !== 'ltc').map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts));
-  },
+  id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true, mixed: true,
+  blurb: 'Ten hands, each from a different drill, shuffled together. Each new deal moves on to the drills the last one left out.',
+  get sources() { return SETS.filter(d => d !== MIXED && d.id !== 'ltc'); },
+  get recipes() { return this.sources.map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts)); },
 };
 SETS.push(MIXED);
 
@@ -418,6 +417,7 @@ const weight = k => k.startsWith('rec:') ? 4 : /^(call|pcall|res):/.test(k) ? 3 
 // opts.helvic: our side plays Helvic Wriggle when 1NT is doubled.
 function buildSet(def, seed, opts) {
   opts = opts || {};
+  if (def.mixed) return buildMixed(def, seed, opts);
   let hsh = 0;
   for (const c of def.id) hsh = (hsh * 31 + c.charCodeAt(0)) | 0;
   const rng = mulberry(seed * 7919 + hsh), recipes = def.recipes;
@@ -450,3 +450,38 @@ function buildSet(def, seed, opts) {
   }
   return shuffle(rng, out);
 }
+
+// Mixed: one hand from each of `size` different drills. The drills come in a fixed shuffled
+// order and seed n starts where seed n-1 stopped, so consecutive deals cover different drills
+// (14 drills: seed 1 has drills 1-10, seed 2 has 11-14 and 1-6, and so on). Within a drill, the
+// hand chosen is the one that adds the most situations (recipes, calls, auctions) not yet in the set.
+const MIX_CANDS = 8;       // hands dealt per drill before choosing one
+function buildMixed(def, seed, opts) {
+  const src = def.sources, size = setSize(def);
+  const order = shuffle(mulberry(20261026), src.map((_, k) => k));
+  const start = ((Math.max(1, seed) - 1) * size) % order.length;
+  const rng = mulberry(seed * 7919 + 4242), got = new Set(), out = [];
+  for (let k = 0; k < Math.min(size, order.length * 4); k++) {
+    const di = order[(start + k) % order.length], d = src[di];
+    const recs = shuffle(rng, d.recipes.map((_, r) => r)), cands = [];
+    let tries = 0, i = 0;
+    while (cands.length < MIX_CANDS && tries < 3000) {
+      tries++;
+      const r = recs[i % recs.length], q = d.recipes[r](rng, opts);
+      if (q && q.steps && q.steps.length && (d.slam || !slamHand(q))) { q.rec = d.id + ':' + r; q.src = d.id; cands.push(q); i++; }
+      else if (tries % 300 === 0) i++;
+    }
+    if (!cands.length) continue;
+    let best = -1, pickQ = cands[0];
+    for (const q of cands) {
+      let sc = rng() * 0.5;
+      for (const x of features(q)) if (!got.has(x)) sc += weight(x);
+      if (sc > best) { best = sc; pickQ = q; }
+    }
+    features(pickQ).forEach(x => got.add(x));
+    out.push(pickQ);
+    if (out.length >= size) break;
+  }
+  return shuffle(rng, out);
+}
+

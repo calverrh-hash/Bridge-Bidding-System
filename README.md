@@ -2,7 +2,7 @@
 
 Practice bidding drills for a 5-card majors / strong 1NT (15-17) system. You sit South and bid whole auctions. Partner is dealt a real hand and bids by the same chart. In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.
 
-There are 16 drills: 15 topic drills of 10 hands each and a Mixed drill of 50. Each set is picked from a larger deal to cover as many different situations as possible. "New hands for every drill" on the home screen deals fresh hands everywhere at once.
+There are 16 drills of 10 hands each. Each topic set is picked from a larger deal to cover as many different situations as possible. "New hands for every drill" on the home screen deals fresh hands everywhere at once. Mixed takes one hand from each of 10 different drills, and each new deal moves on to the drills the last one left out.
 
 ## The chart
 
@@ -40,7 +40,7 @@ From a terminal (Git Bash on Windows, or Linux/macOS), run `bash tests/run.sh`. 
 | `js/rules.js` | The uncontested chart, one function per decision: openings, responses to 1NT/1M/1m, opener's rebid and responder's next call, 2NT/2♣/weak twos/pre-empts, slam tools and LTC. |
 | `js/competitive.js` | The competitive chart (F and H): overcalls, doubles, Cappelletti, the cue bid after a takeout double, penalty doubles and reopening, our 1NT doubled (chart or Helvic), the unassuming cue bid, support doubles. |
 | `js/auction.js` | Keeps the whole auction, all four seats (`auctionState`), picks which rule applies at each point (`chartCall`, `sysCall`), plays a whole auction (`simulate`, opponents pass) and a scripted four-hand one (`sim4`, opponents bid). |
-| `js/drills.js` | The uncontested drills, the LTC drill, Mixed, and `buildSet`, which deals each set (10 hands, or 50 for Mixed). |
+| `js/drills.js` | The uncontested drills, the LTC drill, Mixed, and `buildSet`, which deals each set (10 hands). |
 | `js/contested.js` | The four-hand drills: the opponents' scripts and the recipes for penalty doubles, their 1NT, our 1NT doubled, the unassuming cue bid and support doubles. |
 | `js/app.js` | The page itself: home screen, Chart/Helvic switch, bidding box, number pad, feedback, results and saved progress. |
 | `style.css` | Colours (light and dark), type and layout. |

@@ -398,8 +398,18 @@ test('regression: the same seed deals the same hands on a slow device', () => {
     finally { Date.now = realNow; performance.now = realPerf; }
   }
 });
-test('topic drills deal 10 hands and Mixed deals 50', () => {
-  for (const d of SETS) same(setSize(d), d.id === 'mixed' ? 50 : 10, d.id);
+test('every drill deals 10 hands, Mixed included', () => {
+  for (const d of SETS) same(setSize(d), 10, d.id);
+});
+test('Mixed: ten different drills per deal, and the next deal moves on to the others', () => {
+  const M = SETS.find(d => d.id === 'mixed'), n = M.sources.length, seen = new Set();
+  const a = buildSet(M, 1).map(q => q.src), b = buildSet(M, 2).map(q => q.src);
+  same(new Set(a).size, 10, 'seed 1: ten different drills');
+  same(new Set(b).size, 10, 'seed 2: ten different drills');
+  const notInA = M.sources.map(d => d.id).filter(id => !a.includes(id));
+  check(notInA.every(id => b.includes(id)), 'seed 2 includes every drill seed 1 left out');
+  for (let s = 1; s <= Math.ceil(n / 10) + 1; s++) buildSet(M, s).forEach(q => seen.add(q.src));
+  same(seen.size, n, 'a few deals in a row cover every drill');
 });
 test('our 1NT doubled, chart system: weak and 5-5 runs to the lower suit', () => {
   // Hands are [clubs, diamonds, hearts, spades]. ♠Q10852 ♥J10963 ♦4 ♣72: 3 HCP.

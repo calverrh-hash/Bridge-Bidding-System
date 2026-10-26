@@ -3,7 +3,8 @@
 ## 2026-10-24 (later): latest rules from the trainer
 
 ### Changed
-- **Set sizes:** topic drills are 10 hands, chosen for the widest coverage; Mixed is 50 hands. A set can set its own size with `size:`.
+- **Set sizes:** every drill is 10 hands, chosen for the widest coverage. A set can set its own size with `size:`.
+- **Mixed:** one hand from each of 10 different drills. Each new deal moves on to the drills the last one left out, so consecutive deals mix up the content and two or three cover every drill.
 - **Our 1NT doubled (chart system):** weak and 5-5 in two of ♦/♥/♠, bid the lower suit (you can still run to the higher one at the 2-level if that is doubled too). The chart says so too.
 - **After our redouble and their run, 5-5:** bid the higher-ranking suit unless the lower one is clearly better (two of the top three honours against none), e.g. ♠J10543 ♦AKQ106 bids 2♦. On the chart too.
 - **Opener's minimum rebid with 6-4:** show a 4-card major first when it is below the barrier (1♦-1♥-1♠, 1♠-2♣-2♥); otherwise rebid the six-card suit (1♦-1♠-2♦, since 2♥ would be a reverse). On the chart too.
