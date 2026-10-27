@@ -125,13 +125,14 @@ const callsHTML = (title, list) => list.length ? `<div class="pcalls"><span clas
 function home() {
   const sets = [...SETS].sort((a, b) => (a.last ? 1 : 0) - (b.last ? 1 : 0));
   const cards = sets.map(d => {
-    const key = keyOf(d.id), done = playedCount(d.id), best = bestOf(key), size = SET_SIZE;
+    const key = keyOf(d.id), done = playedCount(d.id), best = bestOf(key), size = setSize(d);
     const sys = d.helvic ? ` <b>${DB.opts.helvic ? 'Playing Helvic Wriggle.' : 'Playing the chart system.'}</b>` : '';
     return `<button class="set" data-set="${d.id}"><div class="set-top"><h3>${rich(d.name)}</h3><span class="chip">${rich(d.refs)}</span></div><p>${rich(d.blurb)}${sys}</p>
     <div class="meter"><i style="width:${done / size * 100}%"></i></div><div class="set-foot"><span>${done ? `${done} / ${size} played` : `${size} hands`}</span><span>${best != null ? `Best ${best}/${size}` : 'Not finished yet'}</span></div></button>`;
   }).join('');
   const hv = DB.opts.helvic;
-  app.innerHTML = `<div class="intro"><span class="eyebrow">5-card majors · strong NT</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart. In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.</p></div>
+  app.innerHTML = `<div class="intro"><span class="eyebrow">5-card majors · strong NT</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart. In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.</p>
+    <div class="actions" style="margin-top:4px"><button class="ghost" id="newall">New hands for every drill</button></div></div>
     <div class="sys"><div><span class="eyebrow">When our 1NT is doubled</span><p>${hv ? 'Helvic Wriggle: pass = values or a wriggle (partner redoubles), XX = weak one-suiter (partner bids 2♣), 2♣/2♦/2♥ = that suit and the next one up.' : 'Chart: 2♦/2♥/2♠ natural sign-off (transfers off), redouble with 7+.'}</p></div>
     <div class="seg" role="group" aria-label="System when our 1NT is doubled"><button id="m-chart" class="${hv ? '' : 'on'}" aria-pressed="${!hv}">Chart</button><button id="m-helvic" class="${hv ? 'on' : ''}" aria-pressed="${hv}">Helvic</button></div></div>
     <div class="sets">${cards}</div>`;
@@ -139,6 +140,15 @@ function home() {
   const mode = helvic => { DB.opts.helvic = helvic; save(); render(); };
   document.getElementById('m-chart').onclick = () => mode(false);
   document.getElementById('m-helvic').onclick = () => mode(true);
+  document.getElementById('newall').onclick = newHandsEverywhere;
+}
+// Move every drill (chart and Helvic versions) to its next seed and clear unfinished progress.
+// Best scores are kept.
+function newHandsEverywhere() {
+  SETS.forEach(d => [d.id, d.id + '~helvic'].forEach(k => { DB.seed[k] = seedOf(k) + 1; }));
+  DB.prog = {};
+  save();
+  render();
 }
 
 // Start or resume a set. With `order` (a list of hand indexes), replay just those hands.
@@ -166,7 +176,7 @@ function play() {
   const word = q.steps.some(x => x.kind === 'num') ? 'Step' : 'Call';
   const pips = q.steps.length > 1 ? `<div class="pips">${q.steps.map((_, k) => `<i class="${k < S.step ? (S.cur[k] === q.steps[k].ans.bid ? 'ok' : 'no') : k === S.step ? (S.answered ? (S.answered === st.ans.bid ? 'ok' : 'no') : 'cur') : ''}"></i>`).join('')}<span>${word} ${S.step + 1} of ${q.steps.length}</span></div>` : '';
   const prevWrong = S.step > 0 && q.steps[S.step - 1].kind !== 'num' && S.cur[S.step - 1] !== q.steps[S.step - 1].ans.bid;
-  let lower;
+  let lower, top = '';   // top: the Continue button, shown above the table so you needn't scroll
   if (S.answered) {
     // Feedback on the answer just given, and on the last step the whole hand.
     const a = st.ans, good = S.answered === a.bid;
@@ -180,7 +190,8 @@ function play() {
     const nextLabel = !last ? (num ? 'Next step →' : 'Continue the auction →') : nextUnplayed() < 0 ? 'See results' : 'Next hand →';
     lower = `<div class="fb ${good ? 'ok' : 'no'}" role="status"><div class="verdict">${good ? 'Correct' : num ? `It's ${a.bid}` : `Chart says ${fmt(a.bid)}`}</div>
       ${good ? '' : `<p>You ${num ? 'said' : 'bid'} ${showA(st, S.answered)}.${last || num ? '' : ' The auction continues with the chart call.'}</p>`}<p>${rich(a.why)}</p><span class="ref">${rich(REF[a.ref] || '')}</span></div>
-      ${fin}<div class="actions"><button class="primary" id="next">${nextLabel}</button></div>`;
+      ${fin}`;
+    top = `<div class="actions"><button class="primary" id="next">${nextLabel}</button></div>`;
   } else if (num) {
     // The number pad, for counting losers and tricks.
     lower = `<div class="box"><div class="brow np">${st.opts.map(v => `<button class="bc" data-num="${v}">${v}</button>`).join('')}</div><p class="hint">${st.opts[0] === '0' ? 'Losers in your hand' : 'Tricks LTC predicts'}</p></div>`;
@@ -198,7 +209,7 @@ function play() {
   }
   app.innerHTML = `<div class="bar"><button class="back" id="back">‹ All drills</button><span class="count">Hand ${S.pos + 1} / ${S.order.length} · ${nOk} correct</span></div>
     ${dots}<div class="lead"><span class="eyebrow">${S.retry ? 'Retrying misses · ' : S.practice ? 'Practice: the first result stands · ' : ''}${rich(d.name)}</span>${pips}<p class="note">${rich(st.note)}${prevWrong ? ' <span class="muted">(The auction went on with the chart call.)</span>' : ''}</p></div>
-    ${auctionHTML(q.dealer, st.calls, num ? '?' : S.answered || '?')}${handHTML(q.hand, !!S.answered, '', q.ltc && !!S.answered)}${lower}`;
+    ${top}${auctionHTML(q.dealer, st.calls, num ? '?' : S.answered || '?')}${handHTML(q.hand, !!S.answered, '', q.ltc && !!S.answered)}${lower}`;
   document.getElementById('back').onclick = goHome;
   app.querySelectorAll('[data-jump]').forEach(b => b.onclick = () => jumpTo(+b.dataset.jump));
   app.querySelectorAll('[data-lv]').forEach(b => b.onclick = () => { S.level = +b.dataset.lv; render(); });

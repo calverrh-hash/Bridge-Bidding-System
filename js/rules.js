@@ -45,9 +45,10 @@ function openingBid(h) {
   if (p >= 11) {
     if (fiveM) {
       const M = l[3] >= l[2] ? 3 : 2, mn = Math.max(l[0], l[1]);
+      // Longest suit first: a longer minor (6-5) opens the minor; you bid the major twice later.
+      if (mn > l[M]) { const m = l[1] >= l[0] ? 1 : 0; return R(B(1, m), `${p} HCP with ${NUM[l[m]]} ${SN[m]} and five ${SN[M]}: open your longest suit, 1${SY[m]}. Bid the ${SN[M].replace(/s$/, '')}s twice later to show five.`, 'OB.longer-minor'); }
       const why = l[2] === l[3] ? 'With 5-5 in the majors, open the higher-ranking suit: 1♠.'
         : mn === l[M] ? 'With 5-5, open the higher-ranking suit.'
-        : mn > l[M] ? 'A 5-card major opens 1 of the major even with a longer minor (1♣/1♦ deny a 5-card major).'
         : 'Open the longer major.';
       return R(B(1, M), `${p} HCP, unbalanced, with a 5+ card major: open 1${SY[M]}. ${why}`, 'OB.major');
     }
@@ -153,6 +154,12 @@ function inv(h) {
   const p = hcp(h);
   return p <= 15 ? R('P', `${p} HCP is a minimum (15): pass the invitation.`, 'A.invite-answer') : R('3N', `${p} HCP is a maximum (16-17): accept with 3NT.`, 'A.invite-answer');
 }
+// Opener answers transfer-then-2NT (five cards in M, 8-9) holding 3+ cards in M: play the 5-3 fit.
+function invFit(h, M) {
+  const p = hcp(h), t = L(h)[M];
+  return p <= 15 ? R(B(3, M), `Partner showed five ${SN[M]} and 8-9. With ${t} ${SN[M]} you have a fit, and ${p} HCP is a minimum (15): bid 3${SY[M]}. A 5-3 fit usually takes a trick more than no-trumps.`, 'A.invite-answer')
+    : R(B(4, M), `Partner showed five ${SN[M]} and 8-9. With ${t} ${SN[M]} you have a fit, and ${p} HCP is a maximum (16-17): bid 4${SY[M]}.`, 'A.invite-answer');
+}
 function inv4(h, M) {
   const p = hcp(h);
   return p <= 15 ? R('P', `${p} HCP is a minimum (15): pass 3${SY[M]}.`, 'A.invite-answer') : R(B(4, M), `${p} HCP is a maximum (16-17): accept with 4${SY[M]}.`, 'A.invite-answer');
@@ -194,6 +201,18 @@ function r1M(h, M) {
   if (t >= 5 && p <= 6) return R(B(4, M), `${t} trumps and only ${p} HCP: jump to 4${SY[M]}, the weak raise (5+ trumps, to play).`, 'B.weak-raise');
   if (t >= 4) {
     if (p <= 5) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
+    // Shape counts: 7 losers or fewer plays like 13+ (game opposite an opener's 7 losers).
+    const k = losers(h), gf = p >= 13 || (p >= 7 && k <= 7);
+    if (gf) {
+      const why = p >= 13 ? `${p} HCP` : `${p} HCP but only ${k} losers (${loserBreak(h)}), so your hand plays like 13+`;
+      // A good side suit (5+ cards, two of the top three honours) is shown first: it's your source of tricks.
+      const side = [0, 1, 2, 3].filter(s => s !== M && l[s] >= 5 && [14, 13, 12].filter(r => has(h, s, r)).length >= 2).sort((a, b) => l[b] - l[a] || b - a);
+      if (side.length) {
+        const s = side[0], b = B(s > M ? 1 : 2, s);
+        return R(b, `${t}-card support and ${why}. With a good ${l[s]}-card ${SN[s].replace(/s$/, '')} suit, show it first (${plain(b)}, forcing), then support ${SN[M]} strongly: partner learns where your tricks come from.`, 'B.new-suit-then-support');
+      }
+      return R('2N', `${t}-card support and ${why}: Jacoby 2NT (4+ trumps, game forcing).`, 'B.jacoby');
+    }
     if (p === 6) return gap('The chart has no raise for four trumps and exactly 6 HCP.');
     if (p <= 9) return R('3D', `${t}-card support and ${p} HCP: 3♦ shows 4+ trumps, 7-9.`, 'B.bergen-3d');
     if (p <= 12) return R('3C', `${t}-card support and ${p} HCP: 3♣ shows 4+ trumps, 10-12.`, 'B.bergen-3c');
@@ -218,15 +237,16 @@ function jac(h, M) {
   const p = hcp(h), l = L(h);
   const short = [0, 1, 2, 3].filter(s => s !== M && l[s] <= 1);
   const g5 = [0, 1, 2, 3].filter(s => s !== M && l[s] >= 5 && [14, 13, 12].filter(r => has(h, s, r)).length >= 2);
-  if (short.length > 1 || (short.length && g5.length) || g5.length > 1) return amb('Opener has more than one feature to show over Jacoby 2NT.');
-  if (short.length) {
+  // A good 5-card side suit comes first (a 5-5 hand always has a short suit too).
+  if (g5.length > 1 || (!g5.length && short.length > 1)) return amb('Opener has more than one feature to show over Jacoby 2NT.');
+  if (short.length && !g5.length) {
     const s = short[0];
     return R(B(3, s), `${l[s] === 0 ? 'Void' : 'Singleton'} in ${SN[s]}: show it with 3${SY[s]}.`, 'B.jacoby-shortness');
   }
   if (g5.length) {
     const s = g5[0];
     if (M === 2 && s === 3) return gap('The chart has no way to show a good spade suit over 1♥ – 2NT.');
-    return R(B(4, s), `Good 5-card ${SN[s]} suit: 4${SY[s]}.`, 'B.jacoby-side-suit');
+    return R(B(4, s), `Good 5-card ${SN[s]} suit: 4${SY[s]}.${short.length ? ' A good side suit comes before showing your short suit.' : ''}`, 'B.jacoby-side-suit');
   }
   if (p <= 14) return R(B(4, M), `Flat minimum (${p}): 4${SY[M]} shows 11-14 with no shortness.`, 'B.jacoby-flat');
   if (p <= 17) return R('3N', `Flat ${p}: 3NT shows 15-17 with no shortness.`, 'B.jacoby-flat');
@@ -250,7 +270,9 @@ function jacCont(h, M, x) {
   }
   // Opener with 18+ and 2+ key cards bids 4NT at once, so 3M is 18+ with 0-1 key cards.
   if (x === B(3, M)) return slamTry(h, M, 18, `Opener's 3${SY[M]} (flat 18+)`);
-  return gap('The chart has no continuation after opener shows shortness or a side suit.');
+  // Opener showed shortness or a good side suit (11+): slam with 31+ (chart G), else sign off.
+  const what = /^4/.test(x) ? 'a good side suit' : 'a short suit';
+  return slamTry(h, M, 11, `Opener's ${plain(x)} (${what}, 11+)`) || R(B(4, M), `Opener's ${plain(x)} shows ${what}. With ${p} there's no slam (under 31 between you): sign off in 4${SY[M]}.`, 'B.jacoby-signoff');
 }
 // Opener with 13-14 after a limit raise: the chart says use LTC (G). A limit raise counts as 8 losers.
 function ltcLimit(h, M) {
@@ -306,7 +328,20 @@ function rebid(h, o, r, lvl) {
   }
   if (p <= 14) {
     if (l[r] >= 4) return R(B(lvl + 1, r), `Unbalanced 11-14 with ${l[r]} ${SN[r]}: simple raise to ${plain(B(lvl + 1, r))}.`, 'D.raise');
-    if (l[o] >= 6) return R(B(2, o), `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]}: simple rebid of 2${SY[o]}.`, 'D.rebid-suit');
+    // Shape upgrade: a 7-card suit, or 5 losers or fewer, plays like 15-19, so jump rebid.
+    // (Six losers is common with a six-card suit, so that alone doesn't upgrade.)
+    const jumpByShape = l[o] >= 7 || (l[o] >= 6 && losers(h) <= 5);
+    const shapeJump = () => R(B(3, o), `${p} HCP, but ${l[o] >= 7 ? `a ${NUM[l[o]]}-card suit` : `only ${losers(h)} losers (${loserBreak(h)})`} plays like the strong band (15-19): jump rebid to 3${SY[o]}.`, 'D.jump-rebid-shape');
+    if (l[o] >= 7) return shapeJump();
+    // 6-4 with a 4-card major you can show below the barrier: show the major first. A major
+    // fit is worth more than repeating the long suit, and you can rebid that suit later.
+    const mj = others.filter(s => s >= 2 && l[s] >= 4 && bv(B(cheapest(s, resp), s)) < bv(bar));
+    if (l[o] >= 6 && mj.length === 1) {
+      const s = mj[0], b = B(cheapest(s, resp), s);
+      return R(b, `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]} and four ${SN[s]}: show the major first, ${plain(b)}, so a 4-4 ${SN[s].replace(/s$/, '')} fit isn't lost. It sits below the barrier (2${SY[o]}), so it shows no extra strength, and you can still rebid your ${SN[o]} later.`, 'D.new-suit');
+    }
+    if (jumpByShape) return shapeJump();
+    if (l[o] >= 6) return R(B(2, o), `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]}: simple rebid of 2${SY[o]}.${others.some(s => s >= 2 && l[s] >= 4) ? ' Your 4-card major would be a reverse here (above the barrier, 16+), so rebid the long suit.' : ''}`, 'D.rebid-suit');
     const below = others.filter(s => l[s] >= 4 && bv(B(cheapest(s, resp), s)) <= bv(bar));
     if (below.length > 1) return amb('More than one four-card suit could be shown below the barrier.');
     if (below.length === 1) {
@@ -319,6 +354,12 @@ function rebid(h, o, r, lvl) {
   if (lvl !== 1) return gap('The chart has no rebid with 15+ after a 2-level response.');
   if (p <= 19) {
     if (l[r] >= 4) return R(B(3, r), `Unbalanced 15-19 with ${l[r]} ${SN[r]}: double raise to 3${SY[r]}.`, 'D.double-raise');
+    // 6-5 with a five-card major (opened the longer minor): show the major now, and again later.
+    const five = others.filter(s => s >= 2 && l[s] >= 5);
+    if (o <= 1 && l[o] >= 6 && five.length === 1) {
+      const s = five[0], b = B(cheapest(s, resp), s);
+      return R(b, `${p} HCP, six ${SN[o]} and five ${SN[s]}: show the major now with ${plain(b)}${bv(b) > bv(bar) ? ' (a reverse, fine with 15-19)' : ''}. Bid ${SN[s]} again next time to show five.`, 'D.six-five');
+    }
     const opts = [];
     if (l[o] >= 6) opts.push([B(3, o), `Unbalanced 15-19 with ${NUM[l[o]]} ${SN[o]}: jump rebid to 3${SY[o]}.`, 'D.jump-rebid']);
     for (const s of others) {
@@ -352,10 +393,13 @@ function supportAfterNewSuit(h, M, r, x) {
   // Opener's jump rebid in the major (15-19, six cards): a fit is known, so chart D ("10+ game")
   // and chart G (31+ with a fit asks 4NT) decide.
   if (x === B(3, M) && r[0] === '1') return slamTry(h, M, 15, `Opener's jump to ${plain(x)} (15-19)`) || R(B(4, M), `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[M]}. With three-card support and ${p}, bid game: 4${SY[M]}.`, 'D.after-jump-rebid');
-  if (!minimum) return gap('Opener showed extra values, and the chart has no slam route after a new suit with three-card support.');
+  if (!minimum) {   // opener showed extras: 18-19 balanced (2NT, or 3NT after a 2-level response) or 15-19
+    const mn = x === '3N' || x === '2N' ? 18 : 15;
+    return slamTry(h, M, mn, `Opener's ${plain(x)} (${mn}+)`) || R(B(4, M), `Opener's ${plain(x)} shows ${mn}+. You have ${NUM[L(h)[M]]}-card support: now bid game, 4${SY[M]}.`, 'B.support-after-new-suit');
+  }
   // As after Jacoby: at most 16 + 14 = 30 combined, so no slam.
-  if (p >= 17) return gap('With 17+ opposite a minimum, slam is possible, and the chart has no slam route here.');
-  return R(B(4, M), `You bid a new suit first, holding three-card support for ${SN[M]} and 13+. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
+  if (p >= 17) return slamTry(h, M, 11, "Opener's minimum rebid (11-14)") || R(B(4, M), `Opener's rebid shows a minimum. With ${p} and ${NUM[L(h)[M]]}-card support, bid game: 4${SY[M]}.`, 'B.support-after-new-suit');
+  return R(B(4, M), `You bid a new suit first, holding ${NUM[L(h)[M]]}-card support for ${SN[M]} and game values. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
 }
 // Responder's second call after opener's rebid. seq = [opening, response, rebid].
 function respAfterRebid(h, seq) {
@@ -363,10 +407,19 @@ function respAfterRebid(h, seq) {
   if (x === 'P' || !/^\d/.test(x)) return gap('The chart has no call here.');
   const rs = ST.indexOf(r[1]), rl = +r[0], xs = ST.indexOf(x[1]), xl = +x[0];
   if (xs === rs) {   // opener raised responder's suit
-    if (rs < 2) return gap('The chart has no continuation after opener raises a minor.');
+    if (rs < 2) {   // opener raised responder's minor: no-trump is the usual game
+      const o0 = ST.indexOf(seq[0][1]), mj = o0 >= 2 && l[o0] >= 3;
+      if (xl >= rl + 2) return p >= 10 ? R(mj ? B(4, o0) : '3N', `Opener's jump raise shows 15-19. With ${p} (10+) bid game: ${mj ? `4${SY[o0]}, with ${l[o0]} of opener's ${SN[o0]}` : '3NT, nine tricks instead of eleven'}.`, 'D.after-double-raise') : R('P', `Opener's jump raise shows 15-19. With ${p} (6-9), pass.`, 'D.after-double-raise');
+      if (xl === 2) return p >= 13 ? R('3N', `Opener's raise shows 11-14. With ${p} (13+), bid 3NT.`, 'D.after-raise') : p >= 11 ? R('2N', `Opener's raise shows 11-14. With ${p} (11-12), invite with 2NT.`, 'D.after-raise') : R('P', `Opener's raise shows 11-14. With ${p} (10 or less), pass.`, 'D.after-raise');
+      return p >= 12 ? R(mj ? B(4, o0) : '3N', `Opener's ${plain(x)} shows 11-14. With ${p} (12+) bid game: ${mj ? `4${SY[o0]}, with ${l[o0]} of opener's ${SN[o0]}` : '3NT'}.`, 'D.after-raise') : R('P', `Opener's ${plain(x)} shows 11-14. With ${p}, pass.`, 'D.after-raise');
+    }
     const dbl = xl >= rl + 2, s = slamTry(h, rs, dbl ? 15 : 11, dbl ? "Opener's double raise (15-19)" : "Opener's raise (11-14)");
     if (s) return s;
     if (xl === rl + 1) {
+      // Opener's simple raise is about 7 losers: 24 − (yours + 7) = tricks.
+      const k = losers(h), t = 24 - k - 7;
+      if (p < 13 && t >= 10) return R(B(4, rs), `Opener's simple raise shows 11-14 (about 7 losers). You have ${p} HCP but ${k} losers (${loserBreak(h)}): 24 − (${k} + 7) = ${t} tricks, so bid 4${SY[rs]}.`, 'D.after-raise');
+      if (p <= 10 && t === 9 && xl === 2) return R(B(3, rs), `Opener's simple raise shows 11-14. You have ${p} HCP but ${k} losers: 24 − (${k} + 7) = 9 tricks, so invite with 3${SY[rs]}.`, 'D.after-raise');
       if (p >= 13) return R(B(4, rs), `Opener's simple raise shows 11-14. With ${p}, bid game: 4${SY[rs]}.`, 'D.after-raise');
       if (p >= 11) {
         if (xl >= 3) return gap('After a raise to the 3-level, the chart gives no call with 11-12.');
@@ -381,13 +434,24 @@ function respAfterRebid(h, seq) {
     return gap('The chart has no continuation after this raise.');
   }
   if (x === '1N') {
-    if (l[rs] >= 5 || p > 15) return gap('After a 1NT rebid, the chart gives no call with a five-card suit or 16+.');
+    if (l[rs] >= 5) {   // a five-card or longer suit of your own
+      const n5 = l[rs], maj = rs >= 2;
+      if (p <= 10) return maj && n5 >= 6 ? R(B(2, rs), `Opener's 1NT shows 12-14. With ${p} and ${NUM[n5]} ${SN[rs]}, sign off in 2${SY[rs]}.`, 'D.after-1nt') : R('P', `Opener's 1NT shows 12-14. With ${p} (10 or less), pass.`, 'D.after-1nt');
+      if (p <= 12) return maj && n5 >= 6 ? R(B(3, rs), `Opener's 1NT shows 12-14. With ${p} (11-12) and ${NUM[n5]} ${SN[rs]}, invite with 3${SY[rs]}.`, 'D.after-1nt') : R('2N', `Opener's 1NT shows 12-14. With ${p} (11-12), invite with 2NT.`, 'D.after-1nt');
+      return maj && n5 >= 6 ? R(B(4, rs), `Opener's 1NT shows 12-14. With ${p} (13+) and ${NUM[n5]} ${SN[rs]}, bid 4${SY[rs]}.`, 'D.after-1nt') : R('3N', `Opener's 1NT shows 12-14. With ${p} (13+), bid 3NT.`, 'D.after-1nt');
+    }
+    if (p > 20) return R('6N', `Opener's 1NT shows 12-14. With ${p} you have 33+ between you: 6NT.`, 'D.after-1nt');
+    if (p > 15) return R('3N', `Opener's 1NT shows 12-14. With ${p} (16-20) that's under 33 for slam: 3NT.`, 'D.after-1nt');
     if (p <= 10) return R('P', `Opener's 1NT shows 12-14 balanced. With ${p} (10 or less), pass.`, 'D.after-1nt');
     if (p <= 12) return R('2N', `Opener's 1NT shows 12-14. With ${p} (11-12), invite with 2NT.`, 'D.after-1nt');
     return R('3N', `Opener's 1NT shows 12-14. With ${p} (13+), bid 3NT.`, 'D.after-1nt');
   }
   if (x === '2N' && rl === 1) {
-    if (rs >= 2 && l[rs] >= 5) return gap('After a 2NT rebid, the chart gives no call with a five-card major.');
+    if (rs >= 2 && l[rs] >= 5) {
+      if (p < 7) return R('P', `Opener's 2NT shows 18-19. With only ${p}, pass.`, 'D.after-2nt');
+      return l[rs] >= 6 ? R(B(4, rs), `Opener's 2NT shows 18-19. With ${p} (7+) and ${NUM[l[rs]]} ${SN[rs]}, bid 4${SY[rs]}.`, 'D.after-2nt')
+        : R(B(3, rs), `Opener's 2NT shows 18-19. With ${p} (7+) and five ${SN[rs]}, bid 3${SY[rs]} (forcing): opener bids 4${SY[rs]} with three, else 3NT.`, 'D.after-2nt');
+    }
     if (p >= 7) return R('3N', `Opener's 2NT shows 18-19 balanced. With ${p} (7+), bid 3NT.`, 'D.after-2nt');
     return R('P', `Opener's 2NT shows 18-19. With only ${p}, pass.`, 'D.after-2nt');
   }
@@ -397,8 +461,29 @@ function respAfterRebid(h, seq) {
   const o = ST.indexOf(seq[0][1]);
   if (xs === o) {
     if (x === B(cheapest(o, r), o)) {   // simple rebid of opener's suit: 11-14
+      // A rebid major promises six, so three cards or a doubleton honour (Ax, Kx, Qx) is a fit.
+      const hx = l[o] === 2 && h[o].some(c => c >= 12), fit = o >= 2 && (l[o] >= 3 || hx);
+      const fw = hx ? `${SN[o].replace(/s$/, '')} doubleton honour (${h[o].map(c => RANK[c] || c).join('')}): opposite six, that's a fit` : `${l[o]} ${SN[o]}: a fit`;
+      if (fit && p >= 13) return R(B(4, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}, and with ${p} (13+) bid game: 4${SY[o]}.`, 'D.after-major-rebid');
+      if (fit && p >= 10 && xl === 2) return R(B(3, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}. With ${p} (10-12), invite with 3${SY[o]}.`, 'D.after-major-rebid');
       if (p <= 10) return R('P', `Opener's ${plain(x)} is a minimum rebid (11-14). With ${p} (10 or less), pass.`, 'D.after-minimum');
-      return gap('After a minimum rebid, the chart says "11-12 invite, 13+ game" but not which call.');
+      const own6 = l[rs] >= 6 && rs !== o;
+      if (p <= 12) {
+        if (l[o] >= 3) return R(B(3, o), `Opener's ${plain(x)} is a minimum (11-14). With ${p} (11-12) and ${l[o]} ${SN[o]}, invite with 3${SY[o]}.`, 'D.after-minimum');
+        if (own6) return R(B(3, rs), `Opener's ${plain(x)} is a minimum (11-14). With ${p} (11-12) and ${NUM[l[rs]]} ${SN[rs]}, invite with 3${SY[rs]}.`, 'D.after-minimum');
+        return R('2N', `Opener's ${plain(x)} is a minimum (11-14). With ${p} (11-12), invite with 2NT.`, 'D.after-minimum');
+      }
+      if (o >= 2 && l[o] >= 2) return R(B(4, o), `Opener's ${plain(x)} shows six ${SN[o]}. With ${p} (13+) and ${l[o]} of them, bid 4${SY[o]}.`, 'D.after-minimum');
+      if (own6 && rs >= 2) return R(B(4, rs), `Opener's ${plain(x)} is a minimum. With ${p} (13+) and ${NUM[l[rs]]} ${SN[rs]}, bid 4${SY[rs]}.`, 'D.after-minimum');
+      return R('3N', `Opener's ${plain(x)} is a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
+    }
+    if (xl === 3 && o < 2 && x === B(cheapest(o, r) + 1, o)) {   // jump rebid of a minor: 15-19, 6+ cards
+      return p >= 10 ? R('3N', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (10+), bid 3NT: nine tricks instead of eleven.`, 'D.after-jump-rebid')
+        : R('P', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (6-9), pass.`, 'D.after-jump-rebid');
+    }
+    if (rl === 2 && xl === 3 && o >= 2 && x === B(3, o)) {   // after a 2-level response (9+): game
+      return l[o] >= 2 ? R(B(4, o), `Opener's jump to ${plain(x)} shows six ${SN[o]} and extras. With ${p} (9+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-jump-rebid')
+        : R('3N', `Opener's jump to ${plain(x)} shows six ${SN[o]}. With ${p} (9+) but ${cardsOf(l[o], o)}, bid 3NT.`, 'D.after-jump-rebid');
     }
     if (rl === 1 && xl === 3 && o >= 2) {   // jump rebid of a major: 15-19, 6+ cards
       if (p >= 10) return l[o] >= 2 ? R(B(4, o), `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (10+) and ${l[o]} ${SN[o]}, bid game: 4${SY[o]}.`, 'D.after-jump-rebid')
@@ -407,8 +492,36 @@ function respAfterRebid(h, seq) {
     }
     return gap('The chart has no continuation after this rebid.');
   }
+  if (x === '2N' && rl === 2) {   // 12-14 balanced after a 2-level response
+    if (p >= 11) return o >= 2 && l[o] >= 3 ? R(B(4, o), `Opener's 2NT shows 12-14 balanced. With ${p} (11+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-1nt') : R('3N', `Opener's 2NT shows 12-14 balanced. With ${p} (11+), bid 3NT.`, 'D.after-1nt');
+    return R('P', `Opener's 2NT shows 12-14 balanced. With ${p} (9-10), pass.`, 'D.after-1nt');
+  }
+  if (x === '3N' || gameBid(x)) return AP('Opener bid game.');
+  if (xs < 4 && xs !== rs && xs !== o && bv(x) > bv(B(2, o))) {   // reverse (15-19) or jump shift (20-22)
+    const js = xl === cheapest(xs, r) + 1, fitO = o >= 2 && l[o] >= 3, fitX = xs >= 2 && l[xs] >= 4;
+    const tag = js ? "Opener's jump shift shows 20-22 and is game forcing" : "Opener's reverse shows 15-19 and is forcing";
+    if (js || p >= 10) {
+      if (fitO) return R(B(4, o), `${tag}. With ${l[o]} ${SN[o]}, bid game there: 4${SY[o]}.`, js ? 'D.after-jump-shift' : 'D.after-reverse');
+      if (fitX) return R(B(4, xs), `${tag}. With ${l[xs]} ${SN[xs]}, bid game there: 4${SY[xs]}.`, js ? 'D.after-jump-shift' : 'D.after-reverse');
+      if (rs >= 2 && l[rs] >= 6) return R(B(4, rs), `${tag}. With ${NUM[l[rs]]} ${SN[rs]}, bid 4${SY[rs]}.`, js ? 'D.after-jump-shift' : 'D.after-reverse');
+      return R('3N', `${tag}. ${js ? 'Never pass: ' : `With ${p} (10+), `}bid 3NT.`, js ? 'D.after-jump-shift' : 'D.after-reverse');
+    }
+    if (fitX) return R(B(3, xs), `${tag}. With ${p} (6-9) and ${l[xs]} ${SN[xs]}, raise to 3${SY[xs]}.`, 'D.after-reverse');
+    if (l[o] >= 3 || (l[o] >= 2 && o >= 2)) return R(B(cheapest(o, x), o), `${tag}. With ${p} (6-9), give preference to opener's first suit: ${plain(B(cheapest(o, x), o))}.`, 'D.after-reverse');
+    if (l[rs] >= 5) return R(B(cheapest(rs, x), rs), `${tag}. With ${p} (6-9), rebid your ${SN[rs]}: ${plain(B(cheapest(rs, x), rs))}.`, 'D.after-reverse');
+    return R(bv('2N') > bv(x) ? '2N' : '3N', `${tag}. With ${p} (6-9) and nothing else to say, ${bv('2N') > bv(x) ? '2NT' : '3NT'}.`, 'D.after-reverse');
+  }
   if (xs < 4 && xs !== rs && bv(x) <= bv(B(2, o))) {   // new suit below the barrier: 11-14
-    if (p > 10) return gap('After a minimum rebid, the chart says "11-12 invite, 13+ game" but not which call.');
+    if (p > 10) {
+      if (p <= 12) {
+        if (l[o] >= 3) return R(B(3, o), `Opener's ${plain(x)} shows a minimum with a second suit. With ${p} (11-12) and ${l[o]} ${SN[o]}, invite with 3${SY[o]}.`, 'D.after-minimum');
+        if (xs >= 2 && l[xs] >= 4) return R(B(3, xs), `Opener's ${plain(x)} shows a minimum with ${SN[xs]}. With ${p} (11-12) and ${l[xs]} of them, invite with 3${SY[xs]}.`, 'D.after-minimum');
+        return R('2N', `Opener's ${plain(x)} shows a minimum (11-14). With ${p} (11-12), invite with 2NT.`, 'D.after-minimum');
+      }
+      if (o >= 2 && l[o] >= 3) return R(B(4, o), `Opener's ${plain(x)} shows a minimum. With ${p} (13+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-minimum');
+      if (xs >= 2 && l[xs] >= 4) return R(B(4, xs), `Opener's ${plain(x)} shows ${SN[xs]}. With ${p} (13+) and ${l[xs]} of them, bid 4${SY[xs]}.`, 'D.after-minimum');
+      return R('3N', `Opener's ${plain(x)} shows a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
+    }
     if (l[o] >= l[xs] && l[o] >= 2) {
       const b = B(cheapest(o, x), o);
       return R(b, `Opener's ${plain(x)} shows a minimum (11-14) with a second suit. With ${p} (10 or less), give preference to the first suit: you hold ${l[o]} ${SN[o]} and ${l[xs]} ${SN[xs]}, so ${plain(b)}.`, 'D.preference');
@@ -419,14 +532,17 @@ function respAfterRebid(h, seq) {
 }
 
 // ---------- E: 2NT, 2♣, weak twos ----------
-// After a transfer over 2NT with 4-5 points: exactly five cards and no singleton or void
-// bids 3NT to offer a choice of games; opener corrects to 4M with 3+ (chart E).
-const choice2N = (h, M) => L(h)[M] === 5 && Math.min(...L(h)) >= 2;
+// After a transfer over 2NT with 4-5 points: exactly five cards bids 3NT to offer a choice
+// of games; opener corrects to 4M with 3+ (chart E, same as over 1NT). Six cards bid 4M.
+const choice2N = (h, M) => L(h)[M] === 5;
 // Responder to 2NT (pm = 3), or to 2♣-2♦-2NT (pm = 1). pm is the most HCP that passes.
 function over2Nx(h, pm) {
   const p = hcp(h), l = L(h), H = l[2], S = l[3];
   if (p > 10) return gap('The chart has no call opposite 2NT with 11+.');
-  if ((H >= 5 && S >= 4) || (S >= 5 && H >= 4)) return gap('The chart has no call opposite 2NT with 5-4 in the majors.');
+  if ((H >= 5 && S >= 4) || (S >= 5 && H >= 4)) {
+    if (p <= pm) { const M = S >= 5 ? 3 : 2; return R(M === 2 ? '3D' : '3H', `${p} HCP, 5-4 in the majors: transfer to your five-card ${SN[M].replace(/s$/, '')}s with ${M === 2 ? '3♦' : '3♥'}, then pass.`, 'E.2nt-transfer'); }
+    return R('3C', `${p} HCP, 5-4 in the majors: 3♣ Stayman. Over 3♦, bid your five-card major (forcing): opener raises with three, else 3NT.`, 'E.2nt-stayman');
+  }
   if ((H >= 6 || S >= 6) && p > pm) {
     const M = S >= 6 ? 3 : 2;
     return R(M === 2 ? '4D' : '4H', `${Num(l[M])} ${SN[M]} with enough to play game: Texas ${M === 2 ? '4♦ → 4♥' : '4♥ → 4♠'}.`, 'E.2nt-texas');
@@ -522,16 +638,33 @@ function rkReply(h, M) {
   if (n === 2) return q ? R('5S', `${list} You hold the ${SY[M]}Q: 5♠ = 2 with the queen.`, 'G.rkcb-answer') : R('5H', `${list} No trump queen: 5♥ = 2 without the queen.`, 'G.rkcb-answer');
   return gap('The chart has no reply showing all five key cards.');
 }
-// The 4NT bidder decides after partner's reply. An unclear reply (0 or 3, 1 or 4) is read low,
-// unless partner opened 2NT or 2♣ (strong = true).
+// The 4NT bidder decides after partner's reply. An unclear reply (0 or 3, 1 or 4) is worked
+// out from the points: you asked with 31+ between you, so the opponents hold at most 40 − 31 = 9.
+// If the low reading would leave them more key cards than 9 points can hold (three key cards
+// need 11+), partner has the high number. If both readings still fit, take the one closer to
+// partner's share of the missing points (or high opposite a strong 2NT/2♣ opening).
 function askDecide(h, M, reply, strong) {
-  const k = kcList(h, M).length;
-  const poss = (reply === '5C' ? [0, 3] : reply === '5D' ? [1, 4] : [2]).filter(v => v + k <= 5);
+  const k = kcList(h, M).length, p = hcp(h);
+  let poss = (reply === '5C' ? [0, 3] : reply === '5D' ? [1, 4] : [2]).filter(v => v + k <= 5);
   if (!poss.length) return gap('The reply does not fit with the key cards you hold.');
   let pk = poss[0], read = '';
   if (poss.length > 1) {
-    pk = strong ? poss[1] : poss[0];
-    read = strong ? ` (${poss[0]} or ${poss[1]}: partner opened with a strong hand, so read it high)` : ` (${poss[0]} or ${poss[1]}: an unclear reply is read low)`;
+    const missA = 4 - [0, 1, 2, 3].filter(s => has(h, s, 14)).length, missK = has(h, M, 13) ? 0 : 1;
+    // Fewest points that n of the missing key cards can be worth (the trump king 3, aces 4).
+    const minPts = n => n <= 0 ? 0 : Math.min(n, missK) * 3 + Math.max(0, n - missK) * 4;
+    const pMin = Math.max(0, 31 - p), oppMax = 40 - p - pMin;
+    const fits = poss.filter(v => minPts(5 - k - v) <= oppMax);
+    if (fits.length === 1) {
+      pk = fits[0];
+      const ov = poss.find(v => v !== pk), oppKC = 5 - k - ov;
+      read = pk > ov ? ` (${poss[0]} or ${poss[1]}: with 31+ between you the opponents have at most ${oppMax} points, too few for the ${oppKC} key cards they'd need if partner had ${ov}, so partner has ${pk})`
+        : ` (${poss[0]} or ${poss[1]}: ${pk} is the only reading that fits)`;
+    } else {
+      const share = (pMin + 2) / Math.max(1, 40 - p), expect = share * (5 - k);
+      pk = strong ? poss[1] : (Math.abs(poss[1] - expect) < Math.abs(poss[0] - expect) ? poss[1] : poss[0]);
+      read = strong ? ` (${poss[0]} or ${poss[1]}: partner opened with a strong hand, so read it high)`
+        : ` (${poss[0]} or ${poss[1]}: partner holds most of the points you don't, so expect about ${expect.toFixed(1)} of the ${5 - k} missing: read it as ${pk})`;
+    }
   }
   const tot = k + pk, miss = 5 - tot, rv = bv(reply), five = bv(B(5, M));
   const head = `You hold ${k}, partner's ${plain(reply)} shows ${reply === '5C' ? '0 or 3' : reply === '5D' ? '1 or 4' : '2'} so ${pk} here${read}: ${tot} of 5.`;

@@ -46,12 +46,13 @@ test('app: a level button greys out strains below the last bid', () => {
   const st = S.qs[S.order[S.pos]].steps[0];
   const lg = legal(S.qs[S.order[S.pos]].dealer, st.calls);
   if (lg.min >= 0) {
-    const lvl = +st.calls.filter(c => /^\d/.test(c)).pop()[0];
+    // The last bid's level, or the next one up if it was no-trump (nothing left at that level).
+    const lastBid = st.calls.filter(c => /^\d/.test(c)).pop(), lvl = +lastBid[0] + (lastBid[1] === 'N' ? 1 : 0);
     click(`[data-lv="${lvl}"]`);
     document.querySelectorAll('#app [data-st]').forEach(b => same(b.disabled, bv(lvl + ST[+b.dataset.st]) <= lg.min, 'strain ' + b.dataset.st));
   }
 });
-test('app: perfect run scores 25 and saves the best score', () => {
+test('app: perfect run scores a full set and saves the best score', () => {
   resetApp();
   click('[data-set="nt-resp"]');
   playOut();
@@ -70,32 +71,32 @@ test('regression: best score is saved even if you leave before "See results"', (
   }
   click('#back');   // leave without pressing "See results"
   same(loadDB().best.comp, SET_SIZE);
-  check(/Best 25\/25/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home card shows the best score');
+  check(/Best 15\/15/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home card shows the best score');
 });
 test('app: progress resumes where you left off', () => {
   resetApp();
   click('[data-set="comp"]');
   for (let i = 0; i < 3; i++) { playHand(); click('#next'); }
   click('#back');
-  check(/3 \/ 25 played/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home shows 3 played');
+  check(/3 \/ 15 played/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home shows 3 played');
   click('[data-set="comp"]');
   same(S.pos, 3);
 });
 test('app: clicking a dot jumps to that hand; "next" goes to the next unplayed hand', () => {
   resetApp();
   click('[data-set="comp"]');
-  click('[data-jump="9"]');
-  same(S.pos, 9);
+  click('[data-jump="4"]');
+  same(S.pos, 4);
   playHand(); click('#next');
-  same(S.pos, 10, 'next unplayed after 9');
-  click('[data-jump="24"]');
+  same(S.pos, 5, 'next unplayed after 4');
+  click(`[data-jump="${SET_SIZE - 1}"]`);
   playHand(); click('#next');
   same(S.pos, 0, 'wraps round to the first unplayed hand');
 });
 test('app: playing hands out of order still finishes the set and saves the best score', () => {
   resetApp();
   click('[data-set="comp"]');
-  click('[data-jump="20"]');
+  click('[data-jump="7"]');
   playOut();
   same(S.view, 'done');
   same(S.res.filter(Boolean).length, SET_SIZE, 'every hand played');
@@ -104,7 +105,7 @@ test('app: playing hands out of order still finishes the set and saves the best 
 test('app: "See results" appears only when no hand is left unplayed', () => {
   resetApp();
   click('[data-set="comp"]');
-  click('[data-jump="24"]');
+  click(`[data-jump="${SET_SIZE - 1}"]`);
   playHand();
   same($('#next').textContent, 'Next hand →');
 });
@@ -207,12 +208,12 @@ test('app: the Helvic switch changes the system and keeps separate progress', ()
   click('#m-helvic');
   same(loadDB().opts.helvic, true);
   check(/Playing Helvic Wriggle/.test($('[data-set="our-nt"]').textContent), 'card says Helvic');
-  check(/25 hands/.test($('[data-set="our-nt"]').textContent), 'Helvic progress starts empty');
+  check(/15 hands/.test($('[data-set="our-nt"]').textContent), 'Helvic progress starts empty');
   click('[data-set="our-nt"]');
   check(S.qs.some(q => q.steps.some(st => st.ans.ref === 'H')), 'Helvic hands are dealt');
   click('#back');
   click('#m-chart');
-  check(/1 \/ 25 played/.test($('[data-set="our-nt"]').textContent), 'chart progress kept');
+  check(/1 \/ 15 played/.test($('[data-set="our-nt"]').textContent), 'chart progress kept');
   resetApp();
 });
 test('app: LTC steps use the number pad, then the bidding box', () => {
@@ -232,4 +233,22 @@ test('app: the whole hand shows the opponents\' calls in four-hand drills', () =
   playHand();
   check(/Opponents' calls/.test(app.textContent), 'opponents listed');
   resetApp();
+});
+test('app: the Continue button sits above the bidding table', () => {
+  resetApp();
+  click('[data-set="nt-resp"]');
+  click('[data-call="P"]');
+  const nx = $('#next'), table = $('.table');
+  check(!!(nx && table && (nx.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING)), 'Continue comes before the table');
+});
+test('app: "New hands for every drill" moves every drill to new hands and keeps best scores', () => {
+  resetApp();
+  DB.best.comp = 7; DB.seed.comp = 3; DB.prog.comp = { seed: 3, sig: 'x', res: [] }; save();
+  click('#newall');
+  const d = loadDB();
+  same(d.seed.comp, 4, 'comp moved to the next seed');
+  same(d.seed['nt-resp'], 2, 'untouched drills move too');
+  same(d.seed['our-nt~helvic'], 2, 'Helvic versions move too');
+  same(Object.keys(d.prog).length, 0, 'unfinished progress cleared');
+  same(d.best.comp, 7, 'best score kept');
 });

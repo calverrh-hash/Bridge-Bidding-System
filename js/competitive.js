@@ -39,6 +39,17 @@ function overcall(h, x) {
   if (p <= 9) return R('P', `${p} HCP with no 5-card suit of your own and not enough to double: pass.`, 'F.overcall-pass');
   return gap('The chart has no call for this hand over the opening.');
 }
+// LHO opened 1 of suit x, partner made a weak jump overcall ov (6+ cards, 6-10), RHO passed.
+// Raise pre-emptively to the level of the fit: total trumps minus six (3 cards → 3-level, 4 → 4-level).
+function wjoRaise(h, x, ov) {
+  const y = ST.indexOf(ov[1]), t = L(h)[y], p = hcp(h), lv = +ov[0];
+  if (p >= 15) return gap('The chart has no constructive advance of a weak jump overcall.');
+  if (t < 3) return R('P', `Partner's weak jump overcall shows six ${SN[y]} and 6-10. With ${cardsOf(t, y)} there's no fit: pass.`, 'F.wjo-raise');
+  const lvl = Math.min(t, 5), tot = 6 + t;
+  if (lvl <= lv) return R('P', `Partner's ${plain(ov)} shows six ${SN[y]}. You have ${t}: ${tot} trumps between you, so the fit is already at its level. Pass.`, 'F.wjo-raise');
+  const b = B(lvl, y);
+  return R(b, `Partner's ${plain(ov)} shows six ${SN[y]}. With ${t} you have ${tot} trumps between you: raise pre-emptively to the level of the fit, ${plain(b)}. It's a blocking bid, not a game try.`, 'F.wjo-raise');
+}
 // Partner opened 1 of suit o, RHO overcalled 1 of suit v.
 function negDbl(h, o, v) {
   const p = hcp(h), l = L(h);
@@ -48,6 +59,11 @@ function negDbl(h, o, v) {
   else if (o <= 1 && v === 3) { need = l[2] === 4; show = 'four hearts'; }
   else { need = l[0] >= 4 && l[1] >= 4; show = 'both minors'; }
   if (need && p >= 6) return R('X', `Negative double: shows ${show} and 6+ (the overcall was at the 1-level).`, 'F.negative-double');
+  // Weak with a long minor fit for partner: jump raise pre-emptively instead.
+  if (o <= 1 && l[o] >= 5 && p >= 4 && p <= 8) {
+    const b = B(cheapest(o, B(1, v)) + 1, o);
+    return R(b, `${Num(l[o])} ${SN[o]} and only ${p} HCP: pre-emptive jump raise to ${plain(b)}. It takes their bidding space; a negative double would show the unbid major${o === 0 && v === 1 ? 's' : ''} instead.`, 'F.preempt-minor-raise');
+  }
   if (p <= 5) return R('P', `Only ${p} HCP: a negative double over a 1-level overcall needs 6+. Pass.`, 'F.negative-double-pass');
   return gap('The chart only covers the negative double here.');
 }
@@ -194,8 +210,20 @@ function penaltyFollow(seat, calls, h, dealer) {
       const nb = B(cheapest(4, lb), 4);
       return R(nb, `They ran to ${plain(lb)} and partner's pass is forcing (we have the balance of the points). No 5-card suit but a ${SN[s]} stopper: ${plain(nb)}.`, 'F.redouble-follow');
     }
-    const top = cands.filter(u => l[u] === mx), t = top.sort((a, b) => b - a)[0], nb = B(cheapest(t, lb), t);
-    return R(nb, `They ran to ${plain(lb)} and partner's pass is forcing: after our redouble we must not let them play undoubled. You can't double with ${cardsOf(h[s].length, s)}, so bid your ${mx >= 5 && top.length > 1 ? 'higher-ranking 5-card suit' : 'longest suit'}: ${plain(nb)}.`, 'F.redouble-follow');
+    const top = cands.filter(u => l[u] === mx).sort((a, b) => b - a), pre = `They ran to ${plain(lb)} and partner's pass is forcing: after our redouble we must not let them play undoubled. You can't double with ${cardsOf(h[s].length, s)}, so`;
+    if (mx >= 5 && top.length > 1) {
+      // 5-5: the higher-ranking suit, unless the lower one is clearly better
+      // (two of the top three honours against none).
+      const hi = top[0], lo = top[1], honours = u => h[u].filter(r => r >= 12).length;
+      if (honours(lo) >= 2 && honours(hi) === 0) {
+        const nb = B(cheapest(lo, lb), lo);
+        return R(nb, `${pre} with 5-5 bid the better suit: ${plain(nb)}. Your ${SN[lo]} have ${honours(lo)} of the top three honours and your ${SN[hi]} have none, so show the suit you want partner to value and lead.`, 'F.redouble-follow');
+      }
+      const nb = B(cheapest(hi, lb), hi);
+      return R(nb, `${pre} with 5-5 bid the higher-ranking suit first: ${plain(nb)}, then ${SN[lo]} next. That order shows at least as many ${SN[hi]} as ${SN[lo]}. If you bid ${SN[lo]} first and ${SN[hi]} second, partner would read you for only four ${SN[hi]}, and with three of them would not know there is a fit. (Bid the lower suit first only when it is clearly better: two of the top three honours against none.)`, 'F.redouble-follow');
+    }
+    const t = top[0], nb = B(cheapest(t, lb), t);
+    return R(nb, `${pre} bid your longest suit: ${plain(nb)}.`, 'F.redouble-follow');
   }
   if (calls.some((v, k) => k < i && (v === 'X' || v === 'XX') && us(k)) && s < 4) {
     return h[s].length >= 4 ? R('X', `They ran to ${plain(lb)}. We have already shown we want a penalty, so double their escape with ${h[s].length} ${SN[s]}.`, 'H.double-escape')
@@ -247,8 +275,8 @@ function ntDoubledResp(h, helvic) {
   if (!helvic) {
     if (p >= 7) return R('XX', `${p} HCP: redouble (7+). We have the balance of the points.`, 'F.nt-doubled');
     if ([1, 2, 3].some(s => l[s] >= 5)) {
-      const s = longest(h, [0]);
-      if (l[s] < 5) return amb('Five clubs and another five-card suit: the chart does not say which to show.');
+      const c = [1, 2, 3].filter(u => l[u] >= 5), mx = Math.max(...c.map(u => l[u])), ties = c.filter(u => l[u] === mx), s = ties[0];
+      if (ties.length > 1) return R(B(2, s), `Weak and 5-5 in ${SN[ties[0]]} and ${SN[ties[1]]}: bid the lower suit, ${plain(B(2, s))}, as a natural sign-off (transfers are off). If they double that too, you can run to 2${SY[ties[1]]} and still be at the 2-level.`, 'F.nt-doubled');
       return R(B(2, s), `Weak with ${l[s]} ${SN[s]}: ${plain(B(2, s))} is a natural sign-off (transfers are off).`, 'F.nt-doubled');
     }
     if (l[0] >= 5) return gap('The chart has no club escape when our 1NT is doubled (2♣ is not on the list).');
@@ -325,15 +353,25 @@ function ucbAdvance(h, x, ov) {
 // Overcaller after the cue bid: cheapest rebid = minimum (8-12), jump to game = 13+.
 function ucbOvercaller(h, ov, cue) {
   const y = ST.indexOf(ov[1]), p = hcp(h);
+  const k = losers(h);
   if (p >= 13) return R(B(4, y), `Partner's ${plain(cue)} shows support and 10+. With ${p} HCP (13+), jump to game: ${plain(B(4, y))}.`, 'H.ucb-rebid');
+  if (k <= 6) return R(B(4, y), `Partner's ${plain(cue)} shows support and 10+ (about 8 losers). You have ${p} HCP but only ${k} losers (${loserBreak(h)}): 24 − (${k} + 8) = ${24 - k - 8} tricks, so jump to game: ${plain(B(4, y))}.`, 'H.ucb-rebid');
   const b = B(cheapest(y, cue), y);
-  return R(b, `Partner's ${plain(cue)} shows support and 10+. With a minimum overcall (${p} HCP), bid ${plain(b)}: the cheapest rebid of your suit says "minimum".`, 'H.ucb-rebid');
+  return R(b, `Partner's ${plain(cue)} shows support and 10+. With a minimum overcall (${p} HCP, ${k} losers), bid ${plain(b)}: the cheapest rebid of your suit says "minimum".`, 'H.ucb-rebid');
 }
 // Advancer after the overcaller's minimum rebid: game with 13+.
 function ucbAfterMin(h, y, reb) {
-  const p = hcp(h);
+  const p = hcp(h), lg = ltcGame(h, 8, "partner's minimum overcall");
+  if (p < 13 && lg) return R(B(4, y), `Partner rebid ${plain(reb)}: a minimum overcall. You have ${p} HCP, but shape counts. ${lg}: ${plain(B(4, y))}.`, 'H.ucb-after-minimum');
   return p >= 13 ? R(B(4, y), `Partner rebid ${plain(reb)}: a minimum overcall. With ${p} HCP you still want game: ${plain(B(4, y))}.`, 'H.ucb-after-minimum')
     : R('P', `Partner rebid ${plain(reb)}: a minimum overcall. With ${p} HCP (10-12) there's no game: pass.`, 'H.ucb-after-minimum');
+}
+
+// Shape counts in competitive auctions too: tricks = 24 − (your losers + partner's shown losers).
+// Returns a sentence when that reaches game (10 tricks), else null.
+function ltcGame(h, pl, who) {
+  const k = losers(h), t = 24 - k - pl;
+  return t >= 10 ? `Count losers: yours ${k} (${loserBreak(h)}), ${who} about ${pl}. 24 − (${k} + ${pl}) = ${t} tricks, so game` : null;
 }
 
 // ---------- H: support doubles ----------
@@ -354,7 +392,9 @@ function supCall(h, M, calls, opp) {
 function supResp(h, M, calls, opp, sup) {
   const t = L(h)[M], p = hcp(h), y = /^\d/.test(opp) ? ST.indexOf(opp[1]) : -1, stp = y >= 0 && y < 4 && stop(h, y);
   const c2 = cheapest(M, lastBid(calls)), fit = `Partner's ${plain(sup)} shows exactly 3 ${SN[M]}, so you have ${t + 3} between you.`;
-  if (p >= 13) {
+  const lg = ltcGame(h, 7, "partner's opening");
+  if (p >= 13 || lg) {
+    if (p < 13) return R(B(4, M), `${fit} You have ${p} HCP, but shape counts. ${lg}: ${plain(B(4, M))}.`, 'H.support-response');
     if (t === 4 && stp) return R('3N', `${fit} With ${p} HCP you want game; with only a 7-card fit and a ${SN[y]} stopper, 3NT.`, 'H.support-response');
     return R(B(4, M), `${fit} With ${p} HCP (13+), bid game: ${plain(B(4, M))}.`, 'H.support-response');
   }
@@ -366,13 +406,15 @@ function supResp(h, M, calls, opp, sup) {
 }
 // Opener after responder's invitation: accept with 13+.
 function supAfterInvite(h, M, inv) {
-  const p = hcp(h);
+  const p = hcp(h), lg = inv !== '2N' && ltcGame(h, 8, "partner's invitation");
+  if (p < 13 && lg) return R(B(4, M), `Partner invites with ${plain(inv)} (10-12). You have ${p} HCP, but shape counts. ${lg}: accept with ${plain(B(4, M))}.`, 'H.support-invite-answer');
   if (p >= 13) return inv === '2N' ? R('3N', `Partner invites with 2NT (10-12). With ${p} HCP (13+), accept: 3NT.`, 'H.support-invite-answer') : R(B(4, M), `Partner invites with ${plain(inv)} (10-12). With ${p} HCP (13+), accept: ${plain(B(4, M))}.`, 'H.support-invite-answer');
-  return R('P', `Partner invites (10-12). With ${p} HCP (11-12), decline: pass.`, 'H.support-invite-answer');
+  return R('P', `Partner invites (10-12). With ${p} HCP (11-12) and ${losers(h)} losers, decline: pass.`, 'H.support-invite-answer');
 }
 // Responder after opener's direct raise (4+ support).
 function supAfterRaise(h, M, raise) {
-  const p = hcp(h);
+  const p = hcp(h), lg = ltcGame(h, +raise[0] >= 3 ? 6 : 7, "opener's raise");
+  if (lg && p < (+raise[0] >= 3 ? 10 : 13)) return R(B(4, M), `Opener's ${plain(raise)} raise. You have ${p} HCP, but shape counts. ${lg}: ${plain(B(4, M))}.`, 'D.after-raise');
   if (+raise[0] >= 3) return p >= 10 ? R(B(4, M), `Opener's double raise shows 15-19. With ${p} (10+), bid game.`, 'D.after-double-raise') : R('P', `Opener's double raise shows 15-19. With ${p} (6-9), pass.`, 'D.after-double-raise');
   if (p >= 13) return R(B(4, M), `Opener's simple raise shows 11-14. With ${p} (13+), bid game.`, 'D.after-raise');
   if (p >= 11) return R(B(3, M), `Opener's simple raise shows 11-14. With ${p} (11-12), invite with 3${SY[M]}.`, 'D.after-raise');
