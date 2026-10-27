@@ -87,7 +87,7 @@ B = f'''
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 3♦:</b> 11-15 sign off 3M · 16+ 4M.')}{box('reb','<b>After 3♣:</b> 11-13 sign off 3M · 14+ 4M.')}</div>
 <div class="sp"></div>
-{box('cnv','<b>JACOBY 2NT - opener bids:</b> 3 of a singleton/void suit (never the trump suit) · 3NT 15-17 flat · 4M 11-14 flat · 4 of a new suit = good 5-card side suit · <b>18+ with 2+ key cards: 4NT at once</b> (31+ combined), else 3M 18+ flat.')}
+{box('cnv','<b>JACOBY 2NT - opener bids:</b> 4 new suit = good 5-card side suit · else 3 of a singleton/void · 3NT 15-17 flat · 4M 11-14 flat · <b>18+ with 2+ key cards: 4NT at once</b> (31+ combined), else 3M 18+ flat.')}
 {lab('0-2 trumps')}
 {box('rsp','<b>0-2 trumps:</b> over 1♥: 1♠ with 4+♠ (6+, forcing) · <b>1NT 6-10, any shape, not forcing</b> · new suit at 2-level 9+ (forcing). Opener rebids: see D.')}'''
 
@@ -135,7 +135,7 @@ ltc = '''<table class="lt"><tr><th colspan="2">Opener</th></tr><tr><th>Points</t
 G = f'''{box('cnv','<b>RKCB 4NT</b> (only once a trump suit is agreed; otherwise quantitative). Key cards = 4 aces + the K of trumps. Replies: <b>5♣ 0 or 3</b> · <b>5♦ 1 or 4</b> · <b>5♥ 2 without Q</b> · <b>5♠ 2 with Q</b>.')}
 {arrow}
 {box('reb','<b>Asker:</b> missing two key cards → 5 of trumps · missing one → 6 of trumps · all five → 5NT (asks kings; show each king by bidding its suit in order). Cheapest non-trump bid asks for the trump Queen. <b>Warning:</b> with hearts trumps a 5♠ reply is past 5♥, so asker can only go 6♥ or 5NT.')}
-{box('cnv','<b>WHEN TO ASK:</b> once a fit is found, your points + partner\'s shown minimum = <b>31+ → 4NT</b>. Ask only with <b>2+ key cards</b> yourself; with 0-1, bid game and let partner ask. Unclear reply (0 or 3, 1 or 4): read it low, unless partner opened 2NT or 2♣. <b>Grand:</b> all five key cards + trump Q + a side king.')}
+{box('cnv','<b>WHEN TO ASK:</b> once a fit is found, your points + partner\'s shown minimum = <b>31+ → 4NT</b>. Ask only with <b>2+ key cards</b> yourself; with 0-1, bid game and let partner ask. Unclear reply (0 or 3, 1 or 4): work it out. With 31+ between you, the opponents can\'t hold 3 key cards (11+ pts), so 0/3 = 3; with 2+ yourself, 1/4 = 1. <b>Grand:</b> all five key cards + trump Q + a side king.')}
 <div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card suit fit only, never NT). <b>24 − (opener losers + responder losers) = tricks; level = tricks − 6.</b> E.g. 24 − 14 = 10 tricks → 4-level. HCP→losers is approximate: count real losers when shape is unusual. <b>In every auction with an 8-card fit, shape counts: if losers give 10 tricks (11 in a minor), bid game even when points say stop.</b><div class="ltw">{ltc}</div></div>'''
 
 # ---------------- H (new) ----------------

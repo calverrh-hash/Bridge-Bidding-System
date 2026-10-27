@@ -161,10 +161,12 @@ function theirNT(role) {
 // ---------- Our 1NT doubled ----------
 // role 'resp': partner opens 1NT (dealer N); 'open': you open 1NT (dealer S, Helvic only,
 // since by the chart the opener just passes). kind: the type of responding hand to deal.
-function ourNT(role, kind) {
+// chartToo: the opener's side is also dealt when playing the chart system (opener just passes
+// partner's redouble or sign-off).
+function ourNT(role, kind, chartToo) {
   return (rng, opts) => {
     const helvic = !!(opts && opts.helvic);
-    if (role === 'open' && !helvic) return null;
+    if (role === 'open' && !helvic && !chartToo) return null;
     const spec = {
       values: [sp({}, [1, 5]), 7, 10], one: [sp({}, [0, 6]), 0, 6, h => helvicType(h) === 'one'],
       two: [sp({}, [0, 5]), 0, 6, h => helvicType(h) === 'two'], wriggle: [sp({}, [1, 4]), 0, 6, h => helvicType(h) === 'wriggle'],
@@ -301,7 +303,9 @@ SETS.push(
   {
     id: 'our-nt', name: 'Our 1NT doubled', refs: 'F · H', helvic: true,
     blurb: 'When they double our 1NT: redouble, sign off or wriggle out.',
-    recipes: ['values', 'one', 'two', 'wriggle', 'one', 'two', 'wriggle'].flatMap(k => [ourNT('resp', k), ourNT('open', k)]),
+    recipes: ['values', 'one', 'two', 'wriggle', 'one', 'two', 'wriggle'].flatMap(k => [ourNT('resp', k), ourNT('open', k)])
+      // Opener after partner's redouble or sign-off (chart system only; Helvic has its own answers).
+      .concat([0, 1].map(j => { const r = want(ourNT('open', j ? 'one' : 'values', true), 'F.nt-doubled-opener', 60); return (rng, opts) => opts && opts.helvic ? null : r(rng, opts); })),
   },
   {
     id: 'ucb', name: 'Unassuming cue bid', refs: 'H',

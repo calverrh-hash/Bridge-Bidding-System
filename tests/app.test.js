@@ -71,14 +71,14 @@ test('regression: best score is saved even if you leave before "See results"', (
   }
   click('#back');   // leave without pressing "See results"
   same(loadDB().best.comp, SET_SIZE);
-  check(/Best 10\/10/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home card shows the best score');
+  check(/Best 15\/15/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home card shows the best score');
 });
 test('app: progress resumes where you left off', () => {
   resetApp();
   click('[data-set="comp"]');
   for (let i = 0; i < 3; i++) { playHand(); click('#next'); }
   click('#back');
-  check(/3 \/ 10 played/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home shows 3 played');
+  check(/3 \/ 15 played/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home shows 3 played');
   click('[data-set="comp"]');
   same(S.pos, 3);
 });
@@ -208,12 +208,12 @@ test('app: the Helvic switch changes the system and keeps separate progress', ()
   click('#m-helvic');
   same(loadDB().opts.helvic, true);
   check(/Playing Helvic Wriggle/.test($('[data-set="our-nt"]').textContent), 'card says Helvic');
-  check(/10 hands/.test($('[data-set="our-nt"]').textContent), 'Helvic progress starts empty');
+  check(/15 hands/.test($('[data-set="our-nt"]').textContent), 'Helvic progress starts empty');
   click('[data-set="our-nt"]');
   check(S.qs.some(q => q.steps.some(st => st.ans.ref === 'H')), 'Helvic hands are dealt');
   click('#back');
   click('#m-chart');
-  check(/1 \/ 10 played/.test($('[data-set="our-nt"]').textContent), 'chart progress kept');
+  check(/1 \/ 15 played/.test($('[data-set="our-nt"]').textContent), 'chart progress kept');
   resetApp();
 });
 test('app: LTC steps use the number pad, then the bidding box', () => {

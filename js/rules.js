@@ -225,15 +225,16 @@ function jac(h, M) {
   const p = hcp(h), l = L(h);
   const short = [0, 1, 2, 3].filter(s => s !== M && l[s] <= 1);
   const g5 = [0, 1, 2, 3].filter(s => s !== M && l[s] >= 5 && [14, 13, 12].filter(r => has(h, s, r)).length >= 2);
-  if (short.length > 1 || (short.length && g5.length) || g5.length > 1) return amb('Opener has more than one feature to show over Jacoby 2NT.');
-  if (short.length) {
+  // A good 5-card side suit comes first (a 5-5 hand always has a short suit too).
+  if (g5.length > 1 || (!g5.length && short.length > 1)) return amb('Opener has more than one feature to show over Jacoby 2NT.');
+  if (short.length && !g5.length) {
     const s = short[0];
     return R(B(3, s), `${l[s] === 0 ? 'Void' : 'Singleton'} in ${SN[s]}: show it with 3${SY[s]}.`, 'B.jacoby-shortness');
   }
   if (g5.length) {
     const s = g5[0];
     if (M === 2 && s === 3) return gap('The chart has no way to show a good spade suit over 1♥ – 2NT.');
-    return R(B(4, s), `Good 5-card ${SN[s]} suit: 4${SY[s]}.`, 'B.jacoby-side-suit');
+    return R(B(4, s), `Good 5-card ${SN[s]} suit: 4${SY[s]}.${short.length ? ' A good side suit comes before showing your short suit.' : ''}`, 'B.jacoby-side-suit');
   }
   if (p <= 14) return R(B(4, M), `Flat minimum (${p}): 4${SY[M]} shows 11-14 with no shortness.`, 'B.jacoby-flat');
   if (p <= 17) return R('3N', `Flat ${p}: 3NT shows 15-17 with no shortness.`, 'B.jacoby-flat');
@@ -557,16 +558,33 @@ function rkReply(h, M) {
   if (n === 2) return q ? R('5S', `${list} You hold the ${SY[M]}Q: 5♠ = 2 with the queen.`, 'G.rkcb-answer') : R('5H', `${list} No trump queen: 5♥ = 2 without the queen.`, 'G.rkcb-answer');
   return gap('The chart has no reply showing all five key cards.');
 }
-// The 4NT bidder decides after partner's reply. An unclear reply (0 or 3, 1 or 4) is read low,
-// unless partner opened 2NT or 2♣ (strong = true).
+// The 4NT bidder decides after partner's reply. An unclear reply (0 or 3, 1 or 4) is worked
+// out from the points: you asked with 31+ between you, so the opponents hold at most 40 − 31 = 9.
+// If the low reading would leave them more key cards than 9 points can hold (three key cards
+// need 11+), partner has the high number. If both readings still fit, take the one closer to
+// partner's share of the missing points (or high opposite a strong 2NT/2♣ opening).
 function askDecide(h, M, reply, strong) {
-  const k = kcList(h, M).length;
-  const poss = (reply === '5C' ? [0, 3] : reply === '5D' ? [1, 4] : [2]).filter(v => v + k <= 5);
+  const k = kcList(h, M).length, p = hcp(h);
+  let poss = (reply === '5C' ? [0, 3] : reply === '5D' ? [1, 4] : [2]).filter(v => v + k <= 5);
   if (!poss.length) return gap('The reply does not fit with the key cards you hold.');
   let pk = poss[0], read = '';
   if (poss.length > 1) {
-    pk = strong ? poss[1] : poss[0];
-    read = strong ? ` (${poss[0]} or ${poss[1]}: partner opened with a strong hand, so read it high)` : ` (${poss[0]} or ${poss[1]}: an unclear reply is read low)`;
+    const missA = 4 - [0, 1, 2, 3].filter(s => has(h, s, 14)).length, missK = has(h, M, 13) ? 0 : 1;
+    // Fewest points that n of the missing key cards can be worth (the trump king 3, aces 4).
+    const minPts = n => n <= 0 ? 0 : Math.min(n, missK) * 3 + Math.max(0, n - missK) * 4;
+    const pMin = Math.max(0, 31 - p), oppMax = 40 - p - pMin;
+    const fits = poss.filter(v => minPts(5 - k - v) <= oppMax);
+    if (fits.length === 1) {
+      pk = fits[0];
+      const ov = poss.find(v => v !== pk), oppKC = 5 - k - ov;
+      read = pk > ov ? ` (${poss[0]} or ${poss[1]}: with 31+ between you the opponents have at most ${oppMax} points, too few for the ${oppKC} key cards they'd need if partner had ${ov}, so partner has ${pk})`
+        : ` (${poss[0]} or ${poss[1]}: ${pk} is the only reading that fits)`;
+    } else {
+      const share = (pMin + 2) / Math.max(1, 40 - p), expect = share * (5 - k);
+      pk = strong ? poss[1] : (Math.abs(poss[1] - expect) < Math.abs(poss[0] - expect) ? poss[1] : poss[0]);
+      read = strong ? ` (${poss[0]} or ${poss[1]}: partner opened with a strong hand, so read it high)`
+        : ` (${poss[0]} or ${poss[1]}: partner holds most of the points you don't, so expect about ${expect.toFixed(1)} of the ${5 - k} missing: read it as ${pk})`;
+    }
   }
   const tot = k + pk, miss = 5 - tot, rv = bv(reply), five = bv(B(5, M));
   const head = `You hold ${k}, partner's ${plain(reply)} shows ${reply === '5C' ? '0 or 3' : reply === '5D' ? '1 or 4' : '2'} so ${pk} here${read}: ${tot} of 5.`;

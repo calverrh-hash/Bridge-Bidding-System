@@ -130,9 +130,13 @@ test('RKCB: the asker decides', () => {
   same(askDecide(parseHand('A32.K432.A32.432'), 2, '5C').bid, '5H');   // 3 + 0: missing two
 });
 
-test('RKCB: an unclear reply is read low, or high when partner opened 2NT/2♣', () => {
-  same(askDecide(parseHand('A32.QJ32.A32.432'), 2, '5C').bid, '5H');         // 2 + (0 or 3): read 0
-  same(askDecide(parseHand('A32.QJ32.A32.432'), 2, '5C', true).bid, '5N');   // read 3: all five, holding the queen
+test('RKCB: an unclear reply is worked out from the points, not read low', () => {
+  // You hold 2 (10 HCP), so partner has 21+ and the opponents at most 9: too few for three key
+  // cards (11+). 5♣ must be 3: all five with the queen, so ask for kings.
+  same(askDecide(parseHand('A32.QJ32.A32.432'), 2, '5C').bid, '5N');
+  same(askDecide(parseHand('A32.QJ32.A32.432'), 2, '5C', true).bid, '5N');
+  // 1 or 4 with 2 of your own: 4 would make six, so it's 1.
+  same(askDecide(parseHand('A32.KJ32.A32.432'), 2, '5D').bid, '6H');
 });
 test('RKCB: kings and the grand slam need the trump queen', () => {
   same(askDecide(parseHand('A2.AJ32.A32.A432'), 2, '5D').bid, '6H');         // 4 + 1 = 5 but no ♥Q
@@ -383,10 +387,15 @@ for (const d of SETS) for (const helvic of d.helvic ? [false, true] : [false]) {
     }
   });
 }
-{
-  const all = allRuleIds(), never = [...all].filter(id => !ASKED.has(id)).sort();
-  info('rule coverage', `${all.size - never.length} of ${all.size} chart rules are asked of you in some drill (seeds 1-${SEEDS}).\n       Never asked: ${never.join(', ')}`);
-}
+// Every rule on the chart must be practised: each one is asked of you in some drill within
+// the first few deals. The only exceptions are calls that are always partner's in the drills
+// (you see them in the whole hand at the end).
+const PARTNER_ONLY = new Set(['GUIDE.redouble-raise']);
+test('rule coverage: every chart rule is asked of you in some drill (seeds 1-8)', () => {
+  const all = allRuleIds(), never = [...all].filter(id => !ASKED.has(id) && !PARTNER_ONLY.has(id)).sort();
+  info('rule coverage', `${all.size - never.length - PARTNER_ONLY.size} of ${all.size - PARTNER_ONLY.size} chart rules are asked of you.`);
+  same(never, [], 'never asked');
+});
 test('buildSet is deterministic for a seed', () => {
   for (const d of SETS) same(JSON.stringify(buildSet(d, 3)), JSON.stringify(buildSet(d, 3)), d.id);
 });
@@ -402,17 +411,15 @@ test('regression: the same seed deals the same hands on a slow device', () => {
     finally { Date.now = realNow; performance.now = realPerf; }
   }
 });
-test('every drill deals 10 hands, Mixed included', () => {
-  for (const d of SETS) same(setSize(d), 10, d.id);
+test('every drill deals 15 hands, Mixed included', () => {
+  for (const d of SETS) same(setSize(d), 15, d.id);
 });
-test('Mixed: ten different drills per deal, and the next deal moves on to the others', () => {
+test('Mixed: a hand from every drill in each deal', () => {
   const M = SETS.find(d => d.id === 'mixed'), n = M.sources.length, seen = new Set();
   const a = buildSet(M, 1).map(q => q.src), b = buildSet(M, 2).map(q => q.src);
-  same(new Set(a).size, 10, 'seed 1: ten different drills');
-  same(new Set(b).size, 10, 'seed 2: ten different drills');
-  const notInA = M.sources.map(d => d.id).filter(id => !a.includes(id));
-  check(notInA.every(id => b.includes(id)), 'seed 2 includes every drill seed 1 left out');
-  for (let s = 1; s <= Math.ceil(n / 10) + 1; s++) buildSet(M, s).forEach(q => seen.add(q.src));
+  same(new Set(a).size, Math.min(15, n), 'seed 1: every drill');
+  same(new Set(b).size, Math.min(15, n), 'seed 2: every drill');
+  for (let s = 1; s <= 2; s++) buildSet(M, s).forEach(q => seen.add(q.src));
   same(seen.size, n, 'a few deals in a row cover every drill');
 });
 test('our 1NT doubled, chart system: weak and 5-5 runs to the lower suit', () => {
