@@ -317,6 +317,10 @@ const SETS = [
         PO({ setup: r => ({ ...NT2, south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 10] } }) }),
         PO({ setup: r => { const M = anyMajor(r); return { ...NT2, south: { lens: rl(r, sp({ [M]: [5, 6], [5 - M]: [0, 3] }, [0, 4])), hcp: [0, 10] } }; } }),
         twoClubs, twoClubs,
+        // Unbalanced 2♣ openings: partner or you with a 5+ suit, then 2♦ and a suit rebid.
+        PO({ setup: r => { const s = ri(r, 0, 3); return { south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 7] }, north: { lens: sp({ [s]: [5, 7] }, [0, 4]), hcp: [23, 26], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; } }),
+        PO({ setup: r => { const s = ri(r, 2, 3); return { south: { lens: rl(r, sp({ [s]: [2, 4] }, [0, 6])), hcp: [0, 7] }, north: { lens: sp({ [s]: [5, 7] }, [0, 4]), hcp: [23, 26], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; } }),
+        SO({ south: { lens: r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [5, 7] }, [0, 4])); }, hcp: [23, 26], ok: h => !isBal(h) }, north: { hcp: [0, 7] } }),
         SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [23, 27] }, north: { hcp: [0, 7] } }),
         SO({ south: { lens: balL, hcp: [23, 26] }, north: { hcp: [0, 7] } }),
         weakTwo, weakTwo,
@@ -447,6 +451,13 @@ function buildSet(def, seed, opts) {
     if (++misses >= MAX_MISSES) { i++; misses = 0; }
   }
   if (pool.length <= size) return shuffle(rng, pool);
+  // Each deal focuses on the next `size` kinds of hand (recipes) in a fixed rotation, so a drill
+  // with more kinds than hands covers them all over a few deals instead of always favouring the
+  // longest auctions.
+  const uniq = [...new Set(recipes)], ui = r => uniq.indexOf(recipes[r]);
+  const rot = shuffle(mulberry(4242 + hsh), uniq.map((_, u) => u)), st = ((Math.max(1, seed) - 1) * size) % uniq.length;
+  const focus = new Set(Array.from({ length: Math.min(size, uniq.length) }, (_, j) => rot[(st + j) % uniq.length]));
+  const usedU = new Set();
   // Greedy: repeatedly take the hand that adds the most situations not yet covered.
   const cands = pool.map(q => ({ q, f: features(q) })), got = new Set(), out = [];
   while (out.length < size) {
@@ -454,9 +465,12 @@ function buildSet(def, seed, opts) {
     cands.forEach((c, k) => {
       let sc = rng() * 0.5;
       for (const x of c.f) if (!got.has(x)) sc += weight(x);
+      const u = ui(c.q.rec);
+      if (focus.has(u) && !usedU.has(u)) sc += 40;
       if (sc > best) { best = sc; bi = k; }
     });
     const c = cands.splice(bi, 1)[0];
+    usedU.add(ui(c.q.rec));
     out.push(c.q);
     c.f.forEach(x => got.add(x));
   }
@@ -475,9 +489,19 @@ function buildMixed(def, seed, opts) {
   const rng = mulberry(seed * 7919 + 4242), got = new Set(), out = [];
   for (let k = 0; k < Math.min(size, order.length * 4); k++) {
     const di = order[(start + k) % order.length], d = src[di];
+    // Each time a drill comes round in Mixed, it moves on to its next kind of hand (recipe),
+    // so rarer topics (Cappelletti, Michaels...) take their turn too.
+    const uniq = [...new Set(d.recipes)], app = Math.floor(((Math.max(1, seed) - 1) * size + k) / order.length);
+    const target = d.recipes.indexOf(uniq[shuffle(mulberry(9001 + di), uniq.map((_, u) => u))[app % uniq.length]]);
     const recs = shuffle(rng, d.recipes.map((_, r) => r)), cands = [];
     let tries = 0, i = 0;
-    while (cands.length < MIX_CANDS && tries < 3000) {
+    while (cands.length < MIX_CANDS && tries < 600) {
+      tries++;
+      const q = d.recipes[target](rng, opts);
+      if (q && q.steps && q.steps.length && (d.slam || !slamHand(q))) { q.rec = d.id + ':' + target; q.src = d.id; cands.push(q); }
+    }
+    tries = 0;
+    while (!cands.length && tries < 3000) {
       tries++;
       const r = recs[i % recs.length], q = d.recipes[r](rng, opts);
       if (q && q.steps && q.steps.length && (d.slam || !slamHand(q))) { q.rec = d.id + ':' + r; q.src = d.id; cands.push(q); i++; }

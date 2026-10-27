@@ -46,7 +46,8 @@ test('app: a level button greys out strains below the last bid', () => {
   const st = S.qs[S.order[S.pos]].steps[0];
   const lg = legal(S.qs[S.order[S.pos]].dealer, st.calls);
   if (lg.min >= 0) {
-    const lvl = +st.calls.filter(c => /^\d/.test(c)).pop()[0];
+    // The last bid's level, or the next one up if it was no-trump (nothing left at that level).
+    const lastBid = st.calls.filter(c => /^\d/.test(c)).pop(), lvl = +lastBid[0] + (lastBid[1] === 'N' ? 1 : 0);
     click(`[data-lv="${lvl}"]`);
     document.querySelectorAll('#app [data-st]').forEach(b => same(b.disabled, bv(lvl + ST[+b.dataset.st]) <= lg.min, 'strain ' + b.dataset.st));
   }

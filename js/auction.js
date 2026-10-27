@@ -33,8 +33,8 @@ function nt2(seq, h, pm) {
     if (r === '3D' || r === '3H') {
       const M = r === '3D' ? 2 : 3;
       if (p <= pm) return R('P', `${p} HCP: pass the completion.`, 'E.2nt-transfer-continue');
-      if (choice2N(h, M)) return R('3N', `${p} HCP with exactly five ${SN[M]} and no singleton: 3NT offers a choice of games. Partner passes with two ${SN[M]}, or bids 4${SY[M]} with three or more.`, 'E.2nt-transfer-choice');
-      return R(B(4, M), `${p} HCP${l[M] >= 6 ? ` with ${l[M]} ${SN[M]}` : ' with a singleton or void'}: the major is the right game, so raise to 4${SY[M]}.`, 'E.2nt-transfer-continue');
+      if (choice2N(h, M)) return R('3N', `${p} HCP with exactly five ${SN[M]}: 3NT offers a choice of games. Partner passes with two ${SN[M]}, or bids 4${SY[M]} with three or more, so you only miss a 5-2 fit.`, 'E.2nt-transfer-choice');
+      return R(B(4, M), `${p} HCP${l[M] >= 6 ? ` with ${l[M]} ${SN[M]}` : ' with five ${SN[M]}'}: the major is the right game, so raise to 4${SY[M]}.`, 'E.2nt-transfer-continue');
     }
     if (r === '4D' || r === '4H') return R('P', 'Texas was a sign-off: pass.', 'E.2nt-texas-pass');
     return gap('The chart has no continuation here.');

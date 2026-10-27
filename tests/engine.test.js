@@ -513,6 +513,17 @@ test('any 1-suit auction: a fit plus losers reaches game (1H 1S 2D with 6 losers
   const flat = [[14, 8, 5], [8, 6, 4, 3], [9, 2], [14, 12, 8, 4]];   // 4-2-4-3, 8 losers: no upgrade
   check(sysCall(['1H', '1S', '2D'], flat).bid !== '5D', 'flat hand stays low');
 });
+test('Mixed rotates through each drill\'s hand types: Cappelletti and unbalanced 2♣ come up', () => {
+  const M = SETS.find(d => d.id === 'mixed'), ids = new Set();
+  for (let s = 1; s <= 30; s++) buildSet(M, s).forEach(q => q.steps.forEach(st => ids.add(st.ans.id)));
+  check([...ids].some(id => /^F\.cappelletti/.test(id)), 'Cappelletti in 30 Mixed deals');
+  const B = SETS.find(d => d.id === 'big'), bi = new Set();
+  for (let s = 1; s <= 4; s++) buildSet(B, s).forEach(q => q.steps.forEach(st => bi.add(st.ans.id)));
+  check(bi.has('E.2c-rebid-suit') && bi.has('GUIDE.2c-rebid-answer'), 'unbalanced 2♣ auctions in the Strong openings drill');
+});
+test('2NT, transfer, then 3NT with exactly five cards even with a singleton', () => {
+  same(choice2N([[11], [11, 10, 9, 7, 6, 4], [13], [10, 9, 7, 5, 4]], 3), true);
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });

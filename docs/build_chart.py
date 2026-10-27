@@ -113,7 +113,7 @@ D = ''.join([
  box('note','Barrier = 2 of the opening suit; a new suit above it (reverse) shows extra strength. 5-5: open the higher, then show the lower.')])
 
 # ---------------- E ----------------
-E = f'''<div class="g2">{box('cnv','<b>2NT 20-22 bal:</b> pass 0-3 · 3NT 4+ · 3♣ Stayman (opener 3♦/3♥/3♠; then 4M with a fit, else 3NT) · 3♦/3♥ transfers (then pass 0-3; 4-5: <b>3NT = choice</b> with exactly 5 and no singleton, opener corrects to 4M with 3+; else 4M) · 4♦/4♥ Texas.')}{box('cnv','<b>2♣ 23+:</b> 2♦ negative 0-7 · positive 8+: 4+ suit 2♥/♠ or 5+ minor 3♣/♦; bal 8-9 2NT, 10-12 3NT. Opener after 2♦: 2♥/♠ 5+ suit · 3♣/♦ 5+ minor · 2NT 23-24 bal (0-1 pass, else as over 2NT) · 3NT 25-27 bal.')}</div>
+E = f'''<div class="g2">{box('cnv','<b>2NT 20-22 bal:</b> pass 0-3 · 3NT 4+ · 3♣ Stayman (opener 3♦/3♥/3♠; then 4M with a fit, else 3NT) · 3♦/3♥ transfers (then pass 0-3; 4-5: <b>3NT = choice</b> with exactly 5, opener corrects to 4M with 3+; else 4M) · 4♦/4♥ Texas.')}{box('cnv','<b>2♣ 23+:</b> 2♦ negative 0-7 · positive 8+: 4+ suit 2♥/♠ or 5+ minor 3♣/♦; bal 8-9 2NT, 10-12 3NT. Opener after 2♦: 2♥/♠ 5+ suit · 3♣/♦ 5+ minor · 2NT 23-24 bal (0-1 pass, else as over 2NT) · 3NT 25-27 bal.')}</div>
 <div class="sp"></div>
 {box('cnv','<b>Weak two (5-10 HCP, 6-card suit).</b> Responder: pass (2-card, under 14) · 3M with 3 trumps · 4M with 4+ trumps · <b>2NT ask with 14+</b>. Opener: 3M = minimum or no feature · bid an outside A/K = feature (8-10) · 3NT = solid AKQ suit.')}
 <div class="sp"></div>

@@ -454,9 +454,9 @@ function respAfterRebid(h, seq) {
 }
 
 // ---------- E: 2NT, 2♣, weak twos ----------
-// After a transfer over 2NT with 4-5 points: exactly five cards and no singleton or void
-// bids 3NT to offer a choice of games; opener corrects to 4M with 3+ (chart E).
-const choice2N = (h, M) => L(h)[M] === 5 && Math.min(...L(h)) >= 2;
+// After a transfer over 2NT with 4-5 points: exactly five cards bids 3NT to offer a choice
+// of games; opener corrects to 4M with 3+ (chart E, same as over 1NT). Six cards bid 4M.
+const choice2N = (h, M) => L(h)[M] === 5;
 // Responder to 2NT (pm = 3), or to 2♣-2♦-2NT (pm = 1). pm is the most HCP that passes.
 function over2Nx(h, pm) {
   const p = hcp(h), l = L(h), H = l[2], S = l[3];
