@@ -14,6 +14,7 @@
   - Responder after opener rebids a six-card major: a doubleton honour (Ax, Kx, Qx) is support; with 10-12 invite with 3M, with 13+ bid 4M. Opener accepts with 13-14 or 6 losers or fewer.
   - Partner's weak jump overcall: raise pre-emptively to the level of the fit (3 cards → 3-level, 4 → 4-level). New recipe in Competitive bidding.
   - After partner opens a minor and RHO overcalls at the 1-level: with 4-8 and 5+ cards in partner's minor, a pre-emptive jump raise, alongside the negative double. New recipe in Competitive bidding.
+- **Chart layout:** the "Key fixes & updates" panel is gone (the changelog records changes). Panel D moved into its place and panel E is wider.
 - **Continue button** sits above the bidding table, so you don't have to scroll down to move on.
 
 ### Added

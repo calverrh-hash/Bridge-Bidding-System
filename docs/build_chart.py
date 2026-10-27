@@ -162,7 +162,7 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 .panel{{position:absolute;border:1.2pt solid var(--c);border-radius:5pt;background:#fff;overflow:hidden}}
 .ph{{white-space:nowrap;background:var(--c);color:#fff;font-weight:700;font-size:8.4pt;height:17pt;padding:2.5pt 6pt;display:flex;align-items:center;gap:5pt}}
 .let{{flex-shrink:0;display:inline-flex;width:12pt;height:12pt;border-radius:50%;background:#fff;color:var(--c);align-items:center;justify-content:center;font-size:8pt}}
-.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.95pt}} .pD .pb{{gap:3pt}}
+.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}}
 .pA,.pB,.pC{{--c:#2E5E9E}} .pD{{--c:#408A54}} .pE{{--c:#B07A0F}} .pF{{--c:#A33A3A}} .pG{{--c:#6B4A99}} .pH{{--c:#7A3550}} .pK{{--c:#7A6B1A}} .pO{{--c:#1F3B5E}}
 .b{{border:0.8pt solid;border-radius:3pt;padding:3pt 4pt}}
 .rsp{{background:#E6F0FA;border-color:#4A7BC0}} .reb{{background:#E6F5EB;border-color:#4FA066}} .cnv{{background:#FFF2D6;border-color:#D19A2A}}
@@ -188,14 +188,13 @@ table.lt th{{background:#f3d98b;border:.6pt solid #b08c2f;padding:1pt 6pt}} tabl
 .foot{{position:absolute;right:16pt;top:819pt;font-size:7.4pt;color:#333}}
 </style></head><body>
 <div class="top"><h1>5-CARD MAJORS · STRONG NT  -  CORRECTED BIDDING FLOWCHART</h1>
-<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, Smolen, McKendrick, Jacoby, 3♣/3♦ raises, weak twos, 2♣, negative and support doubles, unassuming cue bid, Helvic.</p><span class="ver">Updated 23 Oct 2026</span></div>
+<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, Smolen, McKendrick, Jacoby, 3♣/3♦ raises, weak twos, 2♣, negative and support doubles, unassuming cue bid, Helvic.</p><span class="ver">Updated 27 Oct 2026</span></div>
 {panel(16,60,204,338,'pO','','OPENING BIDS','<div class="pb" style="gap:5pt;padding:0">'+op+'</div>')}
-{panel(16,346,204,808,'pK','','KEY FIXES & UPDATES','<div class="fix">'+fixes+'</div><div class="upd"><h4>UPDATES · OCT 2026</h4>'+updates+'</div>')}
 {panel(212,60,689,375,'pA','A','RESPONSES TO 1NT (15-17)',A)}
 {panel(697,60,932,375,'pB','B','RESPONSES TO 1♥/♠',B)}
 {panel(940,60,1175,375,'pC','C',"RESPONSES TO 1♣/♦",C)}
-{panel(212,383,447,622,'pD','D',"OPENER'S REBID (after a new-suit response)",D)}
-{panel(455,383,689,622,'pE','E','2NT · 2♣ · WEAK TWOS · PRE-EMPTS',E)}
+{panel(16,346,204,808,'pD','D',"OPENER'S REBID (new-suit reply)",D)}
+{panel(212,383,689,622,'pE','E','2NT · 2♣ · WEAK TWOS · PRE-EMPTS',E)}
 {panel(212,630,689,808,'pH','H','SUPPORT DOUBLES · CUE BIDS · HELVIC · AFTER A PENALTY DOUBLE',Hp)}
 {panel(697,383,932,808,'pF','F','COMPETITIVE AUCTIONS · DOUBLES',F)}
 {panel(940,383,1175,808,'pG','G','SLAM TOOLS',G)}
