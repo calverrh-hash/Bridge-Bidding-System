@@ -554,6 +554,11 @@ test('never repeat partner\'s bid: when the wanted game is already bid, pass', (
   const h = parseHand('K963.KQJ84.KJ8.K');
   same(sysCall(['1S', '2H', '4H'], h).bid, 'P');
 });
+test('Smolen over 2NT too: 2NT 3♣ 3♦ 3♥ shows five spades', () => {
+  same(sysCall(['2N', '3C', '3D'], parseHand('KJ832.Q854.32.42')).bid, '3H');   // 4 hearts, 5 spades
+  same(sysCall(['2N', '3C', '3D', '3H'], parseHand('A94.K3.AK743.AK10')).bid, '4S');
+  same(sysCall(['2N', '3C', '3D', '3H'], parseHand('A9.K43.AK743.AK10')).bid, '3N');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });

@@ -541,7 +541,7 @@ function over2Nx(h, pm) {
   if (p > 10) return gap('The chart has no call opposite 2NT with 11+.');
   if ((H >= 5 && S >= 4) || (S >= 5 && H >= 4)) {
     if (p <= pm) { const M = S >= 5 ? 3 : 2; return R(M === 2 ? '3D' : '3H', `${p} HCP, 5-4 in the majors: transfer to your five-card ${SN[M].replace(/s$/, '')}s with ${M === 2 ? '3♦' : '3♥'}, then pass.`, 'E.2nt-transfer'); }
-    return R('3C', `${p} HCP, 5-4 in the majors: 3♣ Stayman. Over 3♦, bid your five-card major (forcing): opener raises with three, else 3NT.`, 'E.2nt-stayman');
+    return R('3C', `${p} HCP, 5-4 in the majors: 3♣ Stayman. Over 3♦, Smolen: bid your four-card major to show five in the other.`, 'E.2nt-stayman');
   }
   if ((H >= 6 || S >= 6) && p > pm) {
     const M = S >= 6 ? 3 : 2;

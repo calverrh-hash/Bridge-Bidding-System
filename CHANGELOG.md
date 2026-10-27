@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-27 (evening)
+- **Smolen over 2NT too:** 2NT – 3♣ – 3♦ – 3♥/3♠ shows four in the bid major and five in the other, as over 1NT; opener bids 4 of the five-card major with three, else 3NT. (It had been natural.) On the chart too.
+
 ## 2026-10-24 (later): latest rules from the trainer
 
 ### Changed

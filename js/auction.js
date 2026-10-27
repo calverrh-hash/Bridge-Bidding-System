@@ -29,7 +29,7 @@ function nt2(seq, h, pm) {
       if (a === '3H') return l[2] >= 4 ? R('4H', 'Opener has four hearts and so do you: 4♥.', 'E.2nt-stayman-continue') : R('3N', 'No heart fit: 3NT.', 'E.2nt-stayman-continue');
       if (a === '3S') return l[3] >= 4 ? R('4S', 'Opener has four spades and so do you: 4♠.', 'E.2nt-stayman-continue') : R('3N', 'No spade fit: 3NT.', 'E.2nt-stayman-continue');
       const f5 = l[3] >= 5 && l[2] >= 4 ? 3 : l[2] >= 5 && l[3] >= 4 ? 2 : -1;
-      if (f5 >= 0) return R(B(3, f5), `Opener has no 4-card major. Show your five ${SN[f5]}: 3${SY[f5]} (forcing).`, 'E.2nt-stayman-continue');
+      if (f5 >= 0) { const f4 = f5 === 3 ? 2 : 3; return R(B(3, f4), `Opener has no 4-card major. Smolen, as over 1NT: bid your four-card major, 3${SY[f4]}, to show five ${SN[f5]}. Opener bids 4${SY[f5]} with three, else 3NT, and plays it from the strong hand.`, 'E.2nt-stayman-continue'); }
       return R('3N', 'Opener has no 4-card major: 3NT.', 'E.2nt-stayman-continue');
     }
     if (r === '3D' || r === '3H') {
@@ -48,7 +48,7 @@ function nt2(seq, h, pm) {
       return l[M] >= 3 ? R(B(4, M), `Partner's 3NT shows exactly five ${SN[M]} and offers a choice. With ${l[M]} ${SN[M]}, correct to 4${SY[M]}.`, 'E.2nt-choice-answer')
         : R('P', `Partner's 3NT shows five ${SN[M]} and offers a choice. With only ${l[M]}, pass 3NT.`, 'E.2nt-choice-answer');
     }
-    if (r === '3C' && seq[2] === '3D' && /^3[HS]$/.test(a)) { const M = ST.indexOf(a[1]); return l[M] >= 3 ? R(B(4, M), `Partner's ${plain(a)} shows five ${SN[M]}. With ${l[M]}, bid 4${SY[M]}.`, 'E.2nt-choice-answer') : R('3N', `Partner's ${plain(a)} shows five ${SN[M]}. With only ${l[M]}, 3NT.`, 'E.2nt-choice-answer'); }
+    if (r === '3C' && seq[2] === '3D' && /^3[HS]$/.test(a)) { const M = a === '3H' ? 3 : 2; return l[M] >= 3 ? R(B(4, M), `Partner's ${plain(a)} is Smolen: four ${SN[5 - M]} and five ${SN[M]}. With ${l[M]} ${SN[M]}, bid 4${SY[M]}.`, 'E.2nt-choice-answer') : R('3N', `Partner's ${plain(a)} is Smolen: five ${SN[M]}. With only ${l[M]}, 3NT.`, 'E.2nt-choice-answer'); }
     if (a === '3N' || /^4[HS]$/.test(a)) return AP('Partner chose the contract.');
   }
   if (n === 5 && /^(4[HS]|3N)$/.test(seq[4])) return AP('Partner chose the contract.');   // corrected the 3NT choice
