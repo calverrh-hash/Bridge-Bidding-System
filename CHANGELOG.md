@@ -17,6 +17,7 @@
 - **After the unassuming cue bid:** the overcaller jumps to game with 13+ HCP or 6 losers or fewer (6 losers opposite a limit raise's 8 = 10 tricks). On the chart too.
 - **6-5 with a longer minor:** open the minor (longest suit first), then show the major; with 15-19, opener shows it at the first rebid. 1♣/1♦ no longer deny a five-card major outright.
 - **Shape counts once a fit is found:** opener after a simple raise (≤5 losers 4M, 6 losers 3M try), after a limit raise (≤6 losers 4M), after Bergen 3♦ (≤5) or 3♣ (≤6); responder accepting a game try with ≤8 losers; responder after opener's simple raise (24 − (losers + 7) ≥ 10 → game). Points still decide when they say more.
+- **General rule, every auction after a 1-of-a-suit opening:** once there's an 8-card fit (from what partner has shown plus your own length), count losers: your own plus an estimate for partner from their bids. If 24 − (yours + partner's) reaches 10 tricks in a major or 11 in a minor, bid game (`fitGame` in auction.js, rule id `LTC.fit-game`). Partner then passes. Not used in slam sequences, artificial raises, or NT and 2♣ auctions.
 - **Mixed:** the slam hand is a small slam in two deals out of three (the coverage pick had favoured grand slams).
 - **Chart layout:** the "Key fixes & updates" panel is gone (the changelog records changes). Panel D moved into its place and panel E is wider.
 - **Continue button** sits above the bidding table, so you don't have to scroll down to move on.

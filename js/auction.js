@@ -293,6 +293,65 @@ function after1Minor(seq, h) {
 // The chart call for hand h after the partnership calls in seq, with the opponents silent.
 // Returns R(...), or amb()/gap() if the chart stops.
 function sysCall(seq, h) {
+  const c = chartSysCall(seq, h);
+  // Partner jumped to game on shape: pass.
+  if (!isCall(c) && seq.length >= 2 && /^1[CDHS]$/.test(seq[0]) && /^(4[HS]|5[CD])$/.test(seq[seq.length - 1])) return AP('Partner bid game.');
+  return fitGame(seq, h, c);
+}
+
+// ---------- Shape counts: game by losing trick count once a fit is found ----------
+// After a 1-of-a-suit opening, work out what partner has shown (minimum length in each suit,
+// and roughly how many losers), find any 8-card fit, and if 24 − (your losers + partner's)
+// reaches game (10 tricks in a major, 11 in a minor), bid game even when points say stop.
+const NAT = c => /^[1-7][CDHS]$/.test(c);
+function partnerShows(seq) {
+  const n = seq.length, len = [0, 0, 0, 0], popener = n % 2 === 1;
+  const pIdx = [...seq.keys()].filter(i => (n - i) % 2 === 1);
+  const o = ST.indexOf(seq[0][1]);
+  let los = popener ? 7 : 9;
+  for (const i of pIdx) {
+    const c = seq[i];
+    if (!NAT(c)) {
+      if (c === '2N' && i === 2) los = 6;                       // opener's 18-19 2NT rebid
+      continue;
+    }
+    const s = ST.indexOf(c[1]), lv = +c[0];
+    if (i === 0) { len[s] = s >= 2 ? 5 : s === 1 ? 4 : 3; continue; }
+    if (i === 1 && o >= 2 && (c === '3C' || c === '3D')) { len[o] = 4; los = c === '3C' ? 8 : 9; continue; }   // Bergen
+    const ours = seq.some((x, j) => (n - j) % 2 === 0 && NAT(x) && x[1] === c[1]);
+    const mine = pIdx.some(j => j < i && NAT(seq[j]) && seq[j][1] === c[1]);
+    if (ours) { len[s] = Math.max(len[s], popener ? 4 : 3); }   // a raise of our suit
+    else if (mine) { len[s] = Math.max(len[s] + 1, s >= 2 ? 6 : 5); }   // rebid of their own suit
+    else len[s] = Math.max(len[s], 4);                             // a new suit
+    // Strength: jumps and reverses show extras.
+    const prev = seq[i - 1], cheapLv = prev && NAT(prev) ? cheapest(s, prev) : 1;
+    if (popener && i === 2) { if (lv > cheapLv) los = lv >= cheapLv + 1 && !ours && !mine ? 5 : 6; else if (!ours && !mine && bv(c) > bv(B(2, o))) los = 6; }
+    if (!popener && i === 1) los = ours ? (lv >= 3 ? 8 : 9) : (lv >= 2 ? 8 : 9);
+  }
+  return { len, los };
+}
+function fitGame(seq, h, c) {
+  if (!isCall(c) || !c.bid || seq.length < 2 || !/^1[CDHS]$/.test(seq[0]) || seq.includes('4N')) return c;
+  if (/^(G\.|B\.jacoby|B\.bergen|B\.new-suit-then-support|LTC\.)/.test(c.id || '') || c.bid === '4N') return c;
+  const last = seq[seq.length - 1];
+  if (last === 'P' || /^(3N|4[HS]|5[CD])$/.test(last) || /^[67]/.test(last)) return c;
+  const b = c.bid;
+  if (/^([45][CDHS]|[3-7]N|[67][CDHS])$/.test(b) && !/^4[CD]$/.test(b)) return c;   // already game or higher
+  const { len, los } = partnerShows(seq), l = L(h), k = losers(h);
+  const lastBid = [...seq].reverse().find(NAT) || '1C';
+  const fits = [3, 2, 1, 0].filter(s => len[s] + l[s] >= 8);
+  for (const s of fits) {
+    const game = s >= 2 ? 4 : 5, t = 24 - k - los;
+    if (t < game + 6) continue;
+    if (s <= 1 && b === '3N') continue;
+    const g = B(game, s);
+    if (bv(g) <= bv(lastBid)) continue;
+    return R(g, `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks, enough for ${plain(g)}. With a fit, shape counts more than points.`, 'LTC.fit-game');
+  }
+  return c;
+}
+
+function chartSysCall(seq, h) {
   const n = seq.length;
   if (n === 0) return openingBid(h);
   const o = seq[0];

@@ -136,7 +136,7 @@ G = f'''{box('cnv','<b>RKCB 4NT</b> (only once a trump suit is agreed; otherwise
 {arrow}
 {box('reb','<b>Asker:</b> missing two key cards → 5 of trumps · missing one → 6 of trumps · all five → 5NT (asks kings; show each king by bidding its suit in order). Cheapest non-trump bid asks for the trump Queen. <b>Warning:</b> with hearts trumps a 5♠ reply is past 5♥, so asker can only go 6♥ or 5NT.')}
 {box('cnv','<b>WHEN TO ASK:</b> once a fit is found, your points + partner\'s shown minimum = <b>31+ → 4NT</b>. Ask only with <b>2+ key cards</b> yourself; with 0-1, bid game and let partner ask. Unclear reply (0 or 3, 1 or 4): read it low, unless partner opened 2NT or 2♣. <b>Grand:</b> all five key cards + trump Q + a side king.')}
-<div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card suit fit only, never NT). <b>24 − (opener losers + responder losers) = tricks; level = tricks − 6.</b> E.g. 24 − 14 = 10 tricks → 4-level. HCP→losers is approximate: count real losers when shape is unusual. <b>With a fit, shape counts: if losers give 10 tricks, bid game even when points say stop.</b><div class="ltw">{ltc}</div></div>'''
+<div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card suit fit only, never NT). <b>24 − (opener losers + responder losers) = tricks; level = tricks − 6.</b> E.g. 24 − 14 = 10 tricks → 4-level. HCP→losers is approximate: count real losers when shape is unusual. <b>In every auction with an 8-card fit, shape counts: if losers give 10 tricks (11 in a minor), bid game even when points say stop.</b><div class="ltw">{ltc}</div></div>'''
 
 # ---------------- H (new) ----------------
 Hp = f'''<div class="g2">

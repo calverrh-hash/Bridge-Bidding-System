@@ -505,6 +505,14 @@ test('Mixed: most slam hands are small slams', () => {
   for (let s = 1; s <= 12; s++) buildSet(M, s).filter(q => q.src === 'slam').forEach(q => { if (/^6/.test(q.contract || '')) six++; if (/^7/.test(q.contract || '')) seven++; });
   check(six > seven, `small ${six}, grand ${seven}`);
 });
+test('any 1-suit auction: a fit plus losers reaches game (1H 1S 2D with 6 losers: 5D)', () => {
+  // ♠AQ843 ♥- ♦86432 ♣A85: 10 HCP, 6 losers. Opener's 2♦ shows 4+ diamonds and about 7 losers.
+  const h = [[14, 8, 5], [8, 6, 4, 3, 2], [], [14, 12, 8, 4, 3]];
+  same(sysCall(['1H', '1S', '2D'], h).bid, '5D');
+  same(sysCall(['1H', '1S', '2D', '5D'], [[13, 4], [14, 12, 9, 5], [14, 13, 9, 7, 2], [9, 6]]).bid, 'P', 'opener passes the game');
+  const flat = [[14, 8, 5], [8, 6, 4, 3], [9, 2], [14, 12, 8, 4]];   // 4-2-4-3, 8 losers: no upgrade
+  check(sysCall(['1H', '1S', '2D'], flat).bid !== '5D', 'flat hand stays low');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });
