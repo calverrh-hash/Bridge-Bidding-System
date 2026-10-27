@@ -312,6 +312,11 @@ function rebid(h, o, r, lvl) {
   }
   if (p <= 14) {
     if (l[r] >= 4) return R(B(lvl + 1, r), `Unbalanced 11-14 with ${l[r]} ${SN[r]}: simple raise to ${plain(B(lvl + 1, r))}.`, 'D.raise');
+    // Shape upgrade: a 7-card suit, or 5 losers or fewer, plays like 15-19, so jump rebid.
+    // (Six losers is common with a six-card suit, so that alone doesn't upgrade.)
+    const jumpByShape = l[o] >= 7 || (l[o] >= 6 && losers(h) <= 5);
+    const shapeJump = () => R(B(3, o), `${p} HCP, but ${l[o] >= 7 ? `a ${NUM[l[o]]}-card suit` : `only ${losers(h)} losers (${loserBreak(h)})`} plays like the strong band (15-19): jump rebid to 3${SY[o]}.`, 'D.jump-rebid-shape');
+    if (l[o] >= 7) return shapeJump();
     // 6-4 with a 4-card major you can show below the barrier: show the major first. A major
     // fit is worth more than repeating the long suit, and you can rebid that suit later.
     const mj = others.filter(s => s >= 2 && l[s] >= 4 && bv(B(cheapest(s, resp), s)) < bv(bar));
@@ -319,6 +324,7 @@ function rebid(h, o, r, lvl) {
       const s = mj[0], b = B(cheapest(s, resp), s);
       return R(b, `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]} and four ${SN[s]}: show the major first, ${plain(b)}, so a 4-4 ${SN[s].replace(/s$/, '')} fit isn't lost. It sits below the barrier (2${SY[o]}), so it shows no extra strength, and you can still rebid your ${SN[o]} later.`, 'D.new-suit');
     }
+    if (jumpByShape) return shapeJump();
     if (l[o] >= 6) return R(B(2, o), `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]}: simple rebid of 2${SY[o]}.${others.some(s => s >= 2 && l[s] >= 4) ? ' Your 4-card major would be a reverse here (above the barrier, 16+), so rebid the long suit.' : ''}`, 'D.rebid-suit');
     const below = others.filter(s => l[s] >= 4 && bv(B(cheapest(s, resp), s)) <= bv(bar));
     if (below.length > 1) return amb('More than one four-card suit could be shown below the barrier.');
@@ -410,6 +416,11 @@ function respAfterRebid(h, seq) {
   const o = ST.indexOf(seq[0][1]);
   if (xs === o) {
     if (x === B(cheapest(o, r), o)) {   // simple rebid of opener's suit: 11-14
+      // A rebid major promises six, so three cards or a doubleton honour (Ax, Kx, Qx) is a fit.
+      const hx = l[o] === 2 && h[o].some(c => c >= 12), fit = o >= 2 && (l[o] >= 3 || hx);
+      const fw = hx ? `${SN[o].replace(/s$/, '')} doubleton honour (${h[o].map(c => RANK[c] || c).join('')}): opposite six, that's a fit` : `${l[o]} ${SN[o]}: a fit`;
+      if (fit && p >= 13) return R(B(4, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}, and with ${p} (13+) bid game: 4${SY[o]}.`, 'D.after-major-rebid');
+      if (fit && p >= 10 && xl === 2) return R(B(3, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}. With ${p} (10-12), invite with 3${SY[o]}.`, 'D.after-major-rebid');
       if (p <= 10) return R('P', `Opener's ${plain(x)} is a minimum rebid (11-14). With ${p} (10 or less), pass.`, 'D.after-minimum');
       return gap('After a minimum rebid, the chart says "11-12 invite, 13+ game" but not which call.');
     }

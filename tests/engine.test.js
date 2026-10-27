@@ -432,7 +432,12 @@ test('opener 11-14 with 6-4: show a 4-card major below the barrier, otherwise re
   const a = [[13, 4], [14, 12, 10, 7, 6, 3], [5], [13, 11, 8, 4]];          // 4-1-6-2, 13 HCP
   same(rebid(a, 1, 2, 1).bid, '1S', '1D-1H: 1S');
   const b = [[13, 4], [14, 12, 10, 7, 6, 3], [13, 11, 8, 4], [5]];          // 1-4-6-2
-  same(rebid(b, 1, 3, 1).bid, '2D', '1D-1S: 2H would be a reverse, so 2D');
+  same(rebid(b, 1, 3, 1).bid, '3D', '1D-1S: 2H would be a reverse; with 5 losers the six diamonds jump to 3D');
+  const b6 = [[13, 4], [12, 10, 9, 7, 6, 3], [13, 11, 8, 4], [5]];           // 1-4-6-2, 6 losers
+  same(rebid(b6, 1, 3, 1).bid, '2D', '1D-1S with 6 losers: 2D');
+  const b7 = [[12, 11], [12, 10, 9, 7, 6, 3], [11, 9, 8, 4], [14]];         // 1-4-6-2, 11 HCP, 7 losers
+  check(losers(b7) >= 7, 'b7 has 7 losers');
+  same(rebid(b7, 1, 3, 1).bid, '2D', '1D-1S with 7 losers: 2H would be a reverse, so 2D');
   const c = [[4], [7, 5], [13, 11, 8, 4], [14, 12, 10, 7, 6, 3]];           // 6-4-2-1 in the majors
   same(rebid(c, 3, 0, 2).bid, '2H', '1S-2C: 2H is below 2S');
   const d = [[14, 12, 10, 7, 6, 3], [13, 4], [5], [13, 11, 8, 4]];          // 4-1-2-6 clubs
@@ -447,6 +452,35 @@ test('transfer then 2NT: opener with 3+ in the major bids 3M with 15, 4M with 16
   const min2 = [[13, 9, 4, 3], [14, 10, 6, 2], [12, 11, 5], [13, 8]];   // 15 HCP, two spades
   same(sysCall(['1N', '2H', '2S', '2N'], min2).bid, 'P', '15 with two spades: pass');
   same(sysCall(['1N', '2D', '2H', '2N'], [[13, 9, 4], [14, 10, 6, 2], [13, 8, 3], [12, 11, 5]]).bid, '3H', 'hearts too');
+});
+test('opener 11-14: a 7-card suit or 5 losers jump rebids like 15-19', () => {
+  // Hands are [clubs, diamonds, hearts, spades].
+  const seven = [[9, 4], [8], [10, 6, 3], [14, 13, 10, 9, 7, 5, 2]];      // 7 spades, 7 HCP + ... = AK = 7
+  seven[0] = [14, 4];                                                    // add the club ace: 11 HCP
+  same(rebid(seven, 3, 0, 2).bid, '3S', '1S-2C: seven spades jump to 3S');
+  const sixLosers = [[14, 4], [5], [13, 8, 3, 2], [14, 12, 10, 9, 7, 5]].map(x => x);  // 6-4-1-2
+  sixLosers[3] = [14, 13, 11, 9, 7, 5]; sixLosers[2] = []; sixLosers[1] = [13, 8, 3, 2]; sixLosers[0] = [12, 4, 2];   // 6-0-4-3, 13 HCP, 5 losers
+  check(losers(sixLosers) <= 5, 'test hand has 5 losers or fewer');
+  same(rebid(sixLosers, 3, 0, 2).bid, '3S', '1S-2C: six spades and 5 losers jump to 3S');
+  const plain6 = [[13, 4, 2], [12, 5], [8, 3], [14, 12, 10, 9, 7, 5]];    // 6-2-2-3, 11 HCP, 8 losers
+  same(rebid(plain6, 3, 0, 2).bid, '2S', 'ordinary six-card minimum: 2S');
+});
+test('responder after opener rebids a six-card major: Qx is support, 10-12 invites', () => {
+  const qx = [[13, 10, 6, 3], [14, 9, 7, 4], [13, 5, 2], [12, 6]];       // 2 spades (Qx), 3 hearts, 4-4 minors: 12 HCP
+  same(respAfterRebid(qx, ['1S', '2D', '2S']).bid, '3S', 'Qx and 12: invite 3S');
+  const small = [[13, 10, 6, 3], [14, 9, 7, 4], [8, 5, 2], [6, 2]];       // xx in spades, 10 HCP
+  same(respAfterRebid(small, ['1S', '2D', '2S']).bid, 'P', 'small doubleton and 10: pass');
+});
+test('competitive: pre-emptive minor raise and raising a weak jump overcall', () => {
+  const minor = [[8, 3], [13, 10, 9, 6, 4, 2], [9, 7, 5], [10, 4]];        // six diamonds, 3 HCP? K = 3 -> add a jack
+  minor[3] = [11, 4];                                                      // 4 HCP
+  same(negDbl(minor, 1, 3).bid, '3D', '1D (1S): 3D');
+  const three = [[9, 6, 3], [13, 8, 4, 2], [12, 7, 5], [10, 8, 4]];        // three spades
+  same(wjoRaise(three, 2, '2S').bid, '3S', '1H (2S): 3 spades -> 3S');
+  const four = [[9, 6], [13, 8, 4, 2], [12, 7, 5], [10, 8, 4, 2]];         // four spades
+  same(wjoRaise(four, 2, '2S').bid, '4S', '1H (2S): 4 spades -> 4S');
+  const none = [[9, 6, 3, 2], [13, 8, 4, 2], [12, 7, 5, 3], [10]];
+  same(wjoRaise(none, 2, '2S').bid, 'P', 'no fit: pass');
 });
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);

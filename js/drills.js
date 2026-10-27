@@ -259,6 +259,18 @@ const SETS = [
         NEG(false),
         NEG(false),
         NEG(true),
+        // Weak with a long fit for partner's minor: pre-emptive jump raise.
+        rng => {
+          const o = ri(rng, 0, 1), v = pick(rng, [2, 3]);
+          const h = deal(rng, rl(rng, sp({ [o]: [5, 6], [v === 2 ? 3 : 2]: [0, 3] }, [0, 4])), 4, 8);
+          return oneCall('N', [B(1, o), B(1, v)], h, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`);
+        },
+        // Partner's weak jump overcall: raise to the level of the fit.
+        rng => {
+          const x = ri(rng, 0, 3), y = pick(rng, [0, 1, 2, 3].filter(t => t !== x)), ov = B(y > x ? 2 : 3, y);
+          const h = deal(rng, rl(rng, sp({ [y]: [ri(rng, 1, 4), 4] }, [0, 5])), 3, 12);
+          return oneCall('W', [B(1, x), ov, 'P'], h, `LHO opened 1${SY[x]}; partner made a weak jump overcall, ${plain(ov)}.`);
+        },
         ADV,
         ADV,
         CAP(r => rl(r, sp({ 2: [4, 5], 3: [4, 5] }, [0, 4])), 8, 14),

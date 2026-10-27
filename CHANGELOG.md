@@ -9,6 +9,11 @@
 - **After our redouble and their run, 5-5:** bid the higher-ranking suit unless the lower one is clearly better (two of the top three honours against none), e.g. ♠J10543 ♦AKQ106 bids 2♦. On the chart too.
 - **Opener's minimum rebid with 6-4:** show a 4-card major first when it is below the barrier (1♦-1♥-1♠, 1♠-2♣-2♥); otherwise rebid the six-card suit (1♦-1♠-2♦, since 2♥ would be a reverse). On the chart too.
 - **Transfer then 2NT (five cards, 8-9):** opener with 3+ in the major bids 3M with 15 and 4M with 16-17; with two, pass or 3NT as before. Responder passes 3M. These hands used to stop the drill. On the chart too.
+- **From Monday's club session (chart D and F):**
+  - Opener's jump rebid: a 7-card suit, or 5 losers or fewer, counts as the strong 15-19 band even with 11-14 HCP.
+  - Responder after opener rebids a six-card major: a doubleton honour (Ax, Kx, Qx) is support; with 10-12 invite with 3M, with 13+ bid 4M. Opener accepts with 13-14 or 6 losers or fewer.
+  - Partner's weak jump overcall: raise pre-emptively to the level of the fit (3 cards → 3-level, 4 → 4-level). New recipe in Competitive bidding.
+  - After partner opens a minor and RHO overcalls at the 1-level: with 4-8 and 5+ cards in partner's minor, a pre-emptive jump raise, alongside the negative double. New recipe in Competitive bidding.
 - **Continue button** sits above the bidding table, so you don't have to scroll down to move on.
 
 ### Added

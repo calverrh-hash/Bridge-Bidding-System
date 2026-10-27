@@ -195,6 +195,8 @@ function raisedSuit(seq) {
 function openerAfterInvite(h, seq) {
   const p = hcp(h), x = seq[2], a = seq[3], rs = raisedSuit(seq);
   if (x === '1N' && a === '2N') return p >= 13 ? R('3N', `Partner's 2NT invites opposite your 12-14. With ${p} (13-14), accept: 3NT.`, 'GUIDE.invite-answer') : R('P', `Partner's 2NT invites opposite your 12-14. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
+  const o = ST.indexOf(seq[0][1]);
+  if (o >= 2 && x === B(2, o) && a === B(3, o)) return p >= 13 || losers(h) <= 6 ? R(B(4, o), `Partner's 3${SY[o]} invites opposite your 2${SY[o]} rebid. With ${p} HCP and ${losers(h)} losers, accept: 4${SY[o]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[o]} invites opposite your 2${SY[o]} rebid. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
   if (rs >= 2 && +x[0] === 2 && a === B(3, rs)) return p >= 13 ? R(B(4, rs), `Partner's 3${SY[rs]} invites opposite your simple raise (11-14). With ${p} (13-14), accept: 4${SY[rs]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[rs]} invites opposite your simple raise (11-14). With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
   return undefined;
 }
@@ -335,6 +337,11 @@ function competitive(st, h) {
   // Partner opened 1 of a suit and RHO has just overcalled at the 1-level: negative double.
   if (bids.length === 2 && open.by === partner && oneSuit(open.call) && bids[1].by === rho && oneSuit(bids[1].call) && last === bids[1]) {
     return negDbl(h, suit(open.call), suit(bids[1].call));
+  }
+  // LHO opened 1 of a suit, partner made a weak jump overcall, RHO passed: raise to the level of the fit.
+  if (bids.length === 2 && open.by === lho && oneSuit(open.call) && bids[1].by === partner && last.by === rho && last.call === 'P' && /^[23][CDHS]$/.test(bids[1].call)) {
+    const ov = bids[1].call, y = suit(ov), x = suit(open.call);
+    if (+ov[0] === (y > x ? 2 : 3)) return wjoRaise(h, x, ov);
   }
   // LHO opened 1 of a suit, partner doubled for takeout, RHO passed: advance the double.
   if (bids.length === 2 && open.by === lho && oneSuit(open.call) && bids[1].by === partner && bids[1].call === 'X' && last.by === rho && last.call === 'P') {

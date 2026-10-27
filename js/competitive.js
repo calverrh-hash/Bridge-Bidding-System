@@ -39,6 +39,17 @@ function overcall(h, x) {
   if (p <= 9) return R('P', `${p} HCP with no 5-card suit of your own and not enough to double: pass.`, 'F.overcall-pass');
   return gap('The chart has no call for this hand over the opening.');
 }
+// LHO opened 1 of suit x, partner made a weak jump overcall ov (6+ cards, 6-10), RHO passed.
+// Raise pre-emptively to the level of the fit: total trumps minus six (3 cards → 3-level, 4 → 4-level).
+function wjoRaise(h, x, ov) {
+  const y = ST.indexOf(ov[1]), t = L(h)[y], p = hcp(h), lv = +ov[0];
+  if (p >= 15) return gap('The chart has no constructive advance of a weak jump overcall.');
+  if (t < 3) return R('P', `Partner's weak jump overcall shows six ${SN[y]} and 6-10. With ${cardsOf(t, y)} there's no fit: pass.`, 'F.wjo-raise');
+  const lvl = Math.min(t, 5), tot = 6 + t;
+  if (lvl <= lv) return R('P', `Partner's ${plain(ov)} shows six ${SN[y]}. You have ${t}: ${tot} trumps between you, so the fit is already at its level. Pass.`, 'F.wjo-raise');
+  const b = B(lvl, y);
+  return R(b, `Partner's ${plain(ov)} shows six ${SN[y]}. With ${t} you have ${tot} trumps between you: raise pre-emptively to the level of the fit, ${plain(b)}. It's a blocking bid, not a game try.`, 'F.wjo-raise');
+}
 // Partner opened 1 of suit o, RHO overcalled 1 of suit v.
 function negDbl(h, o, v) {
   const p = hcp(h), l = L(h);
@@ -48,6 +59,11 @@ function negDbl(h, o, v) {
   else if (o <= 1 && v === 3) { need = l[2] === 4; show = 'four hearts'; }
   else { need = l[0] >= 4 && l[1] >= 4; show = 'both minors'; }
   if (need && p >= 6) return R('X', `Negative double: shows ${show} and 6+ (the overcall was at the 1-level).`, 'F.negative-double');
+  // Weak with a long minor fit for partner: jump raise pre-emptively instead.
+  if (o <= 1 && l[o] >= 5 && p >= 4 && p <= 8) {
+    const b = B(cheapest(o, B(1, v)) + 1, o);
+    return R(b, `${Num(l[o])} ${SN[o]} and only ${p} HCP: pre-emptive jump raise to ${plain(b)}. It takes their bidding space; a negative double would show the unbid major${o === 0 && v === 1 ? 's' : ''} instead.`, 'F.preempt-minor-raise');
+  }
   if (p <= 5) return R('P', `Only ${p} HCP: a negative double over a 1-level overcall needs 6+. Pass.`, 'F.negative-double-pass');
   return gap('The chart only covers the negative double here.');
 }
