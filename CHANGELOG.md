@@ -18,6 +18,18 @@
 - **6-5 with a longer minor:** open the minor (longest suit first), then show the major; with 15-19, opener shows it at the first rebid. 1♣/1♦ no longer deny a five-card major outright.
 - **Shape counts once a fit is found:** opener after a simple raise (≤5 losers 4M, 6 losers 3M try), after a limit raise (≤6 losers 4M), after Bergen 3♦ (≤5) or 3♣ (≤6); responder accepting a game try with ≤8 losers; responder after opener's simple raise (24 − (losers + 7) ≥ 10 → game). Points still decide when they say more.
 - **General rule, every auction after a 1-of-a-suit opening:** once there's an 8-card fit (from what partner has shown plus your own length), count losers: your own plus an estimate for partner from their bids. If 24 − (yours + partner's) reaches 10 tricks in a major or 11 in a minor, bid game (`fitGame` in auction.js, rule id `LTC.fit-game`). Partner then passes. Not used in slam sequences, artificial raises, or NT and 2♣ auctions.
+- **No more early stops:** every drill auction now reaches a contract (a test checks seeds 1-4). New continuations, all on the chart:
+  - Responder after opener's minimum rebid: 11-12 invites (3 of opener's suit with 3+, own 6-card suit at the 3-level, or 2NT), 13+ bids game; opener accepts with 13-14.
+  - After opener's 1NT rebid with a 5+ suit or 16+; after a 2NT rebid with a five-card major (3M forcing); after 2NT (12-14) following a 2-level reply.
+  - After a reverse (10+ game; 6-9 raise, preference, rebid or 2NT; opener goes on with 17+) and a jump shift (never pass); after a jump rebid of a minor, or of a major following a 2-level reply.
+  - After opener raises your minor (2NT/3NT by strength).
+  - Opener's rebid after 1M-1NT and 1m-1NT; responder's answer. 1m-2NT with an unbalanced opener.
+  - After Jacoby shortness or side suit: 4M, or 4NT with 31+.
+  - 2♣ positive responses: opener with a fit asks RKCB; otherwise own suit or NT (6NT with 33+); responder raises a major with 3. These are in the Slam drill.
+  - 2NT with 5-4 majors: 3♣ Stayman, then the five-card major over 3♦.
+  - Partner's pre-empt with 3+ top honours: 3m → 3NT, 4m → 5m, 4M pass.
+  - New suit then support with 17+ opposite a minimum: game, or 4NT with 31+. Opener after responder's sign-off in their own suit: pass (17+ after a reverse goes on).
+  - When partner has just bid game, pass.
 - **Raising 1♥/1♠ with 4+ trumps:** 7 losers or fewer counts as 13+ (game forcing). With a good side suit (5+ cards, two of the top three honours), bid it first and support afterwards; otherwise Jacoby 2NT. On the chart too.
 - **Never repeat partner's bid:** if the rules want the contract partner has just bid (e.g. game), pass.
 - **Loser count in competitive auctions too:** support doubles (responder's game decision, opener accepting an invitation), the unassuming cue bid (advancer after a minimum rebid), the redouble raise and the invitation after a support raise all bid game when 24 − (yours + partner's) reaches 10 tricks (`ltcGame` in competitive.js).

@@ -234,12 +234,12 @@ test('obvious passes after game are automatic, so these auctions reach a contrac
   same(callFor('2C 2D 3N', '432.432.5432.432'), 'P');
 });
 test('when the chart stops, the auction says why', () => {
-  // 1♥ – 1NT: the chart gives opener no rebid.
-  const q = { partner: true, ...simulate(parseHand('K2.AQJ32.K32.432'), parseHand('874.65.A985.K765'), 'S', 'note') };
-  same(q.calls, ['1H', 'P', '1N', 'P']);
+  // Partner opens 2♣ and you hold 13+: the chart has no response.
+  const q = { partner: true, ...simulate(parseHand('K32.QJ2.QJ2.A432'), parseHand('AQ4.AK43.AK3.KQ5'), 'N', 'note') };
+  same(q.calls, ['2C', 'P']);
   same(q.contract, null);
   same([q.stop.stop, q.stop.seat], ['gap', 'S']);
-  check(/1NT response/.test(outcome(q)), outcome(q));
+  check(/13\+/.test(outcome(q)), outcome(q));
   // "More than one call" and "no call" are told apart.
   same(r1NT(parseHand('AQ432.KJ432.32.2')).stop, 'ambiguous');   // 5-5 majors: transfer to either
   same(rkReply(parseHand('A2.AK32.A32.A432'), 2).stop, 'gap');    // five key cards: no reply
@@ -251,8 +251,8 @@ test('regression: "new suit first, then support" keeps its promise', () => {
   same(callFor('1H 1S 2C', h), '4H');
   same(callFor('1H 1S 2S', h), '4S', 'opener raised spades: the 4-4 fit will do');
   same(callFor('1H 1S 3H', h), '4H', 'opener jumped in hearts: 14 + 15 is short of slam, so game');
-  same(callFor('1H 1S 2N', h), null, 'opener has 18-19: slam is possible, and the chart stops');
-  same(callFor('1H 1S 1N', 'AQ52.Q63.KQ4.A92'), null, '17 HCP: slam is possible, and the chart stops');
+  same(callFor('1H 1S 2N', h), '4N', 'opener has 18-19: 14 + 18 = 32 with a fit, so ask for key cards');
+  same(callFor('1H 1S 1N', 'AQ52.Q63.KQ4.A92'), '4H', '17 opposite 11-14 is under 31: game');
 });
 test('regression: opposite an 18-19 2NT rebid, 7 HCP bids game after a 1NT response too', () => {
   same(callFor('1C 1N 2N', 'Q75.Q63.K842.982'), '3N');   // 7 HCP
@@ -395,6 +395,11 @@ test('rule coverage: every chart rule is asked of you in some drill (seeds 1-8)'
   const all = allRuleIds(), never = [...all].filter(id => !ASKED.has(id) && !PARTNER_ONLY.has(id)).sort();
   info('rule coverage', `${all.size - never.length - PARTNER_ONLY.size} of ${all.size - PARTNER_ONLY.size} chart rules are asked of you.`);
   same(never, [], 'never asked');
+});
+test('no drill auction stops early: every hand reaches a contract (seeds 1-4)', () => {
+  const stops = [];
+  for (const d of SETS) for (let s = 1; s <= 4; s++) buildSet(d, s, {}).forEach(q => { if (q.stop) stops.push(`${d.id}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
+  same(stops, [], 'auctions that stop');
 });
 test('buildSet is deterministic for a seed', () => {
   for (const d of SETS) same(JSON.stringify(buildSet(d, 3)), JSON.stringify(buildSet(d, 3)), d.id);

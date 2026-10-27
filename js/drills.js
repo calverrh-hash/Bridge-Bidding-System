@@ -100,6 +100,8 @@ const SETS = [
         SO({ south: { lens: balL, hcp: [23, 27] }, north: { hcp: [0, 7] } }),                               // 2♣
         SO({ south: { lens: r => balL(r, [[5, 3, 3, 2]]), hcp: [11, 14] }, north: { hcp: [6, 15] } }),     // 5332
         SO({ south: { lens: balL, hcp: [3, 11] }, north: { hcp: [0, 15], ok: opensAs('P') }, calls: 1 }),  // too weak: pass, and so does partner
+        want(SO({ south: { lens: balL, hcp: [12, 20] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [6, 10] } }), 'C.after-1nt', 60),   // 1m – 1NT: opener's rebid
+        want(SO({ south: { lens: r => rl(r, sp({ 0: [3, 6], 1: [3, 6] }, [1, 4])), hcp: [11, 16] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [11, 12] } }), 'C.after-2nt', 60),   // 1m – 2NT: opener's rebid
       ];
     })(),
   },
@@ -200,6 +202,7 @@ const SETS = [
         want(M1([0, 6], 0, 5, 1), 'B.pass'),                    // too weak to respond
         want(M1([0, 2], 6, 9, 1), 'B.1nt'),                     // 1NT response
         want(M1([3, 3], 13, 16, 2), 'B.support-after-new-suit', 80),   // new suit, then support
+        want(M1([2, 2], 9, 13, 2, true), 'D.after-major-rebid', 80),   // opener rebids six: Hx is support
       ];
     })(),
   },
@@ -226,6 +229,11 @@ const SETS = [
         m1(nmaj, 13, 15, 1),          // 3NT
         want(m1(r => rl(r, sp({}, [0, 6])), 0, 5, 1), 'C.pass'),   // too weak to respond
         want(m1(r => rl(r, sp({ [ri(r, 2, 3)]: [4, 4] }, [1, 4])), 6, 12, 2, true), 'D.after-2nt'),   // 1m – 1M – 2NT (18-19): game or pass
+        // Opener reverses (15-19) or jump-shifts (20-22) into hearts after your 1♠.
+        ...[[15, 19, 'D.after-reverse'], [20, 22, 'D.after-jump-shift']].map(([lo, hi, id]) => want(PO({ setup: r => {
+          const m = ri(r, 0, 1);
+          return { south: { lens: rl(r, sp({ 3: [4, 5], 2: [0, 3] }, [1, 5])), hcp: [6, 12] }, north: { lens: sp({ [m]: [5, 6], 2: [4, 4], 3: [0, 2] }, [0, 3]), hcp: [lo, hi], opens: B(1, m) }, note: `Partner opened 1${SY[m]}.` };
+        } }), id, 30)),
       ];
     })(),
   },
@@ -321,6 +329,11 @@ const SETS = [
       return [
         JR(13, 22), JR(16, 22), JR(18, 22), JR(20, 22),
         JO, JO, JO2, SR, SR, SRP,
+        // 2♣ – positive response: 23 + 8 = 31+, so these are slam auctions.
+        want(SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [23, 25] }, north: { hcp: [8, 11] } }), 'GUIDE.2c-positive-rebid', 60),
+        want(PO({ setup: r => { const s = ri(r, 0, 3); return { south: { lens: rl(r, sp({}, [1, 5])), hcp: [8, 11] }, north: { lens: sp({ [s]: [5, 6] }, [0, 4]), hcp: [23, 25], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; } }), 'GUIDE.2c-positive-continue', 60),
+        want(PO({ setup: r => ({ south: { lens: nmaj(r), hcp: [8, 12] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }), calls: 1 }), 'E.2c-positive-nt'),
+        want(PO({ setup: r => { const s = ri(r, 0, 3); return { south: { lens: rl(r, sp({ [s]: [5, 6] }, [0, 4])), hcp: [8, 12] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; }, calls: 1 }), 'E.2c-positive-suit'),
         want(JR(16, 22), 'G.slam-game', 80),                                      // 31+ but only 0-1 key cards: bid game
         want(SO({ south: { lens: r => { const M = anyMajor(r), s = pick(r, [0, 1, 2, 3].filter(t => t !== M && !(M === 2 && t === 3))); return rl(r, sp({ [M]: [5, 5], [s]: [5, 5] }, [0, 3])); }, hcp: [12, 17], ok: opensAs(/^1[HS]$/) },
           north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 5]); }, hcp: [13, 16] } }), 'B.jacoby-side-suit', 60),   // opener shows a good side suit
@@ -347,11 +360,10 @@ const SETS = [
         SO({ south: { lens: balL, hcp: [23, 26] }, north: { hcp: [0, 7] } }),
         weakTwo, weakTwo,
         SO({ south: { lens: balL, hcp: [20, 22] }, north: { lens: majSpec, hcp: [0, 10] } }),
-        // Positive responses to 2♣, and the simple answers to 2NT.
-        want(PO({ setup: r => ({ south: { lens: nmaj(r), hcp: [8, 12] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }), calls: 1 }), 'E.2c-positive-nt'),
-        want(PO({ setup: r => { const s = ri(r, 0, 3); return { south: { lens: rl(r, sp({ [s]: [5, 6] }, [0, 4])), hcp: [8, 12] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; }, calls: 1 }), 'E.2c-positive-suit'),
+        // The simple answers to 2NT.
         want(PO({ setup: r => ({ ...NT2, south: { lens: nmaj(r), hcp: [0, 3] } }), calls: 1 }), 'E.2nt-pass'),
         want(PO({ setup: r => ({ ...NT2, south: { lens: nmaj(r), hcp: [4, 10] } }), calls: 1 }), 'E.2nt-game'),
+        want(PO({ setup: r => { const M = anyMajor(r); return { ...NT2, south: { lens: rl(r, sp({ [M]: [5, 6], [5 - M]: [0, 3] }, [0, 4])), hcp: [0, 5] } }; } }), 'E.2nt-transfer-continue', 40),
         // Partner opens a weak two: pass, raise, or ask with 2NT (and decide after the answer).
         ...['E.weak-two-pass', 'E.weak-two-raise', 'E.weak-two-ask', 'GUIDE.weak-two-after-ask'].map(id => want(PO({ calls: 1, setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: id === 'E.weak-two-raise' ? [3, 4] : [0, 4] }, [0, 6])), hcp: id === 'E.weak-two-pass' ? [0, 13] : id === 'E.weak-two-raise' ? [4, 13] : [14, 18] }, north: { lens: sp({ [M]: [6, 6] }, [0, 4]), hcp: [5, 10], opens: B(2, M) }, note: `Partner opened a weak 2${SY[M]}.` }; } }), id, 60)),
         // Partner pre-empts: pass, or raise to game with 3+ aces and kings.
