@@ -353,9 +353,11 @@ function ucbAdvance(h, x, ov) {
 // Overcaller after the cue bid: cheapest rebid = minimum (8-12), jump to game = 13+.
 function ucbOvercaller(h, ov, cue) {
   const y = ST.indexOf(ov[1]), p = hcp(h);
+  const k = losers(h);
   if (p >= 13) return R(B(4, y), `Partner's ${plain(cue)} shows support and 10+. With ${p} HCP (13+), jump to game: ${plain(B(4, y))}.`, 'H.ucb-rebid');
+  if (k <= 6) return R(B(4, y), `Partner's ${plain(cue)} shows support and 10+ (about 8 losers). You have ${p} HCP but only ${k} losers (${loserBreak(h)}): 24 − (${k} + 8) = ${24 - k - 8} tricks, so jump to game: ${plain(B(4, y))}.`, 'H.ucb-rebid');
   const b = B(cheapest(y, cue), y);
-  return R(b, `Partner's ${plain(cue)} shows support and 10+. With a minimum overcall (${p} HCP), bid ${plain(b)}: the cheapest rebid of your suit says "minimum".`, 'H.ucb-rebid');
+  return R(b, `Partner's ${plain(cue)} shows support and 10+. With a minimum overcall (${p} HCP, ${k} losers), bid ${plain(b)}: the cheapest rebid of your suit says "minimum".`, 'H.ucb-rebid');
 }
 // Advancer after the overcaller's minimum rebid: game with 13+.
 function ucbAfterMin(h, y, reb) {

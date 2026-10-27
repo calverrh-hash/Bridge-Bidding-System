@@ -482,6 +482,13 @@ test('competitive: pre-emptive minor raise and raising a weak jump overcall', ()
   const none = [[9, 6, 3, 2], [13, 8, 4, 2], [12, 7, 5, 3], [10]];
   same(wjoRaise(none, 2, '2S').bid, 'P', 'no fit: pass');
 });
+test('after the unassuming cue bid: 13+ HCP or 6 losers jumps to game', () => {
+  // Hands are [clubs, diamonds, hearts, spades]. ♠AKQ752 ♥Q4 ♦4 ♣J1086: 12 HCP, 6 losers.
+  const h = [[11, 10, 8, 6], [4], [12, 4], [14, 13, 12, 7, 5, 2]];
+  same(ucbOvercaller(h, '1S', '2H').bid, '4S', '6 losers: 4S');
+  const m = [[11, 10, 8], [9, 4], [12, 4, 3], [14, 13, 7, 5, 2]];       // 5-3-2-3, 11 HCP, 8 losers
+  same(ucbOvercaller(m, '1S', '2H').bid, '2S', 'minimum: 2S');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });
