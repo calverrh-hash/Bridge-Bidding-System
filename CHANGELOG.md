@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-27 (evening)
+- **Responding to 1♣/1♦ with two 5-card suits:** bid the higher-ranking first (a 5-card major before diamonds; spades before hearts). 4-4 still goes up the line. On the chart too.
 - **Responding on shape:** 4-5 HCP with 9 losers or fewer responds as if it held 6 (new suit, 1NT or a simple raise). Four trumps and exactly 6 HCP now raise to 2M (was a gap). On the chart too.
 - **Smolen over 2NT too:** 2NT – 3♣ – 3♦ – 3♥/3♠ shows four in the bid major and five in the other, as over 1NT; opener bids 4 of the five-card major with three, else 3NT. (It had been natural.) On the chart too.
 

@@ -304,6 +304,9 @@ function r1m(h, m) {
   const c = [0, 1, 2, 3].filter(s => s !== m);
   let b = c[0];
   for (const s of c) if (l[s] > l[b]) b = s;
+  // Two 5-card suits: bid the higher-ranking first (so a 5-card major comes before diamonds).
+  const ties5 = c.filter(s => l[s] === l[b] && l[s] >= 5);
+  if (ties5.length > 1) b = ties5[ties5.length - 1];
   if (l[m] > l[b]) return gap('The longest suit is the opening minor, and the chart has no minor raises.');
   // Over 1♣ with four diamonds and a 4-card major, show the major first (chart C).
   if (m === 0 && b === 1 && l[1] === 4) {
@@ -316,7 +319,8 @@ function r1m(h, m) {
   const lv = b > m ? 1 : 2;
   if (lv === 2 && p < 9) return gap('The longest suit could only be bid at the 2-level, which needs 9+.');
   const tie = c.filter(s => l[s] === l[b]).length > 1;
-  return R(B(lv, b), `${pre}${pre ? '' : `${p} HCP: `}new suit, longest first${tie ? ' (equal length: bid the lower)' : ''}: ${plain(B(lv, b))}. ${lv === 1 ? '1-level needs 6+' : '2-level needs 9+'}; forcing.`, 'C.new-suit');
+  const tieWhy = !tie ? '' : l[b] >= 5 ? ' (two 5-card suits: bid the higher-ranking first)' : ' (equal length: bid the lower, up the line)';
+  return R(B(lv, b), `${pre}${pre ? '' : `${p} HCP: `}new suit, longest first${tieWhy}: ${plain(B(lv, b))}. ${lv === 1 ? '1-level needs 6+' : '2-level needs 9+'}; forcing.`, 'C.new-suit');
 }
 
 // ---------- D: opener's rebid ----------

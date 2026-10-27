@@ -93,7 +93,7 @@ B = f'''
 
 # ---------------- C ----------------
 C = f'''
-{box('rsp','<b>New suit - longest (if equal, lowest; over 1♣ with 4♦ and a 4-card major, bid the major):</b> 1-level 6+ pts (or 4-5 with ≤9 losers) · 2-level 9+ pts. Forcing, <b>no upper limit</b>: a 16+ hand starts here and makes slam tries.')}
+{box('rsp','<b>New suit - longest (4-4: lowest, but over 1♣ with 4♦ and a 4-card major, the major; 5-5: the higher):</b> 1-level 6+ pts (or 4-5 with ≤9 losers) · 2-level 9+ pts. Forcing, <b>no upper limit</b>: a 16+ hand starts here and makes slam tries.')}
 <div class="sp"></div>
 <div class="g2">{box('rsp','<b>1NT</b> 6-10 balanced, no 4-card major.')}{box('rsp','<b>2NT</b> 11-12 balanced, no major.')}</div>
 <div class="g2">{arrow}{arrow}</div>

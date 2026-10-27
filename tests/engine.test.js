@@ -563,6 +563,11 @@ test('shape counts for responding: 4-5 HCP with 9 losers or fewer responds', () 
   same(r1m(parseHand('-.KQ532.8543.8653'), 1).bid, '1H');          // 5 HCP, 8 losers
   same(r1m(parseHand('Q32.J432.8543.J3'), 1).bid, 'P');            // 4 HCP, flat: pass
 });
+test('over 1♣/1♦, two 5-card suits: bid the higher-ranking first', () => {
+  same(r1m(parseHand('-.A8543.K10743.A72'), 0).bid, '1H');   // 5-5 red: hearts first
+  same(r1m(parseHand('AJ543.KQ543.32.2'), 0).bid, '1S');     // 5-5 majors: spades first
+  same(r1m(parseHand('A543.KQ43.432.32'), 1).bid, '1H');     // 4-4 majors: up the line
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });
