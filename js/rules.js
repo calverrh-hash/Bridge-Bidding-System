@@ -45,9 +45,10 @@ function openingBid(h) {
   if (p >= 11) {
     if (fiveM) {
       const M = l[3] >= l[2] ? 3 : 2, mn = Math.max(l[0], l[1]);
+      // Longest suit first: a longer minor (6-5) opens the minor; you bid the major twice later.
+      if (mn > l[M]) { const m = l[1] >= l[0] ? 1 : 0; return R(B(1, m), `${p} HCP with ${NUM[l[m]]} ${SN[m]} and five ${SN[M]}: open your longest suit, 1${SY[m]}. Bid the ${SN[M].replace(/s$/, '')}s twice later to show five.`, 'OB.longer-minor'); }
       const why = l[2] === l[3] ? 'With 5-5 in the majors, open the higher-ranking suit: 1♠.'
         : mn === l[M] ? 'With 5-5, open the higher-ranking suit.'
-        : mn > l[M] ? 'A 5-card major opens 1 of the major even with a longer minor (1♣/1♦ deny a 5-card major).'
         : 'Open the longer major.';
       return R(B(1, M), `${p} HCP, unbalanced, with a 5+ card major: open 1${SY[M]}. ${why}`, 'OB.major');
     }
@@ -338,6 +339,12 @@ function rebid(h, o, r, lvl) {
   if (lvl !== 1) return gap('The chart has no rebid with 15+ after a 2-level response.');
   if (p <= 19) {
     if (l[r] >= 4) return R(B(3, r), `Unbalanced 15-19 with ${l[r]} ${SN[r]}: double raise to 3${SY[r]}.`, 'D.double-raise');
+    // 6-5 with a five-card major (opened the longer minor): show the major now, and again later.
+    const five = others.filter(s => s >= 2 && l[s] >= 5);
+    if (o <= 1 && l[o] >= 6 && five.length === 1) {
+      const s = five[0], b = B(cheapest(s, resp), s);
+      return R(b, `${p} HCP, six ${SN[o]} and five ${SN[s]}: show the major now with ${plain(b)}${bv(b) > bv(bar) ? ' (a reverse, fine with 15-19)' : ''}. Bid ${SN[s]} again next time to show five.`, 'D.six-five');
+    }
     const opts = [];
     if (l[o] >= 6) opts.push([B(3, o), `Unbalanced 15-19 with ${NUM[l[o]]} ${SN[o]}: jump rebid to 3${SY[o]}.`, 'D.jump-rebid']);
     for (const s of others) {
@@ -386,6 +393,10 @@ function respAfterRebid(h, seq) {
     const dbl = xl >= rl + 2, s = slamTry(h, rs, dbl ? 15 : 11, dbl ? "Opener's double raise (15-19)" : "Opener's raise (11-14)");
     if (s) return s;
     if (xl === rl + 1) {
+      // Opener's simple raise is about 7 losers: 24 − (yours + 7) = tricks.
+      const k = losers(h), t = 24 - k - 7;
+      if (p < 13 && t >= 10) return R(B(4, rs), `Opener's simple raise shows 11-14 (about 7 losers). You have ${p} HCP but ${k} losers (${loserBreak(h)}): 24 − (${k} + 7) = ${t} tricks, so bid 4${SY[rs]}.`, 'D.after-raise');
+      if (p <= 10 && t === 9 && xl === 2) return R(B(3, rs), `Opener's simple raise shows 11-14. You have ${p} HCP but ${k} losers: 24 − (${k} + 7) = 9 tricks, so invite with 3${SY[rs]}.`, 'D.after-raise');
       if (p >= 13) return R(B(4, rs), `Opener's simple raise shows 11-14. With ${p}, bid game: 4${SY[rs]}.`, 'D.after-raise');
       if (p >= 11) {
         if (xl >= 3) return gap('After a raise to the 3-level, the chart gives no call with 11-12.');

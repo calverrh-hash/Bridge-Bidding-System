@@ -467,7 +467,7 @@ function buildSet(def, seed, opts) {
 // order and seed n starts where seed n-1 stopped, so consecutive deals cover different drills
 // (14 drills: seed 1 has drills 1-10, seed 2 has 11-14 and 1-6, and so on). Within a drill, the
 // hand chosen is the one that adds the most situations (recipes, calls, auctions) not yet in the set.
-const MIX_CANDS = 8;       // hands dealt per drill before choosing one
+const MIX_CANDS = 12;       // hands dealt per drill before choosing one
 function buildMixed(def, seed, opts) {
   const src = def.sources, size = setSize(def);
   const order = shuffle(mulberry(20261026), src.map((_, k) => k));
@@ -484,8 +484,15 @@ function buildMixed(def, seed, opts) {
       else if (tries % 300 === 0) i++;
     }
     if (!cands.length) continue;
-    let best = -1, pickQ = cands[0];
-    for (const q of cands) {
+    // From the slam drill, two deals in three take a small slam (the greedy pick otherwise
+    // favours grand slams, whose auctions have more distinct calls).
+    let pool = cands;
+    if (d.id === 'slam') {
+      const want = seed % 3 === 0 ? /^7/ : /^6/, w = cands.filter(q => want.test(q.contract || ''));
+      if (w.length) pool = w;
+    }
+    let best = -1, pickQ = pool[0];
+    for (const q of pool) {
       let sc = rng() * 0.5;
       for (const x of features(q)) if (!got.has(x)) sc += weight(x);
       if (sc > best) { best = sc; pickQ = q; }

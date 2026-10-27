@@ -210,14 +210,22 @@ function after1Major(seq, h) {
   if (seq.includes('4N')) return afterRKCB(seq, h, raisedSuit(seq) >= 0 ? raisedSuit(seq) : M);
   if (n === 1) return r1M(h, M);
   if (n === 2) {   // opener's rebid
+    if (r === B(2, M)) {
+      // Partner's simple raise is about 9 losers. 24 − (yours + 9) = tricks.
+      const k = losers(h), t = 24 - k - 9, lb = `${k} losers (${loserBreak(h)}): 24 − (${k} + 9) = ${t} tricks`;
+      if (t >= 10 && p <= 18) return R(B(4, M), `Partner's 2${SY[M]} shows 6-9 with 3 trumps. You have ${p} HCP, but your shape counts: ${lb}, so bid 4${SY[M]}.`, 'B.after-raise');
+      if (t === 9 && p <= 15) return R(B(3, M), `Partner's 2${SY[M]} shows 6-9. You have ${p} HCP, but ${lb}: try for game with 3${SY[M]}.`, 'B.after-raise');
+    }
     if (r === B(2, M)) return p <= 15 ? R('P', `Partner's 2${SY[M]} shows 6-9 with 3 trumps. With ${p} (11-15), pass.`, 'B.after-raise') : p <= 18 ? R(B(3, M), `Partner's 2${SY[M]} shows 6-9. With ${p} (16-18), try for game with 3${SY[M]}.`, 'B.after-raise') : R(B(4, M), `Partner's 2${SY[M]} shows 6-9. With ${p} (19+), bid 4${SY[M]}.`, 'B.after-raise');
     if (r === B(3, M)) {
       const s = slamTry(h, M, 10, `Partner's limit raise (10-12)`);
       if (s) return s;
       if (p >= 15) return R(B(4, M), `Partner's 3${SY[M]} shows 10-12. With ${p} (15+), bid 4${SY[M]}.`, 'B.after-limit-raise');
-      if (p <= 12) return R('P', `Partner's 3${SY[M]} shows 10-12. With ${p} (11-12), pass.`, 'B.after-limit-raise');
+      if (p <= 12) return losers(h) <= 6 ? R(B(4, M), `Partner's 3${SY[M]} shows 10-12 (about 8 losers). You have ${p} HCP but ${losers(h)} losers (${loserBreak(h)}): 24 − (${losers(h)} + 8) = ${16 - losers(h)} tricks, so bid 4${SY[M]}.`, 'B.after-limit-raise') : R('P', `Partner's 3${SY[M]} shows 10-12. With ${p} (11-12) and ${losers(h)} losers, pass.`, 'B.after-limit-raise');
       return ltcLimit(h, M);
     }
+    if (r === '3D' && p <= 15 && losers(h) <= 5) return R(B(4, M), `Partner's 3♦ shows 4+ trumps, 7-9 (about 9 losers). You have ${p} HCP but ${losers(h)} losers (${loserBreak(h)}): 24 − (${losers(h)} + 9) = ${15 - losers(h)} tricks, so bid 4${SY[M]}.`, 'B.after-bergen');
+    if (r === '3C' && p <= 13 && losers(h) <= 6 && !slamTry(h, M, 10, '')) return R(B(4, M), `Partner's 3♣ shows 4+ trumps, 10-12 (about 8 losers). You have ${p} HCP but ${losers(h)} losers (${loserBreak(h)}): 24 − (${losers(h)} + 8) = ${16 - losers(h)} tricks, so bid 4${SY[M]}.`, 'B.after-bergen');
     if (r === '3D') return p <= 15 ? R(B(3, M), `Partner's 3♦ shows 4+ trumps, 7-9. With ${p} (11-15), sign off in 3${SY[M]}.`, 'B.after-bergen') : R(B(4, M), `Partner's 3♦ shows 4+ trumps, 7-9. With ${p} (16+), bid 4${SY[M]}.`, 'B.after-bergen');
     if (r === '3C') return slamTry(h, M, 10, `Partner's 3♣ raise (10-12)`) || (p <= 13 ? R(B(3, M), `Partner's 3♣ shows 4+ trumps, 10-12. With ${p} (11-13), sign off in 3${SY[M]}.`, 'B.after-bergen') : R(B(4, M), `Partner's 3♣ shows 4+ trumps, 10-12. With ${p} (14+), bid 4${SY[M]}.`, 'B.after-bergen'));
     if (r === '2N') {
@@ -231,6 +239,8 @@ function after1Major(seq, h) {
   }
   if (n === 3) {   // responder's second call
     const x = seq[2];
+    // Opener's game try shows about 6 losers: accept with 8 losers or fewer (24 − 14 = 10).
+    if (r === B(2, M) && x === B(3, M) && p <= 7 && losers(h) <= 8) return R(B(4, M), `Opener's 3${SY[M]} is a game try (about 6 losers). You have ${p} HCP but ${losers(h)} losers (${loserBreak(h)}): 24 − (6 + ${losers(h)}) = ${18 - losers(h)} tricks, so accept with 4${SY[M]}.`, 'B.game-try-answer');
     if (r === B(2, M) && x === B(3, M)) return p <= 7 ? R('P', `Opener's 3${SY[M]} is a game try (16-18). With ${p} (6-7), pass.`, 'B.game-try-answer') : R(B(4, M), `Opener's 3${SY[M]} is a game try (16-18). With ${p} (8-9), accept with 4${SY[M]}.`, 'B.game-try-answer');
     if (r === '2N') return jacCont(h, M, x);
     if (/^(3[CD]|3[HS]|2[HS])$/.test(r) && (x === B(3, M) || x === B(4, M))) return AP('Opener signed off.');

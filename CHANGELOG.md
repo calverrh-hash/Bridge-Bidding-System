@@ -15,6 +15,9 @@
   - Partner's weak jump overcall: raise pre-emptively to the level of the fit (3 cards → 3-level, 4 → 4-level). New recipe in Competitive bidding.
   - After partner opens a minor and RHO overcalls at the 1-level: with 4-8 and 5+ cards in partner's minor, a pre-emptive jump raise, alongside the negative double. New recipe in Competitive bidding.
 - **After the unassuming cue bid:** the overcaller jumps to game with 13+ HCP or 6 losers or fewer (6 losers opposite a limit raise's 8 = 10 tricks). On the chart too.
+- **6-5 with a longer minor:** open the minor (longest suit first), then show the major; with 15-19, opener shows it at the first rebid. 1♣/1♦ no longer deny a five-card major outright.
+- **Shape counts once a fit is found:** opener after a simple raise (≤5 losers 4M, 6 losers 3M try), after a limit raise (≤6 losers 4M), after Bergen 3♦ (≤5) or 3♣ (≤6); responder accepting a game try with ≤8 losers; responder after opener's simple raise (24 − (losers + 7) ≥ 10 → game). Points still decide when they say more.
+- **Mixed:** the slam hand is a small slam in two deals out of three (the coverage pick had favoured grand slams).
 - **Chart layout:** the "Key fixes & updates" panel is gone (the changelog records changes). Panel D moved into its place and panel E is wider.
 - **Continue button** sits above the bidding table, so you don't have to scroll down to move on.
 

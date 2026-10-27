@@ -14,7 +14,7 @@ lab = lambda t: f'<div class="lab">{t}</div>'
 op = ''.join(f'<div class="ob">{H(t)}</div>' for t in [
  '<b>1NT</b> 15-17 balanced → <b>A</b>',
  '<b>1♥/♠</b> 5+ card major, 11-22 pts. <b>5-5: open the higher-ranking suit</b> (1♠ with both majors) → <b>B, D</b>',
- '<b>1♣/♦</b> no 5-card major: balanced 12-14 or 18-19, or unbalanced 11-22. Longer minor; 4-4 or 5-5 minors 1♦; 3-3 minors 1♣ → <b>C, D</b>',
+ '<b>1♣/♦</b> no 5-card major (or a longer minor: 6-5 opens the minor, then bid the major twice): balanced 12-14 or 18-19, or unbalanced 11-22. Longer minor; 4-4 or 5-5 minors 1♦; 3-3 minors 1♣ → <b>C, D</b>',
  '<b>2NT</b> 20-22 balanced → <b>E</b>',
  '<b>2♣</b> 23+ any shape, game forcing → <b>E</b>',
  '<b>2♦/♥/♠</b> weak: 5-10 HCP, 6-card suit → <b>E</b>',
@@ -79,9 +79,9 @@ A = f'''
 # ---------------- B ----------------
 B = f'''
 {lab('3 trumps')}
-{box('rsp','<b>3 trumps:</b> 2M 6-9 · 3M 10-12 · 13+: bid a new suit (forcing) then support, leaving slam room. <b>4M = weak, 5+ trumps</b> (to play).')}
+{box('rsp','<b>3 trumps:</b> 2M 6-9 · 3M 10-12 · 13+: new suit (forcing), then support. <b>4M = weak, 5+ trumps</b> (to play).')}
 <div class="g2">{arrow}{arrow}</div>
-<div class="g2">{box('reb','<b>After 2M:</b> 11-15 pass · 16-18 3M try (8-9 → 4M, 6-7 pass) · 19+ 4M.')}{box('reb','<b>After 3M:</b> 15+ 4M (31+ combined → 4NT, G) · 13-14 use LTC · 11-12 pass.')}</div>
+<div class="g2">{box('reb','<b>After 2M:</b> 11-15 pass · 16-18 3M try (8-9 or ≤8 losers → 4M, else pass) · 19+ 4M · <b>by losers: 6 → 3M, ≤5 → 4M</b>.')}{box('reb','<b>After 3M:</b> 15+ 4M (31+ combined → 4NT, G) · 13-14 use LTC · 11-12 pass (≤6 losers: 4M).')}</div>
 {lab('4+ trumps')}
 {box('rsp','<b>4+ trumps: 3♦ = 7-9</b> · <b>3♣ = 10-12</b> · <b>2NT Jacoby = 13+</b> (game force).')}
 <div class="g2">{arrow}{arrow}</div>
@@ -107,7 +107,7 @@ C = f'''
 D = ''.join([
  box('reb','<b>Balanced:</b> 12-14 → 1NT (2NT after a 2-level response) · 18-19 → 2NT (3NT after a 2-level response).'),
  box('reb','<b>Unbalanced 11-14 "weak":</b> simple raise (4+) 1♣-1♥-2♥ · new suit below the barrier 1♣-1♥-1♠ (<b>6-4: major first</b>) · simple rebid of a 5+ suit 1♠-2♥-2♠.'),
- box('reb','<b>Unbalanced 15-19 "strong"</b> (or 7-card suit / ≤5 losers)<b>:</b> double raise 1♣-1♥-3♥ · reverse (above the barrier) 1♦-1♠-2♥ · jump rebid of a 6+ suit 1♠-2♥-3♠.'),
+ box('reb','<b>Unbalanced 15-19 "strong"</b> (or 7-card suit / ≤5 losers)<b>:</b> double raise 1♣-1♥-3♥ · reverse (above the barrier) 1♦-1♠-2♥ · jump rebid of a 6+ suit 1♠-2♥-3♠ · 6-5 (minor opened): show the major.'),
  box('reb','<b>Unbalanced 20-22:</b> jump shift 1♣-1♥-2♠, game forcing.'),
  box('rsp','<b>Responder then:</b> after weak: 13+ game, 11-12 invite, ≤10 pass or correct (over 2M, Hx = support: 10-12 3M) · after strong: 10+ game, 6-9 sign off · after jump shift: never pass · after 1NT (12-14): 11-12 2NT, 13+ 3NT, ≤10 pass · after 2NT (18-19): 7+ game, else pass. With a fit and 31+ combined: 4NT (G).'),
  box('note','Barrier = 2 of the opening suit; a new suit above it (reverse) shows extra strength. 5-5: open the higher, then show the lower.')])
@@ -136,7 +136,7 @@ G = f'''{box('cnv','<b>RKCB 4NT</b> (only once a trump suit is agreed; otherwise
 {arrow}
 {box('reb','<b>Asker:</b> missing two key cards → 5 of trumps · missing one → 6 of trumps · all five → 5NT (asks kings; show each king by bidding its suit in order). Cheapest non-trump bid asks for the trump Queen. <b>Warning:</b> with hearts trumps a 5♠ reply is past 5♥, so asker can only go 6♥ or 5NT.')}
 {box('cnv','<b>WHEN TO ASK:</b> once a fit is found, your points + partner\'s shown minimum = <b>31+ → 4NT</b>. Ask only with <b>2+ key cards</b> yourself; with 0-1, bid game and let partner ask. Unclear reply (0 or 3, 1 or 4): read it low, unless partner opened 2NT or 2♣. <b>Grand:</b> all five key cards + trump Q + a side king.')}
-<div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card suit fit only, never NT). <b>24 − (opener losers + responder losers) = tricks; level = tricks − 6.</b> E.g. 24 − 14 = 10 tricks → 4-level. HCP→losers is approximate: count real losers when shape is unusual.<div class="ltw">{ltc}</div></div>'''
+<div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card suit fit only, never NT). <b>24 − (opener losers + responder losers) = tricks; level = tricks − 6.</b> E.g. 24 − 14 = 10 tricks → 4-level. HCP→losers is approximate: count real losers when shape is unusual. <b>With a fit, shape counts: if losers give 10 tricks, bid game even when points say stop.</b><div class="ltw">{ltc}</div></div>'''
 
 # ---------------- H (new) ----------------
 Hp = f'''<div class="g2">

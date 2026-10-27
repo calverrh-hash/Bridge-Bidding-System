@@ -52,7 +52,11 @@ test('opening: 5-5 opens the higher-ranking suit (chart, Oct 2026)', () => {
   same(opening('AQ432.KQ432.2.32'), '1S');
   same(opening('32.2.AQ432.KQ432'), '1D');
 });
-test('opening: a 5-card major opens 1M even with a longer minor', () => same(opening('A.AQ432.2.KJ5432'), '1H'));
+test('opening: a longer minor (6-5) opens the minor; equal length opens the major', () => {
+  same(opening('A.AQ432.2.KJ5432'), '1C');
+  same(opening('98543.A.AKQJ73.Q'), '1D');
+  same(opening('A2.AQ432.2.KJ543'), '1H');
+});
 test('opening: 5332 with a 5-card major and 15-17 is not dealt', () => same(opening('K32.AQJ32.K4.Q32'), null));
 test('opening: weak two, but no weak 2♣', () => {
   same(opening('KQJ932.32.432.32'), '2S');
@@ -488,6 +492,18 @@ test('after the unassuming cue bid: 13+ HCP or 6 losers jumps to game', () => {
   same(ucbOvercaller(h, '1S', '2H').bid, '4S', '6 losers: 4S');
   const m = [[11, 10, 8], [9, 4], [12, 4, 3], [14, 13, 7, 5, 2]];       // 5-3-2-3, 11 HCP, 8 losers
   same(ucbOvercaller(m, '1S', '2H').bid, '2S', 'minimum: 2S');
+});
+test('with a fit, shape counts: losers can push a minimum into game', () => {
+  // ♠98543 ♥A ♦AKQJ73 ♣Q as 1S - 2S: 16 HCP, 4 losers -> 4S. Hands are [clubs, diamonds, hearts, spades].
+  const h = [[12], [14, 13, 12, 11, 7, 3], [14], [9, 8, 5, 4, 3]];
+  same(sysCall(['1S', '2S'], h).bid, '4S', '4 losers opposite a simple raise: game');
+  const flat = [[13, 4, 2], [12, 8, 3], [14, 9], [14, 13, 7, 5, 3]];     // 16 HCP, 7 losers
+  same(sysCall(['1S', '2S'], flat).bid, '3S', 'flat 16: game try as before');
+});
+test('Mixed: most slam hands are small slams', () => {
+  const M = SETS.find(d => d.id === 'mixed'); let six = 0, seven = 0;
+  for (let s = 1; s <= 12; s++) buildSet(M, s).filter(q => q.src === 'slam').forEach(q => { if (/^6/.test(q.contract || '')) six++; if (/^7/.test(q.contract || '')) seven++; });
+  check(six > seven, `small ${six}, grand ${seven}`);
 });
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
