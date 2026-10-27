@@ -538,6 +538,17 @@ test('competitive auctions count losers too: support double, invited, 5 losers a
   const flat = [[13, 12, 9, 8], [12, 8, 6], [9, 4, 2], [14, 4, 3]];    // 3-3-3-4, 11 HCP, 8 losers
   same(supAfterInvite(flat, 3, '3S').bid, 'P');
 });
+test('responder with 4+ support: 7 losers counts as 13+, and a good side suit is shown first', () => {
+  // ♠AK8432 ♥98432 ♦K8 ♣- opposite 1♥: 10 HCP, 5 losers -> 1♠ first.
+  const h = [[], [13, 8], [9, 8, 4, 3, 2], [14, 13, 8, 4, 3, 2]];
+  same(r1M(h, 2).bid, '1S');
+  const j = [[13, 8, 4], [12, 8], [9, 8, 4, 3], [14, 12, 8, 4]];   // 4-4-2-3, 11 HCP, 8 losers: still 3♣
+  same(r1M(j, 2).bid, '3C');
+});
+test('never repeat partner\'s bid: when the wanted game is already bid, pass', () => {
+  const h = parseHand('K963.KQJ84.KJ8.K');
+  same(sysCall(['1S', '2H', '4H'], h).bid, 'P');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });

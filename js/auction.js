@@ -296,7 +296,14 @@ function sysCall(seq, h) {
   const c = chartSysCall(seq, h);
   // Partner jumped to game on shape: pass.
   if (!isCall(c) && seq.length >= 2 && /^1[CDHS]$/.test(seq[0]) && /^(4[HS]|5[CD])$/.test(seq[seq.length - 1])) return AP('Partner bid game.');
-  return fitGame(seq, h, c);
+  const r = fitGame(seq, h, c);
+  // If the call the rules want has already been bid by partner (e.g. game), pass instead.
+  const lb = [...seq].reverse().find(x => /^\d/.test(x));
+  if (isCall(r) && /^\d/.test(r.bid) && lb && bv(r.bid) <= bv(lb)) {
+    if (r.bid === lb) return R('P', `${r.why.replace(/:[^:]*$/, '').replace(/[,.]? *(bid game|so bid|bid)$/, '')}. Partner has already bid ${plain(lb)}, which is where you want to be: pass.`, r.id);
+    return gap('The chart call is below the auction already reached.');
+  }
+  return r;
 }
 
 // ---------- Shape counts: game by losing trick count once a fit is found ----------

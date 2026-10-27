@@ -121,7 +121,8 @@ const SETS = [
         weakTwo,                                                                                             // weak two, 2NT ask
         SO({ south: { lens: r => rl(r, sp({}, [0, 6])), hcp: [23, 26], ok: ub }, north: { hcp: [0, 7] } }),    // 2♣
         SO({ south: { lens: r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [7, 8] }, [0, 3])); }, hcp: [3, 10] }, north: { hcp: [0, 15] }, calls: 1 }),   // pre-empts
-        want(SO({ south: { lens: r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [6, 7] }, [0, 4])); }, hcp: [11, 14], ok: ub }, north: { hcp: [6, 12] } }), 'D.jump-rebid-shape'),   // 7-card suit or 5 losers
+        want(SO({ south: { lens: r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [6, 7] }, [0, 4])); }, hcp: [11, 14], ok: ub }, north: { hcp: [6, 12] } }), 'D.jump-rebid-shape'),
+        want(strong, 'D.double-raise', 80),                                                                  // 15-19 with 4-card support   // 7-card suit or 5 losers
         want(SO({ south: { lens: r => { const M = anyMajor(r), m = ri(r, 0, 1); return rl(r, sp({ [m]: [6, 6], [M]: [5, 5] }, [0, 2])); }, hcp: [15, 19] }, north: { hcp: [6, 12] } }), 'D.six-five'),   // 6-5, longer minor
         want(SO({ south: { lens: r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [6, 6] }, [0, 5])); }, hcp: [0, 4] }, north: { hcp: [0, 15], ok: opensAs('P') }, calls: 1 }), 'E.pass-no-weak-two'),   // too weak for a weak two
       ];

@@ -201,6 +201,18 @@ function r1M(h, M) {
   if (t >= 5 && p <= 6) return R(B(4, M), `${t} trumps and only ${p} HCP: jump to 4${SY[M]}, the weak raise (5+ trumps, to play).`, 'B.weak-raise');
   if (t >= 4) {
     if (p <= 5) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
+    // Shape counts: 7 losers or fewer plays like 13+ (game opposite an opener's 7 losers).
+    const k = losers(h), gf = p >= 13 || (p >= 7 && k <= 7);
+    if (gf) {
+      const why = p >= 13 ? `${p} HCP` : `${p} HCP but only ${k} losers (${loserBreak(h)}), so your hand plays like 13+`;
+      // A good side suit (5+ cards, two of the top three honours) is shown first: it's your source of tricks.
+      const side = [0, 1, 2, 3].filter(s => s !== M && l[s] >= 5 && [14, 13, 12].filter(r => has(h, s, r)).length >= 2).sort((a, b) => l[b] - l[a] || b - a);
+      if (side.length) {
+        const s = side[0], b = B(s > M ? 1 : 2, s);
+        return R(b, `${t}-card support and ${why}. With a good ${l[s]}-card ${SN[s].replace(/s$/, '')} suit, show it first (${plain(b)}, forcing), then support ${SN[M]} strongly: partner learns where your tricks come from.`, 'B.new-suit-then-support');
+      }
+      return R('2N', `${t}-card support and ${why}: Jacoby 2NT (4+ trumps, game forcing).`, 'B.jacoby');
+    }
     if (p === 6) return gap('The chart has no raise for four trumps and exactly 6 HCP.');
     if (p <= 9) return R('3D', `${t}-card support and ${p} HCP: 3♦ shows 4+ trumps, 7-9.`, 'B.bergen-3d');
     if (p <= 12) return R('3C', `${t}-card support and ${p} HCP: 3♣ shows 4+ trumps, 10-12.`, 'B.bergen-3c');
@@ -382,7 +394,7 @@ function supportAfterNewSuit(h, M, r, x) {
   if (!minimum) return gap('Opener showed extra values, and the chart has no slam route after a new suit with three-card support.');
   // As after Jacoby: at most 16 + 14 = 30 combined, so no slam.
   if (p >= 17) return gap('With 17+ opposite a minimum, slam is possible, and the chart has no slam route here.');
-  return R(B(4, M), `You bid a new suit first, holding three-card support for ${SN[M]} and 13+. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
+  return R(B(4, M), `You bid a new suit first, holding ${NUM[L(h)[M]]}-card support for ${SN[M]} and game values. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
 }
 // Responder's second call after opener's rebid. seq = [opening, response, rebid].
 function respAfterRebid(h, seq) {

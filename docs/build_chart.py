@@ -83,7 +83,7 @@ B = f'''
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 2M:</b> 11-15 pass · 16-18 3M try (8-9 or ≤8 losers → 4M, else pass) · 19+ 4M · <b>by losers: 6 → 3M, ≤5 → 4M</b>.')}{box('reb','<b>After 3M:</b> 15+ 4M (31+ combined → 4NT, G) · 13-14 use LTC · 11-12 pass (≤6 losers: 4M).')}</div>
 {lab('4+ trumps')}
-{box('rsp','<b>4+ trumps: 3♦ = 7-9</b> · <b>3♣ = 10-12</b> · <b>2NT Jacoby = 13+</b> (game force).')}
+{box('rsp','<b>4+ trumps: 3♦ = 7-9</b> · <b>3♣ = 10-12</b> · <b>2NT Jacoby = 13+ or ≤7 losers</b> (GF); good 5+ side suit: bid it first.')}
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 3♦:</b> 11-15 sign off 3M · 16+ 4M.')}{box('reb','<b>After 3♣:</b> 11-13 sign off 3M · 14+ 4M.')}</div>
 <div class="sp"></div>
