@@ -361,9 +361,17 @@ function ucbOvercaller(h, ov, cue) {
 }
 // Advancer after the overcaller's minimum rebid: game with 13+.
 function ucbAfterMin(h, y, reb) {
-  const p = hcp(h);
+  const p = hcp(h), lg = ltcGame(h, 8, "partner's minimum overcall");
+  if (p < 13 && lg) return R(B(4, y), `Partner rebid ${plain(reb)}: a minimum overcall. You have ${p} HCP, but shape counts. ${lg}: ${plain(B(4, y))}.`, 'H.ucb-after-minimum');
   return p >= 13 ? R(B(4, y), `Partner rebid ${plain(reb)}: a minimum overcall. With ${p} HCP you still want game: ${plain(B(4, y))}.`, 'H.ucb-after-minimum')
     : R('P', `Partner rebid ${plain(reb)}: a minimum overcall. With ${p} HCP (10-12) there's no game: pass.`, 'H.ucb-after-minimum');
+}
+
+// Shape counts in competitive auctions too: tricks = 24 − (your losers + partner's shown losers).
+// Returns a sentence when that reaches game (10 tricks), else null.
+function ltcGame(h, pl, who) {
+  const k = losers(h), t = 24 - k - pl;
+  return t >= 10 ? `Count losers: yours ${k} (${loserBreak(h)}), ${who} about ${pl}. 24 − (${k} + ${pl}) = ${t} tricks, so game` : null;
 }
 
 // ---------- H: support doubles ----------
@@ -384,7 +392,9 @@ function supCall(h, M, calls, opp) {
 function supResp(h, M, calls, opp, sup) {
   const t = L(h)[M], p = hcp(h), y = /^\d/.test(opp) ? ST.indexOf(opp[1]) : -1, stp = y >= 0 && y < 4 && stop(h, y);
   const c2 = cheapest(M, lastBid(calls)), fit = `Partner's ${plain(sup)} shows exactly 3 ${SN[M]}, so you have ${t + 3} between you.`;
-  if (p >= 13) {
+  const lg = ltcGame(h, 7, "partner's opening");
+  if (p >= 13 || lg) {
+    if (p < 13) return R(B(4, M), `${fit} You have ${p} HCP, but shape counts. ${lg}: ${plain(B(4, M))}.`, 'H.support-response');
     if (t === 4 && stp) return R('3N', `${fit} With ${p} HCP you want game; with only a 7-card fit and a ${SN[y]} stopper, 3NT.`, 'H.support-response');
     return R(B(4, M), `${fit} With ${p} HCP (13+), bid game: ${plain(B(4, M))}.`, 'H.support-response');
   }
@@ -396,13 +406,15 @@ function supResp(h, M, calls, opp, sup) {
 }
 // Opener after responder's invitation: accept with 13+.
 function supAfterInvite(h, M, inv) {
-  const p = hcp(h);
+  const p = hcp(h), lg = inv !== '2N' && ltcGame(h, 8, "partner's invitation");
+  if (p < 13 && lg) return R(B(4, M), `Partner invites with ${plain(inv)} (10-12). You have ${p} HCP, but shape counts. ${lg}: accept with ${plain(B(4, M))}.`, 'H.support-invite-answer');
   if (p >= 13) return inv === '2N' ? R('3N', `Partner invites with 2NT (10-12). With ${p} HCP (13+), accept: 3NT.`, 'H.support-invite-answer') : R(B(4, M), `Partner invites with ${plain(inv)} (10-12). With ${p} HCP (13+), accept: ${plain(B(4, M))}.`, 'H.support-invite-answer');
-  return R('P', `Partner invites (10-12). With ${p} HCP (11-12), decline: pass.`, 'H.support-invite-answer');
+  return R('P', `Partner invites (10-12). With ${p} HCP (11-12) and ${losers(h)} losers, decline: pass.`, 'H.support-invite-answer');
 }
 // Responder after opener's direct raise (4+ support).
 function supAfterRaise(h, M, raise) {
-  const p = hcp(h);
+  const p = hcp(h), lg = ltcGame(h, +raise[0] >= 3 ? 6 : 7, "opener's raise");
+  if (lg && p < (+raise[0] >= 3 ? 10 : 13)) return R(B(4, M), `Opener's ${plain(raise)} raise. You have ${p} HCP, but shape counts. ${lg}: ${plain(B(4, M))}.`, 'D.after-raise');
   if (+raise[0] >= 3) return p >= 10 ? R(B(4, M), `Opener's double raise shows 15-19. With ${p} (10+), bid game.`, 'D.after-double-raise') : R('P', `Opener's double raise shows 15-19. With ${p} (6-9), pass.`, 'D.after-double-raise');
   if (p >= 13) return R(B(4, M), `Opener's simple raise shows 11-14. With ${p} (13+), bid game.`, 'D.after-raise');
   if (p >= 11) return R(B(3, M), `Opener's simple raise shows 11-14. With ${p} (11-12), invite with 3${SY[M]}.`, 'D.after-raise');

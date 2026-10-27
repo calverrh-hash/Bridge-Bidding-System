@@ -124,6 +124,8 @@ const RDBL = rng => {
     }
     if (n === 10 && /^[23][HS]$/.test(c[8]) && c[8][1] === c[6][1]) {
       const t = ST.indexOf(c[8][1]);
+      const lg = ltcGame(h, 7, "partner's raise");
+      if (hcp(h) < 13 && lg) return R(B(4, t), `Partner raised your ${SN[t]}. You have ${hcp(h)} HCP, but shape counts. ${lg}: 4${SY[t]}.`, 'GUIDE.redouble-raise-answer');
       return hcp(h) >= 13 ? R(B(4, t), `Partner raised your ${SN[t]}. With ${hcp(h)} (13+) you have enough for game: 4${SY[t]}.`, 'GUIDE.redouble-raise-answer')
         : R('P', `Partner raised your ${SN[t]} (11-14 opposite your 10+). With ${hcp(h)}, stop: pass.`, 'GUIDE.redouble-raise-answer');
     }
@@ -279,6 +281,7 @@ function supDeal(role, kind, oppX) {
       if (n === 8) {
         const s4 = c[4], s6 = c[6];
         if ((s4 === 'X' || s4 === 'XX') && (s6 === '2N' || (s6[1] === ST[M] && +s6[0] === 3))) return supAfterInvite(h, M, s6);
+        if (/^\d/.test(s4) && +s4[0] === 2 && s6 === B(3, M) && hcp(h) < 13 && ltcGame(h, 8, "partner's invitation")) return R(B(4, M), `Partner invites with 3${SY[M]}. You have ${hcp(h)} HCP, but shape counts. ${ltcGame(h, 8, "partner's invitation")}: accept.`, 'GUIDE.invite-answer');
         if (/^\d/.test(s4) && +s4[0] === 2 && s6 === B(3, M)) return hcp(h) >= 13 ? R(B(4, M), `Partner invites with 3${SY[M]}. With ${hcp(h)} (13-14), accept.`, 'GUIDE.invite-answer') : R('P', `Partner invites with 3${SY[M]}. With ${hcp(h)} (11-12), pass.`, 'GUIDE.invite-answer');
       }
       return AP('');

@@ -531,6 +531,13 @@ test('Mixed rotates through each drill\'s hand types: Cappelletti and unbalanced
 test('2NT, transfer, then 3NT with exactly five cards even with a singleton', () => {
   same(choice2N([[11], [11, 10, 9, 7, 6, 4], [13], [10, 9, 7, 5, 4]], 3), true);
 });
+test('competitive auctions count losers too: support double, invited, 5 losers accepts', () => {
+  // ♠A43 ♥- ♦Q862 ♣KQJ982 (12 HCP, 5 losers) after 1♣ (P) 1♠ (2♥) X (P) 3♠.
+  const h = [[13, 12, 11, 9, 8, 2], [12, 8, 6, 2], [], [14, 4, 3]];
+  same(supAfterInvite(h, 3, '3S').bid, '4S');
+  const flat = [[13, 12, 9, 8], [12, 8, 6], [9, 4, 2], [14, 4, 3]];    // 3-3-3-4, 11 HCP, 8 losers
+  same(supAfterInvite(flat, 3, '3S').bid, 'P');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });
