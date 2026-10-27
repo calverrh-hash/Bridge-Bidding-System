@@ -335,6 +335,8 @@ const SETS = [
         want(PO({ setup: r => ({ south: { lens: nmaj(r), hcp: [8, 12] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }), calls: 1 }), 'E.2c-positive-nt'),
         want(PO({ setup: r => { const s = ri(r, 0, 3); return { south: { lens: rl(r, sp({ [s]: [5, 6] }, [0, 4])), hcp: [8, 12] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; }, calls: 1 }), 'E.2c-positive-suit'),
         want(JR(16, 22), 'G.slam-game', 80),                                      // 31+ but only 0-1 key cards: bid game
+        want(SO({ south: { lens: r => { const M = anyMajor(r), sh = pick(r, [0, 1, 2, 3].filter(t => t !== M)); return rl(r, sp({ [M]: [5, 5], [sh]: [0, 1] }, [2, 4])); }, hcp: [12, 17], ok: opensAs(/^1[HS]$/) },
+          north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 5]); }, hcp: [13, 15] } }), 'B.jacoby-shortness', 60),   // opener shows a short suit
         want(SO({ south: { lens: r => { const M = anyMajor(r), s = pick(r, [0, 1, 2, 3].filter(t => t !== M && !(M === 2 && t === 3))); return rl(r, sp({ [M]: [5, 5], [s]: [5, 5] }, [0, 3])); }, hcp: [12, 17], ok: opensAs(/^1[HS]$/) },
           north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 5]); }, hcp: [13, 16] } }), 'B.jacoby-side-suit', 60),   // opener shows a good side suit
         PO({ setup: r => ({ ...NT1, south: { lens: nmaj(r), hcp: [16, 17] } }), calls: 1 }),                     // quantitative 4NT

@@ -559,6 +559,10 @@ test('Smolen over 2NT too: 2NT 3♣ 3♦ 3♥ shows five spades', () => {
   same(sysCall(['2N', '3C', '3D', '3H'], parseHand('A94.K3.AK743.AK10')).bid, '4S');
   same(sysCall(['2N', '3C', '3D', '3H'], parseHand('A9.K43.AK743.AK10')).bid, '3N');
 });
+test('shape counts for responding: 4-5 HCP with 9 losers or fewer responds', () => {
+  same(r1m(parseHand('-.KQ532.8543.8653'), 1).bid, '1H');          // 5 HCP, 8 losers
+  same(r1m(parseHand('Q32.J432.8543.J3'), 1).bid, 'P');            // 4 HCP, flat: pass
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });

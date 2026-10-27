@@ -200,7 +200,7 @@ function r1M(h, M) {
   const p = hcp(h), l = L(h), t = l[M];
   if (t >= 5 && p <= 6) return R(B(4, M), `${t} trumps and only ${p} HCP: jump to 4${SY[M]}, the weak raise (5+ trumps, to play).`, 'B.weak-raise');
   if (t >= 4) {
-    if (p <= 5) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
+    if (p <= 5 && !shapeResp(h)) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
     // Shape counts: 7 losers or fewer plays like 13+ (game opposite an opener's 7 losers).
     const k = losers(h), gf = p >= 13 || (p >= 7 && k <= 7);
     if (gf) {
@@ -213,21 +213,22 @@ function r1M(h, M) {
       }
       return R('2N', `${t}-card support and ${why}: Jacoby 2NT (4+ trumps, game forcing).`, 'B.jacoby');
     }
-    if (p === 6) return gap('The chart has no raise for four trumps and exactly 6 HCP.');
+    if (p <= 6) return R(B(2, M), `${p <= 5 ? shapeWhy(h) : ''}${t}-card support and ${p} HCP: simple raise to 2${SY[M]} (6-9). 3♦ needs 7+.`, 'B.raise');
     if (p <= 9) return R('3D', `${t}-card support and ${p} HCP: 3♦ shows 4+ trumps, 7-9.`, 'B.bergen-3d');
     if (p <= 12) return R('3C', `${t}-card support and ${p} HCP: 3♣ shows 4+ trumps, 10-12.`, 'B.bergen-3c');
     return R('2N', `${t}-card support and ${p} HCP: Jacoby 2NT (4+ trumps, 13+, game forcing).`, 'B.jacoby');
   }
   if (t === 3) {
-    if (p <= 5) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
-    if (p <= 9) return R(B(2, M), `3-card support, ${p} HCP: simple raise to 2${SY[M]} (6-9).`, 'B.raise');
+    if (p <= 5 && !shapeResp(h)) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
+    if (p <= 9) return R(B(2, M), `${p <= 5 ? shapeWhy(h) : ''}3-card support, ${p} HCP: simple raise to 2${SY[M]} (6-9).`, 'B.raise');
     if (p <= 12) return R(B(3, M), `3-card support, ${p} HCP: limit raise to 3${SY[M]} (10-12).`, 'B.limit-raise');
     const n = newSuitM(h, M);
     return R(n, `3-card support with ${p} HCP: bid a new suit first (${plain(n)}, forcing), then support. It leaves room for slam.`, 'B.new-suit-then-support');
   }
-  if (p <= 5) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
-  if (M === 2 && l[3] >= 4) return R('1S', `Fewer than 3 hearts and ${l[3]} spades: 1♠ (4+ spades, 6+, forcing).`, 'B.one-spade');
-  if (p <= 8) return R('1N', `Fewer than 3 ${SN[M]} and ${p} HCP: 1NT (6-10, any shape, not forcing).`, 'B.1nt');
+  if (p <= 5 && !shapeResp(h)) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
+  const sw = p <= 5 ? shapeWhy(h) : '';
+  if (M === 2 && l[3] >= 4) return R('1S', `${sw}Fewer than 3 hearts and ${l[3]} spades: 1♠ (4+ spades, 6+, forcing).`, 'B.one-spade');
+  if (p <= 8) return R('1N', `${sw}Fewer than 3 ${SN[M]} and ${p} HCP: 1NT (6-10, any shape, not forcing).`, 'B.1nt');
   if (p <= 10) return amb('With 9-10 and fewer than three trumps, the chart allows 1NT or a new suit.');
   const n = newSuitM(h, M);
   return R(n, `Fewer than 3 ${SN[M]} and ${p} HCP: new suit at the 2-level (9+, forcing). Bid the longest; with equal length, the lower.`, 'B.new-suit');
@@ -287,10 +288,13 @@ function ltcLimit(h, M) {
 }
 
 // ---------- C: responses to 1♣/1♦ ----------
+// Shape counts for responding: 4-5 HCP with 9 losers or fewer plays like a 6-count.
+const shapeResp = h => { const p = hcp(h); return p >= 4 && p <= 5 && losers(h) <= 9; };
+const shapeWhy = h => `${hcp(h)} HCP, but only ${losers(h)} losers (${loserBreak(h)}): with that shape the hand is worth a response, so treat it as 6. `;
 function r1m(h, m) {
   const p = hcp(h), l = L(h), bal = isBal(h), maj = l[2] >= 4 || l[3] >= 4;
-  if (p <= 5) return R('P', `${p} HCP: a response needs 6+. Pass.`, 'C.pass');
-  let pre = '';
+  if (p <= 5 && !shapeResp(h)) return R('P', `${p} HCP: a response needs 6+ (or 4-5 with 9 losers or fewer). Pass.`, 'C.pass');
+  let pre = p <= 5 ? shapeWhy(h) : '';
   if (bal && !maj) {
     if (p <= 10) return R('1N', `${p} HCP balanced with no 4-card major: 1NT (6-10).`, 'C.1nt');
     if (p <= 12) return R('2N', `${p} HCP balanced with no major: 2NT (11-12).`, 'C.2nt');

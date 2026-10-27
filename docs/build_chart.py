@@ -79,7 +79,7 @@ A = f'''
 # ---------------- B ----------------
 B = f'''
 {lab('3 trumps')}
-{box('rsp','<b>3 trumps:</b> 2M 6-9 · 3M 10-12 · 13+: new suit (forcing), then support. <b>4M = weak, 5+ trumps</b> (to play).')}
+{box('rsp','<b>3 trumps:</b> 2M 6-9 (4-5 with ≤9 losers = 6) · 3M 10-12 · 13+: new suit, then support. <b>4M = weak, 5+ trumps</b>.')}
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 2M:</b> 11-15 pass · 16-18 3M try (8-9 or ≤8 losers → 4M, else pass) · 19+ 4M · <b>by losers: 6 → 3M, ≤5 → 4M</b>.')}{box('reb','<b>After 3M:</b> 15+ 4M (31+ combined → 4NT, G) · 13-14 use LTC · 11-12 pass (≤6 losers: 4M).')}</div>
 {lab('4+ trumps')}
@@ -93,7 +93,7 @@ B = f'''
 
 # ---------------- C ----------------
 C = f'''
-{box('rsp','<b>New suit - longest (if equal, lowest; over 1♣ with 4♦ and a 4-card major, bid the major):</b> 1-level 6+ pts · 2-level 9+ pts. Forcing, <b>no upper limit</b>: a 16+ hand starts here and makes slam tries.')}
+{box('rsp','<b>New suit - longest (if equal, lowest; over 1♣ with 4♦ and a 4-card major, bid the major):</b> 1-level 6+ pts (or 4-5 with ≤9 losers) · 2-level 9+ pts. Forcing, <b>no upper limit</b>: a 16+ hand starts here and makes slam tries.')}
 <div class="sp"></div>
 <div class="g2">{box('rsp','<b>1NT</b> 6-10 balanced, no 4-card major.')}{box('rsp','<b>2NT</b> 11-12 balanced, no major.')}</div>
 <div class="g2">{arrow}{arrow}</div>

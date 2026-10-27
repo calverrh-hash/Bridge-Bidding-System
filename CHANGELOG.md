@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-10-27 (evening)
+- **Responding on shape:** 4-5 HCP with 9 losers or fewer responds as if it held 6 (new suit, 1NT or a simple raise). Four trumps and exactly 6 HCP now raise to 2M (was a gap). On the chart too.
 - **Smolen over 2NT too:** 2NT – 3♣ – 3♦ – 3♥/3♠ shows four in the bid major and five in the other, as over 1NT; opener bids 4 of the five-card major with three, else 3NT. (It had been natural.) On the chart too.
 
 ## 2026-10-24 (later): latest rules from the trainer
