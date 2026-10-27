@@ -438,6 +438,16 @@ test('opener 11-14 with 6-4: show a 4-card major below the barrier, otherwise re
   const d = [[14, 12, 10, 7, 6, 3], [13, 4], [5], [13, 11, 8, 4]];          // 4-1-2-6 clubs
   same(rebid(d, 0, 2, 1).bid, '1S', '1C-1H: 1S');
 });
+test('transfer then 2NT: opener with 3+ in the major bids 3M with 15, 4M with 16-17', () => {
+  // Hands are [clubs, diamonds, hearts, spades].
+  const min3 = [[13, 9, 4], [14, 10, 6, 2], [12, 11, 5], [13, 8, 3]];   // 15 HCP, three spades
+  same(sysCall(['1N', '2H', '2S', '2N'], min3).bid, '3S', '15 with three spades: 3S');
+  const max3 = [[14, 9, 4], [14, 10, 6, 2], [14, 11, 5], [13, 8, 3]];   // 16 HCP, three spades
+  same(sysCall(['1N', '2H', '2S', '2N'], max3).bid, '4S', '16 with three spades: 4S');
+  const min2 = [[13, 9, 4, 3], [14, 10, 6, 2], [12, 11, 5], [13, 8]];   // 15 HCP, two spades
+  same(sysCall(['1N', '2H', '2S', '2N'], min2).bid, 'P', '15 with two spades: pass');
+  same(sysCall(['1N', '2D', '2H', '2N'], [[13, 9, 4], [14, 10, 6, 2], [13, 8, 3], [12, 11, 5]]).bid, '3H', 'hearts too');
+});
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);
 });

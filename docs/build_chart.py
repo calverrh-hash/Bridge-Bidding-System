@@ -69,7 +69,7 @@ A = f'''
  <div class="span3">
    <div class="g3">
      <div class="span2">{box('cnv','<b>2♦ → 2♥ · 2♥ → 2♠ TRANSFERS</b> - 5+ card major, any strength. Opener completes. (Jump transfers removed: opener could never accept an invitation.)')}
-       {arrow}{box('reb','<b>After a completed transfer:</b> pass 0-7 · 2NT = 5-card suit, invite 8-9 (15 pass; 16-17 3NT, or 3M with 3+) · 3M = 6+ cards, invite 8-9 (16-17 → 4M) · 3NT = 5-card suit, 10-14 (opener passes, or corrects to 4M with 3+) · new suit = slam try (forcing).')}</div>
+       {arrow}{box('reb','<b>After a completed transfer:</b> pass 0-7 · 2NT = 5-card suit, invite 8-9 (opener: 15 pass, or 3M with 3+; 16-17 3NT, or 4M with 3+) · 3M = 6+ cards, invite 8-9 (16-17 → 4M) · 3NT = 5-card suit, 10-14 (opener passes, or corrects to 4M with 3+) · new suit = slam try (forcing).')}</div>
      <div>{box('cnv','<b>4♦ → 4♥ · 4♥ → 4♠ TEXAS</b> - 6+ major, 10+, to play.')}<div class="sp"></div>{box('note','Invites: 15 = minimum, 16-17 = accept.')}</div>
    </div>
    <div class="sp"></div>{box('note','<b>Slam:</b> 4NT quantitative (balanced) · transfer then new suit · once a fit is found 4NT = RKCB with 31+ combined (see G).')}

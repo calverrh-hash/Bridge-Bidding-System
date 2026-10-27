@@ -8,6 +8,7 @@
 - **Our 1NT doubled (chart system):** weak and 5-5 in two of ♦/♥/♠, bid the lower suit (you can still run to the higher one at the 2-level if that is doubled too). The chart says so too.
 - **After our redouble and their run, 5-5:** bid the higher-ranking suit unless the lower one is clearly better (two of the top three honours against none), e.g. ♠J10543 ♦AKQ106 bids 2♦. On the chart too.
 - **Opener's minimum rebid with 6-4:** show a 4-card major first when it is below the barrier (1♦-1♥-1♠, 1♠-2♣-2♥); otherwise rebid the six-card suit (1♦-1♠-2♦, since 2♥ would be a reverse). On the chart too.
+- **Transfer then 2NT (five cards, 8-9):** opener with 3+ in the major bids 3M with 15 and 4M with 16-17; with two, pass or 3NT as before. Responder passes 3M. These hands used to stop the drill. On the chart too.
 - **Continue button** sits above the bidding table, so you don't have to scroll down to move on.
 
 ### Added

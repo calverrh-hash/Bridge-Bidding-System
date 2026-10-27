@@ -153,6 +153,12 @@ function inv(h) {
   const p = hcp(h);
   return p <= 15 ? R('P', `${p} HCP is a minimum (15): pass the invitation.`, 'A.invite-answer') : R('3N', `${p} HCP is a maximum (16-17): accept with 3NT.`, 'A.invite-answer');
 }
+// Opener answers transfer-then-2NT (five cards in M, 8-9) holding 3+ cards in M: play the 5-3 fit.
+function invFit(h, M) {
+  const p = hcp(h), t = L(h)[M];
+  return p <= 15 ? R(B(3, M), `Partner showed five ${SN[M]} and 8-9. With ${t} ${SN[M]} you have a fit, and ${p} HCP is a minimum (15): bid 3${SY[M]}. A 5-3 fit usually takes a trick more than no-trumps.`, 'A.invite-answer')
+    : R(B(4, M), `Partner showed five ${SN[M]} and 8-9. With ${t} ${SN[M]} you have a fit, and ${p} HCP is a maximum (16-17): bid 4${SY[M]}.`, 'A.invite-answer');
+}
 function inv4(h, M) {
   const p = hcp(h);
   return p <= 15 ? R('P', `${p} HCP is a minimum (15): pass 3${SY[M]}.`, 'A.invite-answer') : R(B(4, M), `${p} HCP is a maximum (16-17): accept with 4${SY[M]}.`, 'A.invite-answer');

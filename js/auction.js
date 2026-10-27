@@ -117,7 +117,7 @@ function after1NT(seq, h) {
     }
     if (r === '2D' || r === '2H') {
       const M = r === '2D' ? 2 : 3;
-      if (a === '2N') return l[M] >= 3 ? gap('With three-card support, the chart gives opener no answer to the 2NT invitation.') : inv(h);
+      if (a === '2N') return l[M] >= 3 ? invFit(h, M) : inv(h);
       if (a === B(3, M)) return inv4(h, M);
       if (a === '3N') return l[M] >= 3 ? R(B(4, M), `Partner showed five ${SN[M]} and 10-14. With ${l[M]} ${SN[M]}, correct to 4${SY[M]}.`, 'A.transfer-3nt-answer') : R('P', `Partner showed five ${SN[M]}. With only ${l[M]}, pass 3NT.`, 'A.transfer-3nt-answer');
       return gap('The chart has no answer to this call after the transfer.');
@@ -127,6 +127,7 @@ function after1NT(seq, h) {
   }
   if (n === 5) {
     const b = seq[4];
+    if ((r === '2D' || r === '2H') && seq[3] === '2N' && b === B(3, r === '2D' ? 2 : 3)) return R('P', `Partner's ${plain(b)} shows a minimum (15) with three ${SN[r === '2D' ? 2 : 3]}: a part-score in the 5-3 fit. Pass.`, 'A.transfer-invite-answer');
     if (b === '3N' || /^4[HS]$/.test(b)) return AP('Partner chose the contract.');
   }
   return gap('The chart has no further calls in this 1NT auction.');
