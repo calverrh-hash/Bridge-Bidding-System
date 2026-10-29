@@ -245,7 +245,8 @@ test('when the chart stops, the auction says why', () => {
   same(rkReply(parseHand('A2.AK32.A32.A432'), 2).stop, 'gap');    // five key cards: no reply
 });
 test('regression: "new suit first, then support" keeps its promise', () => {
-  const h = 'AQ52.J63.K54.A92';   // 14 HCP, three hearts, four spades
+  same(callFor('1H', 'AQ52.J63.K54.A92'), '3N', 'balanced 13-15 with three hearts: 3NT, choice of games');
+  const h = 'AQ52.J63.5.AK932';   // 14 HCP, three hearts, four spades, unbalanced
   same(callFor('1H', h), '1S');
   same(callFor('1H 1S 1N', h), '4H', 'opposite a minimum 1NT: support hearts, not 3NT');
   same(callFor('1H 1S 2C', h), '4H');
@@ -567,6 +568,11 @@ test('over 1♣/1♦, two 5-card suits: bid the higher-ranking first', () => {
   same(r1m(parseHand('-.A8543.K10743.A72'), 0).bid, '1H');   // 5-5 red: hearts first
   same(r1m(parseHand('AJ543.KQ543.32.2'), 0).bid, '1S');     // 5-5 majors: spades first
   same(r1m(parseHand('A543.KQ43.432.32'), 1).bid, '1H');     // 4-4 majors: up the line
+});
+test('1M - 3NT: three-card support, 13-15 balanced; opener chooses', () => {
+  same(r1M(parseHand('64.KQ5.A75.KJ975'), 2).bid, '3N');
+  same(sysCall(['1H', '3N'], parseHand('K2.AJ843.K74.Q32')).bid, 'P');    // 5-3-3-2: pass
+  same(sysCall(['1H', '3N'], parseHand('K2.AJ8432.K74.Q3')).bid, '4H');   // six hearts: 4H
 });
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);

@@ -115,6 +115,7 @@ const SETS = [
       const strong = SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [15, 19], ok: ub }, north: { hcp: [6, 12] } });   // reverses, jump rebids
       return [
         major, major,
+        want(SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [1, 4])); }, hcp: [11, 16], ok: opensAs(/^1[HS]$/) }, north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [3, 3] }, [2, 4]); }, hcp: [13, 15] } }), 'B.3nt-raise-answer', 60),   // partner's 3NT raise: pass or 4M
         SO({ south: { lens: r => rl(r, sp({ 2: [5, 5], 3: [5, 5] }, [0, 3])), hcp: [10, 17], ok: ub }, north: { hcp: [4, 14] } }),   // 5-5 majors
         SO({ south: { lens: r => rl(r, sp({ 2: [0, 4], 3: [0, 4] }, [0, 6])), hcp: [11, 14], ok: ub }, north: { hcp: [6, 14] } }),   // minor openings
         strong, strong,
@@ -203,6 +204,7 @@ const SETS = [
         want(M1([0, 2], 6, 9, 1), 'B.1nt'),                     // 1NT response
         want(M1([3, 3], 13, 16, 2), 'B.support-after-new-suit', 80),   // new suit, then support
         want(M1([2, 2], 9, 13, 2, true), 'D.after-major-rebid', 80),   // opener rebids six: Hx is support
+        want(M1([3, 3], 13, 15, 1), 'B.3nt-raise', 60),                // 3NT: three-card support, 13-15 balanced
       ];
     })(),
   },

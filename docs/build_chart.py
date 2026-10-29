@@ -79,7 +79,7 @@ A = f'''
 # ---------------- B ----------------
 B = f'''
 {lab('3 trumps')}
-{box('rsp','<b>3 trumps:</b> 2M 6-9 (4-5 with ≤9 losers = 6) · 3M 10-12 · 13+: new suit, then support. <b>4M = weak, 5+ trumps</b>.')}
+{box('rsp','<b>3 trumps:</b> 2M 6-9 (4-5, ≤9 losers = 6) · 3M 10-12 · <b>3NT 13-15 bal</b> (opener: pass 5332, else 4M) · 13+: new suit, then support. <b>4M weak, 5+ trumps</b>.')}
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 2M:</b> 11-15 pass · 16-18 3M try (8-9 or ≤8 losers → 4M, else pass) · 19+ 4M · <b>by losers: 6 → 3M, ≤5 → 4M</b>.')}{box('reb','<b>After 3M:</b> 15+ 4M (31+ combined → 4NT, G) · 13-14 use LTC · 11-12 pass (≤6 losers: 4M).')}</div>
 {lab('4+ trumps')}
@@ -168,7 +168,7 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 .panel{{position:absolute;border:1.2pt solid var(--c);border-radius:5pt;background:#fff;overflow:hidden}}
 .ph{{white-space:nowrap;background:var(--c);color:#fff;font-weight:700;font-size:8.4pt;height:17pt;padding:2.5pt 6pt;display:flex;align-items:center;gap:5pt}}
 .let{{flex-shrink:0;display:inline-flex;width:12pt;height:12pt;border-radius:50%;background:#fff;color:var(--c);align-items:center;justify-content:center;font-size:8pt}}
-.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.85pt;line-height:1.2}} .pD .pb{{gap:3pt}}
+.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.85pt;line-height:1.2}} .pB .b{{font-size:7pt}} .pD .pb{{gap:3pt}}
 .pA,.pB,.pC{{--c:#2E5E9E}} .pD{{--c:#408A54}} .pE{{--c:#B07A0F}} .pF{{--c:#A33A3A}} .pG{{--c:#6B4A99}} .pH{{--c:#7A3550}} .pK{{--c:#7A6B1A}} .pO{{--c:#1F3B5E}}
 .b{{border:0.8pt solid;border-radius:3pt;padding:3pt 4pt}}
 .rsp{{background:#E6F0FA;border-color:#4A7BC0}} .reb{{background:#E6F5EB;border-color:#4FA066}} .cnv{{background:#FFF2D6;border-color:#D19A2A}}

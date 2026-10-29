@@ -293,6 +293,13 @@ function after1Major(seq, h) {
     }
     if (r === B(4, M)) return AP('Partner\'s weak 4-level raise is to play.');
     if (r === '1N') return rebidOver1NT(h, M);
+    if (r === '3N') {   // three-card support, 13-15 balanced: choose the game
+      const s = slamTry(h, M, 13, "Partner's 3NT (three-card support, 13-15)");
+      if (s) return s;
+      const l = L(h), flat = isBal(h) && l[M] === 5;
+      return flat ? R('P', `Partner's 3NT shows three ${SN[M]} and 13-15 balanced. Your hand is flat too (5-3-3-2): pass, 3NT is the game.`, 'B.3nt-raise-answer')
+        : R(B(4, M), `Partner's 3NT shows three ${SN[M]} and 13-15 balanced. With ${l[M] >= 6 ? `${NUM[l[M]]} ${SN[M]}` : 'a short suit'}, choose the 5-3 fit: 4${SY[M]}.`, 'B.3nt-raise-answer');
+    }
     return rebid(h, M, ST.indexOf(r[1]), +r[0]);
   }
   if (n === 3 && r === '1N') return respOver1NTRebid(h, M, seq[2]);

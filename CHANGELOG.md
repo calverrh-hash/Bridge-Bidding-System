@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-10-29
+- **1♥/1♠ – 3NT:** exactly three-card support, 13-15 balanced, choice of games. Opener passes with a flat 5-3-3-2, otherwise bids 4M (or asks RKCB with 31+). With 16+ or an unbalanced hand, responder still bids a new suit first, then supports. On the chart too.
+
 ## 2026-10-27 (evening)
 - **Responding to 1♣/1♦ with two 5-card suits:** bid the higher-ranking first (a 5-card major before diamonds; spades before hearts). 4-4 still goes up the line. On the chart too.
 - **Responding on shape:** 4-5 HCP with 9 losers or fewer responds as if it held 6 (new suit, 1NT or a simple raise). Four trumps and exactly 6 HCP now raise to 2M (was a gap). On the chart too.

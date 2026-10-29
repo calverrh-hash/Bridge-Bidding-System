@@ -222,6 +222,7 @@ function r1M(h, M) {
     if (p <= 5 && !shapeResp(h)) return R('P', `${p} HCP is too weak to respond. Pass.`, 'B.pass');
     if (p <= 9) return R(B(2, M), `${p <= 5 ? shapeWhy(h) : ''}3-card support, ${p} HCP: simple raise to 2${SY[M]} (6-9).`, 'B.raise');
     if (p <= 12) return R(B(3, M), `3-card support, ${p} HCP: limit raise to 3${SY[M]} (10-12).`, 'B.limit-raise');
+    if (p <= 15 && isBal(h)) return R('3N', `3-card support, ${p} HCP, balanced: 3NT (13-15, exactly three ${SN[M]}). Partner chooses: pass with a flat 5-3-3-2, otherwise 4${SY[M]}.`, 'B.3nt-raise');
     const n = newSuitM(h, M);
     return R(n, `3-card support with ${p} HCP: bid a new suit first (${plain(n)}, forcing), then support. It leaves room for slam.`, 'B.new-suit-then-support');
   }
