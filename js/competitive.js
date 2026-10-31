@@ -259,9 +259,11 @@ function ntDblNext(h, calls) {
 
 // ---------- F and H: our 1NT doubled, by the chart or by Helvic Wriggle ----------
 // Helvic: pass = 7+ values or a wriggle; XX = weak one-suiter; 2♣/2♦/2♥ = that suit and the next one up.
+// Opposite a weak (12-14) 1NT the values pass needs 9+, opposite 15-17 it needs 7+.
+const helvicValues = () => SYS.acol ? 9 : 7;
 function helvicType(h) {
   const l = L(h), p = hcp(h);
-  if (p >= 7) return 'values';
+  if (p >= helvicValues()) return 'values';
   const mx = Math.max(...l), pairs = [0, 1, 2].filter(s => l[s] >= 4 && l[s + 1] >= 4);
   if (mx >= 6) return 'one';
   if (pairs.length) return 'two';
@@ -310,7 +312,7 @@ function ntDoubledCall(role, h, calls, helvic) {
   }
   if (role === 'r' && k === 1) {
     if (r[0] === 'P' && o[1] === 'XX') {
-      if (hcp(h) >= 7) return R('P', `You passed with values (${hcp(h)} HCP): pass again and play 1NT redoubled.`, 'H.helvic');
+      if (hcp(h) >= helvicValues()) return R('P', `You passed with values (${hcp(h)} HCP): pass again and play 1NT redoubled.`, 'H.helvic');
       const z = [0, 1, 2, 3].find(s => l[s] >= 4);
       return R(B(2, z), `Partner redoubled as asked. Bid your lowest 4-card suit: ${plain(B(2, z))}.`, 'H.helvic');
     }

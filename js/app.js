@@ -19,7 +19,8 @@ const store = {
 const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 function loadDB() {
   const d = store.get(), o = (k) => isObj(d[k]) ? d[k] : {};
-  return { seed: o('seed'), best: o('best'), prog: o('prog'), opts: { helvic: o('opts').helvic === true, acol: o('opts').acol === true, ogust: o('opts').ogust === true } };
+  return { seed: o('seed'), best: o('best'), prog: o('prog'), opts: { helvic: o('opts').helvic === true, acol: o('opts').acol === true, ogust: o('opts').ogust === true,
+    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false } };
 }
 let DB = loadDB();
 const save = () => store.set(DB);
@@ -27,9 +28,12 @@ const save = () => store.set(DB);
 const ALL_SETS = () => SETS.concat(ACOL_SETS);
 const sets = () => DB.opts.acol ? ACOL_SETS : SETS;
 const setDef = id => ALL_SETS().find(x => x.id === id);
-// Acol always uses Ogust (its chart); for 5-card majors it's the switch on the home screen.
-const ogustOn = d => !!(d && !d.acol && DB.opts.ogust);
-const keyOf = id => { const d = setDef(id); return id + (d && d.helvic && DB.opts.helvic ? '~helvic' : '') + (ogustOn(d) ? '~ogust' : ''); };
+// Each system keeps its own Helvic and Ogust switches. Acol starts on Ogust (its chart), 5CM on features.
+const optKey = (ac, k) => ac ? 'acol' + k[0].toUpperCase() + k.slice(1) : k;
+const optOn = (d, k) => !!(d && DB.opts[optKey(d.acol, k)]);
+const ogustOn = d => optOn(d, 'ogust');
+const helvicOn = d => !!(d && d.helvic) && optOn(d, 'helvic');
+const keyOf = id => { const d = setDef(id); return id + (helvicOn(d) ? '~helvic' : '') + (ogustOn(d) ? '~ogust' : ''); };
 const seedOf = key => Number.isInteger(DB.seed[key]) && DB.seed[key] > 0 ? DB.seed[key] : 1;
 const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 
@@ -37,7 +41,7 @@ const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 const cache = {};
 function getSet(id) {
   const key = keyOf(id), seed = seedOf(key), k = key + '#' + seed;
-  if (!cache[k]) cache[k] = buildSet(setDef(id), seed, { helvic: DB.opts.helvic, ogust: ogustOn(setDef(id)) });
+  if (!cache[k]) cache[k] = buildSet(setDef(id), seed, { helvic: helvicOn(setDef(id)), ogust: ogustOn(setDef(id)) });
   return cache[k];
 }
 // A fingerprint of the dealt hands and answers. If the drills change, so does this,
@@ -63,10 +67,15 @@ function playedCount(id) {
 // ---------- Formatting ----------
 const REF_ACOL = {
   A: 'Acol chart A · Responses to 1NT (12-14)', B: 'Acol chart B · Responses to 1♣/♦/♥/♠', C: "Acol chart C · Opener's NT rebids", D: "Acol chart D · Opener's suit rebids",
-  E: 'Acol chart E · 2NT, weak twos (Ogust), 2♣', F: 'Acol chart F · Overcalls and doubles', G: 'Acol chart G · Blackwood, losing tricks', H: 'Acol chart H · Pre-empts, their 1NT',
+  E: 'Acol chart E · 2NT, weak twos, 2♣', F: 'Acol chart F · Overcalls and doubles', G: 'Acol chart G · Blackwood, losing tricks', H: 'Acol chart H · Pre-empts, their 1NT',
   OB: 'Acol chart · Opening bids', LTC: 'Acol chart G · Losing trick count', GUIDE: 'Trainer guide (the chart is silent here)',
 };
-const refOf = id => (DB.opts.acol ? REF_ACOL : REF)[id] || '';
+// Options played in Acol that its chart doesn't have are labelled as such.
+const refOf = (id, rule) => {
+  if (DB.opts.acol && /helvic/.test(rule || '')) return 'Helvic Wriggle (the option you chose; not on the Acol chart)';
+  if (DB.opts.acol && /^(E\.weak-two-answer|GUIDE\.weak-two-after-ask)$/.test(rule || '')) return 'Weak-two features (the option you chose; the Acol chart plays Ogust)';
+  return (DB.opts.acol ? REF_ACOL : REF)[id] || '';
+};
 const REF = {
   A: 'Chart A · Responses to 1NT', B: 'Chart B · Responses to 1♥/♠', C: 'Chart C · Responses to 1♣/♦',
   D: "Chart D · Opener's rebid", E: 'Chart E · 2NT, 2♣, weak twos, pre-empts', F: 'Chart F · Competitive auctions',
@@ -138,16 +147,16 @@ function home() {
   const list = [...sets()].sort((a, b) => (a.last ? 1 : 0) - (b.last ? 1 : 0));
   const cards = list.map(d => {
     const key = keyOf(d.id), done = playedCount(d.id), best = bestOf(key), size = setSize(d);
-    const sys = d.helvic ? ` <b>${DB.opts.helvic ? 'Playing Helvic Wriggle.' : 'Playing the chart system.'}</b>` : '';
+    const sys = d.helvic ? ` <b>${helvicOn(d) ? 'Playing Helvic Wriggle.' : 'Playing the chart system.'}</b>` : '';
     return `<button class="set" data-set="${d.id}"><div class="set-top"><h3>${rich(d.name)}</h3><span class="chip">${rich(d.refs)}</span></div><p>${rich(d.blurb)}${sys}</p>
     <div class="meter"><i style="width:${done / size * 100}%"></i></div><div class="set-foot"><span>${done ? `${done} / ${size} played` : `${size} hands`}</span><span>${best != null ? `Best ${best}/${size}` : 'Not finished yet'}</span></div></button>`;
   }).join('');
-  const hv = DB.opts.helvic, ac = DB.opts.acol, og = DB.opts.ogust;
+  const ac = DB.opts.acol, hv = DB.opts[optKey(ac, 'helvic')], og = DB.opts[optKey(ac, 'ogust')];
   const seg = (id1, l1, id2, l2, on2, label) => `<div class="seg" role="group" aria-label="${label}"><button id="${id1}" class="${on2 ? '' : 'on'}" aria-pressed="${!on2}">${l1}</button><button id="${id2}" class="${on2 ? 'on' : ''}" aria-pressed="${on2}">${l2}</button></div>`;
-  const sysBox = `<div class="sys"><div><span class="eyebrow">System</span><p>${ac ? 'Acol: weak 1NT (12-14), four-card suits, Blackwood, Ogust. Follows the Acol chart.' : '5-card majors, strong 1NT (15-17), RKCB. Follows the 5CM / strong NT chart.'}</p></div>${seg('m-5cm', '5CM · strong NT', 'm-acol', 'Acol · weak NT', ac, 'Bidding system')}</div>`;
-  const helvicBox = ac ? '' : `<div class="sys"><div><span class="eyebrow">When our 1NT is doubled</span><p>${hv ? 'Helvic Wriggle: pass = values or a wriggle (partner redoubles), XX = weak one-suiter (partner bids 2♣), 2♣/2♦/2♥ = that suit and the next one up.' : 'Chart: 2♦/2♥/2♠ natural sign-off (transfers off), redouble with 7+.'}</p></div>
+  const sysBox = `<div class="sys"><div><span class="eyebrow">System</span><p>${ac ? 'Acol: weak 1NT (12-14), four-card suits, Blackwood. Follows the Acol chart.' : '5-card majors, strong 1NT (15-17), RKCB. Follows the 5CM / strong NT chart.'}</p></div>${seg('m-5cm', '5CM · strong NT', 'm-acol', 'Acol · weak NT', ac, 'Bidding system')}</div>`;
+  const helvicBox = `<div class="sys"><div><span class="eyebrow">When our 1NT is doubled</span><p>${hv ? `Helvic Wriggle: pass = values (${ac ? 9 : 7}+) or a wriggle (partner redoubles), XX = weak one-suiter (partner bids 2♣), 2♣/2♦/2♥ = that suit and the next one up.` : ac ? 'Chart: with a 5+ card ♦/♥/♠ suit sign off in it, otherwise pass.' : 'Chart: 2♦/2♥/2♠ natural sign-off (transfers off), redouble with 7+.'}</p></div>
     ${seg('m-chart', 'Chart', 'm-helvic', 'Helvic', hv, 'System when our 1NT is doubled')}</div>`;
-  const ogustBox = ac ? '' : `<div class="sys"><div><span class="eyebrow">Weak two: the 2NT ask</span><p>${og ? 'Ogust: 3♣ minimum, poor suit · 3♦ minimum, good suit · 3♥ maximum, poor suit · 3♠ maximum, good suit · 3NT AKQ.' : 'Features: 3M minimum or no feature · 3 of a new suit = an outside A or K with a maximum · 3NT AKQ.'}</p></div>
+  const ogustBox = `<div class="sys"><div><span class="eyebrow">Weak two: the 2NT ask</span><p>${og ? 'Ogust: 3♣ minimum, poor suit · 3♦ minimum, good suit · 3♥ maximum, poor suit · 3♠ maximum, good suit · 3NT AKQ.' : 'Features: 3M minimum or no feature · 3 of a new suit = an outside A or K with a maximum · 3NT AKQ.'}</p></div>
     ${seg('m-feature', 'Features', 'm-ogust', 'Ogust', og, 'Answer to the weak-two 2NT ask')}</div>`;
   app.innerHTML = `<div class="intro"><span class="eyebrow">${ac ? 'Acol · weak NT' : '5-card majors · strong NT'}</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart. ${ac ? 'In the overcalls drill the opponents have opened or come in.' : 'In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.'}</p>
     <div class="actions" style="margin-top:4px"><button class="ghost" id="newall">New hands for every drill</button></div></div>
@@ -157,8 +166,9 @@ function home() {
   const opt = (k, v) => () => { DB.opts[k] = v; save(); render(); };
   const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
   on('m-5cm', opt('acol', false)); on('m-acol', opt('acol', true));
-  on('m-chart', opt('helvic', false)); on('m-helvic', opt('helvic', true));
-  on('m-feature', opt('ogust', false)); on('m-ogust', opt('ogust', true));
+  const hk = optKey(ac, 'helvic'), ok = optKey(ac, 'ogust');
+  on('m-chart', opt(hk, false)); on('m-helvic', opt(hk, true));
+  on('m-feature', opt(ok, false)); on('m-ogust', opt(ok, true));
   document.getElementById('newall').onclick = newHandsEverywhere;
 }
 // Move every drill (chart and Helvic versions) to its next seed and clear unfinished progress.
@@ -208,7 +218,7 @@ function play() {
     }
     const nextLabel = !last ? (num ? 'Next step →' : 'Continue the auction →') : nextUnplayed() < 0 ? 'See results' : 'Next hand →';
     lower = `<div class="fb ${good ? 'ok' : 'no'}" role="status"><div class="verdict">${good ? 'Correct' : num ? `It's ${a.bid}` : `Chart says ${fmt(a.bid)}`}</div>
-      ${good ? '' : `<p>You ${num ? 'said' : 'bid'} ${showA(st, S.answered)}.${last || num ? '' : ' The auction continues with the chart call.'}</p>`}<p>${rich(a.why)}</p><span class="ref">${rich(refOf(a.ref))}</span></div>
+      ${good ? '' : `<p>You ${num ? 'said' : 'bid'} ${showA(st, S.answered)}.${last || num ? '' : ' The auction continues with the chart call.'}</p>`}<p>${rich(a.why)}</p><span class="ref">${rich(refOf(a.ref, a.id))}</span></div>
       ${fin}`;
     top = `<div class="actions"><button class="primary" id="next">${nextLabel}</button></div>`;
   } else if (num) {
@@ -325,7 +335,7 @@ function crashed(e) {
     <div class="actions"><button class="primary" id="home">Back to the drills</button><button class="ghost" id="reset">Reset saved progress</button></div>
     <p class="muted"><small>${String(e && e.message || e).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</small></p>`;
   document.getElementById('home').onclick = goHome;
-  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false } }; save(); goHome(); };
+  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true } }; save(); goHome(); };
 }
 
 function render() {

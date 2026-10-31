@@ -484,7 +484,7 @@ const weight = k => k.startsWith('rec:') ? 4 : /^(call|pcall|res):/.test(k) ? 3 
 function buildSet(def, seed, opts) {
   opts = opts || {};
   const was = { ...SYS };
-  SYS.acol = !!def.acol; SYS.ogust = !!opts.ogust;
+  SYS.acol = !!def.acol; SYS.ogust = !!opts.ogust; SYS.helvic = !!(opts.helvic && def.helvic);
   try { return def.mixed ? buildMixed(def, seed, opts) : buildPlain(def, seed, opts); }
   finally { Object.assign(SYS, was); }
 }

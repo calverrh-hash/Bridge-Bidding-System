@@ -170,10 +170,11 @@ function ourNT(role, kind, chartToo) {
     const helvic = !!(opts && opts.helvic);
     if (role === 'open' && !helvic && !chartToo) return null;
     const spec = {
-      values: [sp({}, [1, 5]), 7, 10], one: [sp({}, [0, 6]), 0, 6, h => helvicType(h) === 'one'],
-      two: [sp({}, [0, 5]), 0, 6, h => helvicType(h) === 'two'], wriggle: [sp({}, [1, 4]), 0, 6, h => helvicType(h) === 'wriggle'],
+      values: [sp({}, [1, 5]), helvicValues(), helvicValues() + 3], one: [sp({}, [0, 6]), 0, helvicValues() - 1, h => helvicType(h) === 'one'],
+      two: [sp({}, [0, 5]), 0, helvicValues() - 1, h => helvicType(h) === 'two'], wriggle: [sp({}, [1, 4]), 0, helvicValues() - 1, h => helvicType(h) === 'wriggle'],
     }[kind];
-    const O = deal(rng, balL(rng), 15, 17);
+    const ac = SYS.acol, nt = ac ? '12-14' : '15-17';
+    const O = deal(rng, balL(rng), ac ? 12 : 15, ac ? 14 : 17);
     if (!O || !opens1NT(O)) return null;
     const Rh = dealOther(rng, O, spec[0], spec[1], spec[2], spec[3]);
     if (!Rh) return null;
@@ -182,12 +183,13 @@ function ourNT(role, kind, chartToo) {
     const X = restHand(O, Rh, D);
     const H = role === 'resp' ? { N: O, S: Rh, E: D, W: X } : { S: O, N: Rh, W: D, E: X };
     const F = (seat, c, h, n) => {
-      if (n === 0) return role === 'open' ? R('1N', '15-17 balanced: open 1NT.', 'A.open-1nt') : OC('1N', '15-17 balanced.');
+      if (n === 0) return role === 'open' ? (ac ? acolOpening(h) : R('1N', '15-17 balanced: open 1NT.', 'A.open-1nt')) : OC('1N', `${nt} balanced.`);
       if (n === 1) return OC('X', 'Penalty double (16+).');
       if (seat === 'E' || seat === 'W') return AP('');
-      return ntDoubledCall((role === 'resp') === (seat === 'S') ? 'r' : 'o', h, c, helvic);
+      const ro = (role === 'resp') === (seat === 'S') ? 'r' : 'o';
+      return ac && !helvic ? acolNTDoubled(ro, h, c) : ntDoubledCall(ro, h, c, helvic);
     };
-    return sim4(H, role === 'resp' ? 'N' : 'S', F, role === 'resp' ? 'Partner opened 1NT (15-17); RHO doubled for penalties.' : 'You are dealer.');
+    return sim4(H, role === 'resp' ? 'N' : 'S', F, role === 'resp' ? `Partner opened 1NT (${nt}); RHO doubled for penalties.` : 'You are dealer.');
   };
 }
 

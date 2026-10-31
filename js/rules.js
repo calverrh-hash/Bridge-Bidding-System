@@ -615,8 +615,8 @@ function wtResp(h, M) {
 // Weak-two opener answers the 2NT ask.
 function wtAns(h, M) {
   const p = hcp(h);
-  if (has(h, M, 14) && has(h, M, 13) && has(h, M, 12)) return R('3N', `Solid AKQ in ${SN[M]}: 3NT.`, SYS.ogust || SYS.acol ? 'E.ogust-answer' : 'E.weak-two-answer');
-  if (SYS.ogust || SYS.acol) {   // Ogust: 3♣ min poor · 3♦ min good · 3♥ max poor · 3♠ max good (good = two of the top three)
+  if (has(h, M, 14) && has(h, M, 13) && has(h, M, 12)) return R('3N', `Solid AKQ in ${SN[M]}: 3NT.`, SYS.ogust ? 'E.ogust-answer' : 'E.weak-two-answer');
+  if (SYS.ogust) {   // Ogust: 3♣ min poor · 3♦ min good · 3♥ max poor · 3♠ max good (good = two of the top three)
     const g = [14, 13, 12].filter(r => has(h, M, r)).length >= 2, mx = p >= 8;
     const b = mx ? (g ? '3S' : '3H') : (g ? '3D' : '3C');
     return R(b, `Ogust: ${mx ? `maximum (${p}, 8-10)` : `minimum (${p}, 5-7)`} with a ${g ? 'good suit (two of the top three honours)' : 'poor suit'}: ${plain(b)}.`, 'E.ogust-answer');

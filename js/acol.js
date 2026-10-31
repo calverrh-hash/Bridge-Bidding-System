@@ -402,12 +402,28 @@ function acolIgnore(h, o, last) {
   if (+b[0] - +c.bid[0] >= 1 && hcp(h) < 9 && s !== o) return R('P', `You would have bid ${plain(c.bid)}, but now it needs the ${b[0]}-level (9+): pass.`, 'F.acol-ignore');
   return R(b, `Ignore RHO's ${plain(last)}: bid ${plain(b)} as you would have done.`, 'F.acol-ignore');
 }
+// Our 1NT doubled, by the Acol chart: responder signs off in a 5+ card ♦/♥/♠ suit or passes;
+// opener passes. role 'o' = the 1NT opener, 'r' = responder; calls start with our 1NT.
+function acolNTDoubled(role, h, calls) {
+  const n = calls.length;
+  if (role === 'r' && n === 2) {
+    const l = L(h), s = [1, 2, 3].filter(u => l[u] >= 5).sort((a, b) => l[b] - l[a])[0];
+    return s !== undefined ? R(B(2, s), `Our 1NT is doubled. With ${l[s]} ${SN[s]}, sign off in 2${SY[s]}.`, 'H.acol-1nt-doubled') : R('P', `Our 1NT is doubled, and you have no five-card suit to run to: pass.`, 'H.acol-1nt-doubled');
+  }
+  if (role === 'o' && n === 4 && calls[2] !== 'P') return R('P', `Partner's call is final: pass.`, 'H.acol-1nt-doubled');
+  return AP('');
+}
 function acolCompetitive(st, h) {
   const { tagged, seat, partner, lho, rho } = st;
+  {
+    // Our 1NT doubled: the chart's sign-off, or Helvic Wriggle when that option is on.
+    const i = tagged.findIndex(x => x.call !== 'P'), a = tagged[i], b = tagged[i + 1];
+    if (a && a.call === '1N' && (a.by === seat || a.by === partner) && b && b.call === 'X') {
+      const calls = tagged.slice(i).map(x => x.call), role = a.by === seat ? 'o' : 'r';
+      return SYS.helvic ? ntDoubledCall(role, h, calls, true) : acolNTDoubled(role, h, calls);
+    }
+  }
   if (tagged.some(x => x.by === seat)) {
-    // Our 1NT was doubled: opener passes partner's sign-off.
-    const bids = tagged.filter(x => x.call !== 'P');
-    if (bids[0] && bids[0].call === '1N' && bids[0].by === seat && bids[1] && bids[1].call === 'X') return R('P', `Partner's call is final: pass.`, 'H.acol-1nt-doubled');
     return gap('Once the opponents have bid, the chart covers only the first call over them.');
   }
   const bids = tagged.filter(x => x.call !== 'P'), open = bids[0], last = tagged[tagged.length - 1];
@@ -423,10 +439,6 @@ function acolCompetitive(st, h) {
       if (un.every(u => l[u] >= 3)) return R('X', `${p} HCP with 3+ in every unbid suit: takeout double.`, 'H.acol-vs-preempt');
       return R('P', `No long suit and no takeout shape: pass.`, 'H.acol-vs-preempt');
     }
-  }
-  if (bids.length === 2 && open.by === partner && open.call === '1N' && bids[1].by === rho && bids[1].call === 'X' && last === bids[1]) {
-    const l = L(h), s = [1, 2, 3].filter(u => l[u] >= 5).sort((a, b) => l[b] - l[a])[0];
-    return s !== undefined ? R(B(2, s), `Our 1NT is doubled. With ${l[s]} ${SN[s]}, sign off in 2${SY[s]}.`, 'H.acol-1nt-doubled') : R('P', `Our 1NT is doubled, and you have no five-card suit to run to: pass.`, 'H.acol-1nt-doubled');
   }
   if (bids.length === 2 && open.by === partner && oneSuit(open.call) && bids[1].by === rho && last === bids[1] && (oneSuit(bids[1].call) || bids[1].call === 'X' || /^2[CDHS]$/.test(bids[1].call))) return acolIgnore(h, suit(open.call), bids[1].call);
   if (bids.length === 2 && open.by === lho && oneSuit(open.call) && bids[1].by === partner && bids[1].call === 'X' && last.by === rho && last.call === 'P') return acolAdvance(h, suit(open.call));
@@ -505,14 +517,14 @@ const ACOL_SETS = (() => {
         want(SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [13, 16] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [10, 12] } }), 'B.acol-after-2nt', 40),
         want(SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [13, 18] }, north: { hcp: [6, 13] } }), 'D.acol-opener-3', 40),
       ] },
-    { id: 'a-big', name: '2NT, weak twos (Ogust) and 2♣', refs: 'E', acol: true,
-      blurb: '2NT 20-22, the Ogust 2NT ask over a weak two, and 2♣ auctions from both sides.',
+    { id: 'a-big', name: '2NT, weak twos and 2♣', refs: 'E', acol: true,
+      blurb: '2NT 20-22, the 2NT ask over a weak two (Ogust or features), and 2♣ auctions from both sides.',
       recipes: [
         PO({ setup: r => ({ ...NT2a, south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 10] } }), calls: 1 }),
         PO({ setup: r => { const M = anyMajor(r); return { ...NT2a, south: { lens: rl(r, sp({ [M]: [4, 6] }, [0, 5])), hcp: [4, 10] } }; } }),
         SO({ south: { lens: balL, hcp: [20, 22] }, north: { lens: majSpec, hcp: [0, 10] } }),
-        ...['E.weak-two-pass', 'E.weak-two-raise', 'E.weak-two-ask', 'E.ogust-after'].map(wtP),
-        want(SO({ south: { lens: r => sixOf(r, [1, 2, 3]), hcp: [5, 10] }, north: { hcp: [14, 18] } }), 'E.ogust-answer', 60),
+        ...['E.weak-two-pass', 'E.weak-two-raise', 'E.weak-two-ask', ['GUIDE.weak-two-after-ask', 'E.ogust-after']].map(wtP),
+        want(SO({ south: { lens: r => sixOf(r, [1, 2, 3]), hcp: [5, 10] }, north: { hcp: [14, 18] } }), ['E.ogust-answer', 'E.weak-two-answer'], 60),
         PO({ setup: r => ({ south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 7] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }) }),
         PO({ setup: r => { const s = ri(r, 2, 3); return { south: { lens: rl(r, sp({ [s]: [1, 4] }, [0, 6])), hcp: [0, 7] }, north: { lens: sp({ [s]: [5, 7] }, [0, 4]), hcp: [23, 26], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; } }),
         SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [23, 26] }, north: { hcp: [0, 7] } }),
@@ -541,11 +553,14 @@ const ACOL_SETS = (() => {
           r => { const o = ri(r, 0, 3); return oneCall('N', [B(1, o), 'X'], deal(r, rl(r, sp({}, [0, 6])), 4, 15), `Partner opened 1${SY[o]}; RHO doubled.`); },
           r => { const x = ri(r, 0, 3); return oneCall('W', [B(1, x), 'X', 'P'], deal(r, rl(r, sp({ [x]: [0, 3] }, [0, 6])), 0, 14), `LHO opened 1${SY[x]}; partner doubled for takeout.`); },
           r => { const x = ri(r, 0, 3), y = pick(r, [0, 1, 2, 3].filter(t => t !== x)), ov = B(y > x ? 1 : 2, y); return oneCall('W', [B(1, x), ov, 'P'], deal(r, rl(r, sp({}, [0, 6])), 4, 14), `LHO opened 1${SY[x]}; partner overcalled ${plain(ov)}.`); },
-          r => oneCall('N', ['1N', 'X'], deal(r, rl(r, sp({}, [0, 6])), 0, 9), 'Partner opened 1NT (12-14); RHO doubled for penalties.'),
         ];
       })() },
   ];
-  const MIX = { id: 'a-mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, acol: true, mixed: true,
+  sets.push({ id: 'a-our-nt', name: 'Our 1NT doubled', refs: 'H', acol: true, helvic: true,
+    blurb: 'They double our weak no-trump: sign off or sit it out, or wriggle out with Helvic.',
+    recipes: ['values', 'one', 'two', 'wriggle', 'one', 'two', 'wriggle'].flatMap(k => [ourNT('resp', k), ourNT('open', k)])
+      .concat([ourNT('open', 'one', true), ourNT('open', 'two', true)]) });
+  const MIX = { id: 'a-mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, acol: true, helvic: true, mixed: true,
     blurb: 'A hand from every Acol drill, shuffled together. Each new deal moves on to the next kind of hand in each drill.',
     get sources() { return sets; }, get recipes() { return sets.map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts)); } };
   return sets.concat(MIX);

@@ -4,6 +4,8 @@
 - **Acol / weak NT as a second system.** A switch on the home screen chooses 5CM / strong NT or Acol / weak NT. Acol follows `docs/Acol_Weak_NT_Flowchart_A3.pdf`: 1NT 12-14 (McKendrick, 2NT, Stayman, weak take-outs, 3M/4M), balanced 15-19 opens a suit and rebids no-trumps, four-card suits (equal length ♥ > ♠ > ♦ > ♣), raises 2/3/4 by strength, Ogust over weak twos, Blackwood, strong jump overcalls, no negative doubles (bid as if they hadn't), 16+ penalty double of their 1NT. The rules are in `js/acol.js`, with its own nine drills (`ACOL_SETS`); progress is kept separately. The general trainer rules (loser count with a fit, responding on shape) apply in both systems.
 - **Ogust option for 5CM:** a second switch answers the weak-two 2NT ask with Ogust (3♣ min poor · 3♦ min good · 3♥ max poor · 3♠ max good · 3NT AKQ) instead of features. On the 5CM chart too.
 - **Fix:** the loser-count rule read 1♠ – 1NT – 2♦ as a jump and could push responder to game. Fixed in both systems.
+- **Helvic and Ogust in Acol too.** Each system has its own two switches on the home screen: Chart / Helvic when our 1NT is doubled, and Features / Ogust over the weak-two 2NT ask. Acol starts on Ogust (its chart) and 5CM on features. New Acol drill, *Our 1NT doubled*; Acol's Mixed drill follows the Helvic switch. Opposite a 12-14 no-trump the Helvic values pass needs 9+ (7+ opposite 15-17). Calls from an option that isn't on the Acol chart say so instead of pointing at a chart panel.
+- **Fix:** with features, 2♦ – 2NT – answer: responder's game is 3NT, not 4♦.
 - Tests now deal every drill in both systems, and the weak-two drills with Ogust; every rule of both charts must come up.
 
 ## 2026-10-29

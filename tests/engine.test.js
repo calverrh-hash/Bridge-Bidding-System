@@ -377,7 +377,7 @@ const SEEDS = 8;
 const VARIANTS = [];
 for (const d of SETS.concat(ACOL_SETS)) for (const helvic of d.helvic ? [false, true] : [false]) {
   VARIANTS.push({ d, helvic, ogust: false });
-  if (!d.acol && ['open-unbal', 'big', 'mixed'].includes(d.id) && !helvic) VARIANTS.push({ d, helvic, ogust: true });
+  if (['open-unbal', 'big', 'mixed', 'a-big', 'a-mixed'].includes(d.id) && !helvic) VARIANTS.push({ d, helvic, ogust: true });
 }
 for (const { d, helvic, ogust } of VARIANTS) {
   const name = d.id + (helvic ? ' (Helvic)' : '') + (ogust ? ' (Ogust)' : '');
@@ -408,8 +408,23 @@ test('rule coverage: every chart rule is asked of you in some drill (seeds 1-8)'
 });
 test('no drill auction stops early: every hand reaches a contract (seeds 1-4)', () => {
   const stops = [];
-  for (const d of SETS.concat(ACOL_SETS)) for (let s = 1; s <= 4; s++) buildSet(d, s, {}).forEach(q => { if (q.stop) stops.push(`${d.id}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
+  for (const { d, helvic, ogust } of VARIANTS) for (let s = 1; s <= 4; s++) buildSet(d, s, { helvic, ogust }).forEach(q => { if (q.stop) stops.push(`${d.id}${helvic ? '~helvic' : ''}${ogust ? '~ogust' : ''}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
   same(stops, [], 'auctions that stop');
+});
+test('Acol options: Helvic opposite a weak NT needs 9+ to pass for values; Ogust and features both work', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true;
+    const eight = parseHand('J86.Q752.K93.Q84');   // 8 HCP, 4333: a wriggle, not values
+    same(ntDoubledResp(eight, true).bid, 'P', 'wriggle pass');
+    same(helvicType(eight), 'wriggle', '8 HCP is weak opposite 12-14');
+    same(helvicType(parseHand('K86.Q752.K93.Q84')), 'values', '10 HCP is values');
+    const wt = parseHand('84.KQJ963.K72.85');   // 9 HCP, good suit, outside king
+    SYS.ogust = true; same(wtAns(wt, 2).bid, '3S', 'Ogust: max, good');
+    SYS.ogust = false; check(wtAns(wt, 2).id === 'E.weak-two-answer', 'features answer when Ogust is off');
+    const qs = buildSet(ACOL_SETS.find(d => d.id === 'a-our-nt'), 1, { helvic: true });
+    check(qs.some(q => q.steps.some(st => st.ans && /helvic/.test(st.ans.id || ''))), 'Helvic rules asked in the Acol drill');
+  } finally { Object.assign(SYS, was); }
 });
 test('buildSet is deterministic for a seed', () => {
   for (const d of SETS) same(JSON.stringify(buildSet(d, 3)), JSON.stringify(buildSet(d, 3)), d.id);

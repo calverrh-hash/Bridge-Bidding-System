@@ -193,7 +193,7 @@ function afterWeakTwo(seq, h) {
     return gap('The chart has no further calls after a weak two here.');
   }
   // Responder after the answer to the 2NT ask. The chart stops here; trainer guides.
-  if (n === 3 && r === '2N' && (SYS.ogust || SYS.acol)) {   // after the Ogust answer
+  if (n === 3 && r === '2N' && SYS.ogust) {   // after the Ogust answer
     const a = seq[2], mx = a === '3H' || a === '3S', goodS = a === '3D' || a === '3S';
     const game = M >= 2 && t >= 2 ? B(4, M) : '3N', so = B(3, M);
     if (a === '3N') return R('P', `Opener's 3NT shows a solid AKQ suit: that's the contract. Pass.`, 'E.ogust-after');
@@ -201,7 +201,7 @@ function afterWeakTwo(seq, h) {
     return bv(so) > bv(a) ? R(so, `Opener's ${plain(a)} shows a minimum. With ${p}, sign off in ${plain(so)}.`, 'E.ogust-after') : R('P', `Opener's ${plain(a)} shows a minimum. With ${p}, pass.`, 'E.ogust-after');
   }
   if (n === 3 && r === '2N') {
-    const a = seq[2], game = t >= 2 ? B(4, M) : '3N', where = t >= 2 ? `with ${t} ${SN[M]} the major is the game: ${plain(game)}` : `with only ${t} ${SN[M]}, ${plain(game)}`;
+    const a = seq[2], game = M >= 2 && t >= 2 ? B(4, M) : '3N', where = M < 2 ? `in diamonds the game is ${plain(game)}` : t >= 2 ? `with ${t} ${SN[M]} the major is the game: ${plain(game)}` : `with only ${t} ${SN[M]}, ${plain(game)}`;
     if (a === '3N') return R('P', `Opener's 3NT shows a solid AKQ suit: that's the contract. Pass.`, 'GUIDE.weak-two-after-ask');
     if (a === B(3, M)) return p >= 17 ? R(game, `Opener's 3${SY[M]} shows a minimum or no feature. With ${p} (17+) there's still game; ${where}.`, 'GUIDE.weak-two-after-ask') : R('P', `Opener's 3${SY[M]} shows a minimum or no feature. With ${p} (14-16) game is unlikely: pass.`, 'GUIDE.weak-two-after-ask');
     return R(game, `Opener's ${plain(a)} shows a feature and a maximum (8-10), so bid game; ${where}.`, 'GUIDE.weak-two-after-ask');
