@@ -46,14 +46,14 @@ A = f'''
 
 B = f'''
 {lab('4+ card support for a major')}
-{box('rsp','<b>2M</b> 6-9 · <b>3M</b> 10-12 · <b>4M</b> 13-15 · <b>16+: new suit first, then support</b>. <b>Losers</b> (with a singleton, void or 5 trumps): 9 → 2M · 8 → 3M · 7 → 4M · ≤6 → new suit then support. 0-5 with ≤9 losers: 2M.')}
-<div class="g2">{arrow}{arrow}</div>
-<div class="g2">{box('reb','<b>After 2M:</b> 19+ or ≤5 losers 4M · 16-18 or 6 losers 3M try (responder 8-9 or ≤8 losers → 4M) · else pass. 4NT when losers say 12 tricks (G).')}{box('reb','<b>After 3M:</b> 14+ or ≤6 losers 4M, else pass. <b>After 4M:</b> slam check (G).')}</div>
+{box('rsp','<b>2M</b> 6-9 · <b>3M</b> 10-12 · <b>4M</b> shape raise (7 losers, under 13 HCP) · <b>2NT JACOBY</b> 13+, or 10+ with ≤6 losers (game forcing). <b>Losers</b> (with a singleton, void or 5 trumps): 9 → 2M · 8 → 3M · 7 → 4M. 0-5 with ≤9 losers: 2M. <i>Natural option: 2NT 10-12, 4M 13-15, 16+ new suit then support.</i>')}
+<div class="g3">{arrow}{arrow}{arrow}</div>
+<div class="g3">{box('reb','<b>After 2M:</b> 19+ or ≤5 losers 4M · 16-18 or 6 losers 3M try (responder 8-9 or ≤8 losers → 4M) · else pass. 4NT if losers say 12 tricks (G).')}{box('reb','<b>After 3M:</b> 14+ or ≤6 losers 4M, else pass. <b>After 4M:</b> slam check (G).')}{box('cnv','<b>After Jacoby:</b> short suit → 3 of it · else 4M 13-14 · 3NT 15-17 · 3M 18+. Responder: 4M, or 4NT when slam is there (G).')}</div>
 {lab('Other responses')}
 {box('rsp','<b>New suit</b>: longest; 4-4 the lower (4-4 majors: ♥), <b>5-5 the higher</b>. 1-level 6+ (4-5 with ≤9 losers) · 2-level 9+. Forcing. <b>Never skip a 4-card major</b> over 1♣/♦ (unless a longer minor and 10+); over 1♠ with 4♥ and 10+: 2♥.')}
-{box('rsp','<b>Minor raise</b> (4+, no 4-card major): 2m 6-9 · 3m 10-12. <b>1NT</b> 6-9 · <b>2NT</b> 10-12 bal · <b>3NT</b> 13-15 bal.')}
+{box('rsp','<b>Minor raise</b> (4+, no 4-card major): 2m 6-9 · 3m 10-12. <b>1NT</b> 6-9 · <b>2NT</b> 10-12 bal (over 1♥/♠: a new suit, then 2NT) · <b>3NT</b> 13-15 bal.')}
 {arrow}
-{box('reb','<b>Opener:</b> after 2m: 16-18 no short suit 2NT (8-9 → 3NT) · 19 3NT · short suit 3m try (8-9 → 3NT). After 3m: 14+ 3NT; short suit and ≤5 losers 5m. <b>After 2NT:</b> six in a major 4M · 2nd 5-card suit 3x (forcing) · five in a major + 14 3M (3 → 4M) · 14+ 3NT · 13: pass (6-card minor 3m). <b>After 3NT:</b> six-card major, unbalanced: 4M.')}'''
+{box('reb','<b>Opener:</b> after 2m: 16-18 no short suit 2NT (8-9 → 3NT) · 19 3NT · short suit 3m try (8-9 → 3NT). After 3m: 14+ 3NT; short suit and ≤5 losers 5m. <b>After 2NT (over 1m):</b> six in a major 4M · 2nd 5-card suit 3x (forcing) · five in a major + 14 3M (3 → 4M) · 14+ 3NT · 13: pass (6-card minor 3m). <b>After 3NT:</b> six-card major, unbalanced: 4M.')}'''
 
 C = f'''
 {box('reb','<b>Balanced 15-19</b> opens a suit and rebids no-trumps (with 4 of partner’s major, raise it instead).')}
@@ -105,11 +105,11 @@ style = re.search(r'<style>(.*?)</style>', src, re.S).group(1).replace('{{', '{'
 style += '.pD .b{font-size:7.3pt;line-height:1.24} .pA .b{font-size:7pt} .pB .b{font-size:6.9pt} .pF .b{font-size:7.6pt;line-height:1.3} .pC .b,.pG .b,.pE .b,.pH .b{font-size:7.4pt;line-height:1.28}'
 html = f'''<!doctype html><html><head><meta charset="utf-8"><title>Acol Weak NT - Bidding Flowchart</title><style>{style}</style></head><body>
 <div class="top"><h1>ACOL · WEAK NT (12-14)  -  BIDDING FLOWCHART</h1>
-<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, McKendrick 2♠, weak twos, Ogust, 2♣, Helvic.</p><span class="ver">Updated {sys.argv[2] if len(sys.argv) > 2 else ''}</span></div>
+<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, McKendrick 2♠, Jacoby 2NT, weak twos, Ogust, 2♣, Helvic.</p><span class="ver">Updated {sys.argv[2] if len(sys.argv) > 2 else ''}</span></div>
 {panel(16,60,204,338,'pO','','OPENING BIDS','<div class="pb" style="gap:5pt;padding:0">'+op+'</div>')}
 {panel(212,60,689,375,'pA','A','RESPONSES TO 1NT (12-14)',A)}
-{panel(697,60,932,375,'pB','B','RESPONSES TO 1♣/♦/♥/♠',B)}
-{panel(940,60,1175,375,'pC','C',"OPENER'S NT REBIDS (balanced 15-19)",C)}
+{panel(697,60,1030,375,'pB','B','RESPONSES TO 1♣/♦/♥/♠',B)}
+{panel(1038,60,1175,375,'pC','C',"NT REBIDS (bal 15-19)",C)}
 {panel(16,346,204,808,'pD','D',"OPENER'S SUIT REBIDS (13-22)",D)}
 {panel(212,383,689,622,'pE','E','2NT · 2♣ · WEAK TWOS (OGUST)',E)}
 {panel(212,630,689,808,'pH','H','PRE-EMPTS · THEIR 1NT · OUR 1NT DOUBLED',Hp)}

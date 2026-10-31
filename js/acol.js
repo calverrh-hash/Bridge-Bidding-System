@@ -155,6 +155,8 @@ function acolR1(h, o) {
   const sh = shapeResp(h) || (fitM && p <= 5 && losers(h) <= 9), sw = p <= 5 && sh ? shapeWhy(h) : '';
   if (p <= 5 && !sh) return R('P', `${p} HCP: a response needs 6+ (or fewer with real shape: 9 losers or fewer). Pass.`, 'B.acol-pass');
   const pe = Math.max(p, sh ? 6 : 0);
+  // Jacoby 2NT (the switch, on by default): 4+ trumps and game values, 13+ HCP or 6 losers or fewer with 10+.
+  if (SYS.jacoby && fitM && (pe >= 13 || (k <= 6 && p >= 10))) return R('2N', `${t}-card support and ${p} HCP${pe < 13 ? ` with only ${k} losers` : ''}: Jacoby 2NT, a game-forcing raise. Opener shows a short suit, or describes strength.`, 'B.acol-jacoby');
   if (fitM && pe < 16 && k > 6) {
     const byP = pe <= 9 ? 2 : pe <= 12 ? 3 : 4, byL = p <= 5 ? 2 : k <= 7 ? 4 : k <= 8 ? 3 : 2, lv = Math.max(byP, byL);
     const rng = ['', '', '6-9', '10-12', '13-15'][lv];
@@ -171,6 +173,11 @@ function acolR1(h, o) {
   const hearts2 = o === 3 && l[2] >= 4 && pe >= 10;   // never skip a four-card major: 2♥ rather than 2NT
   if (bal && !strong16 && !one.length && !hearts2) {
     if (pe <= 9) return R('1N', `${sw}${p} HCP, fairly balanced, no 4-card suit to show at the 1-level: 1NT (6-9).`, 'B.acol-1nt');
+    if (pe <= 12 && SYS.jacoby && o >= 2) {
+      const m = [0, 1, 2].filter(u => u !== o && l[u] >= 3).sort((a, b) => l[b] - l[a] || a - b)[0];
+      const b = B(cheapest(m, B(1, o)), m);
+      return R(b, `${p} HCP balanced: 2NT would be Jacoby, so bid a new suit, ${plain(b)} (${l[m] === 3 ? 'it may be only three cards' : 'natural'}), and show the 10-12 balanced next with 2NT.`, 'B.acol-new-suit');
+    }
     if (pe <= 12) return R('2N', `${p} HCP balanced: 2NT (10-12).`, 'B.acol-2nt');
     if (pe <= 15) return R('3N', `${p} HCP balanced: 3NT (13-15).`, 'B.acol-3nt');
   }
@@ -219,6 +226,13 @@ function acolRebid(h, o, r) {
       return p >= 14 || k <= 6 ? R('3N', `Partner's raise shows 10-12. With ${p}${p < 14 ? ` and ${k} losers` : ' (14+)'}, bid 3NT: nine tricks are easier than eleven.`, 'B.acol-after-raise') : R('P', `Partner's raise shows 10-12. With ${p}, pass.`, 'B.acol-after-raise');
     }
     return AP('Partner bid game.');
+  }
+  if (r === '2N' && SYS.jacoby && o >= 2) {
+    const sh = [0, 1, 2, 3].find(u => u !== o && l[u] <= 1);
+    if (sh !== undefined) return R(B(3, sh), `Partner's Jacoby 2NT: 4+ ${SN[o]}, game forcing. Show your short suit: 3${SY[sh]} (singleton or void).`, 'B.acol-jacoby-answer');
+    if (p >= 18) return R(B(3, o), `Partner's Jacoby 2NT. No short suit, ${p} HCP (18+): 3${SY[o]}, slam interest.`, 'B.acol-jacoby-answer');
+    if (p >= 15) return R('3N', `Partner's Jacoby 2NT. No short suit, ${p} HCP (15-17): 3NT.`, 'B.acol-jacoby-answer');
+    return R(B(4, o), `Partner's Jacoby 2NT. No short suit and a minimum (13-14): 4${SY[o]}.`, 'B.acol-jacoby-answer');
   }
   if (r === '2N') {
     const two = [0, 1, 2, 3].filter(t => t !== o && l[t] >= 5).sort((a, b) => b - a)[0];
@@ -300,7 +314,7 @@ function acolResp2(h, seq) {
   if (xs === rs && rs < 2 && xl < rl + 2) return p >= 12 ? R('3N', `Opener's raise shows 13-14 and four ${SN[rs]}. With ${p} (12+), try 3NT: nine tricks are easier than eleven.`, 'D.acol-after') : R('P', `Opener's raise shows 13-14. With ${p}, pass.`, 'D.acol-after');
   if (xs === rs) {
     const dbl = xl >= rl + 2;
-    const gm = rs >= 2 || bv('3N') > bv(x) ? game(rs) : B(5, rs);
+    const gm = rs >= 2 || bv('3N') > bv(x) ? game(rs) : o >= 2 && l[o] >= 3 ? B(4, o) : B(5, rs);
     if (dbl) return p >= 10 ? R(gm, `Opener's double raise shows 15-18. With ${p} (10+), bid game: ${plain(gm)}.`, 'D.acol-after') : R('P', `Opener's double raise shows 15-18. With ${p}, pass.`, 'D.acol-after');
     return p >= 13 ? R(game(rs), `Opener's raise shows 13-14. With ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(xl + 1, rs), `Opener's raise shows 13-14. With ${p} (11-12), invite.`, 'D.acol-after') : R('P', `Opener's raise shows 13-14. With ${p}, pass.`, 'D.acol-after');
   }
@@ -438,6 +452,14 @@ function acolAfter1Suit(seq, h) {
     // 16+ with support: new suit, then support.
     const xs0 = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, strongX = x === '3N' || (x === '2N' && /^2/.test(r)) || (xs0 >= 0 && (+x[0] > cheapest(xs0, r) || (xs0 !== o && bv(x) > bv(B(2, o)))));
     if (acolR1(h, o).id === 'B.acol-new-suit-support') return acolSlamTry(h, o, strongX ? 15 : 13, strongX ? "Opener's strong rebid (15+)" : "Opener's opening (13+)", strongX ? 6 : 7) || R(o >= 2 ? B(4, o) : '3N', `You bid a new suit first with ${L(h)[o]}-card support and 16+: now support, game in ${o >= 2 ? SN[o] : 'no-trumps'}.`, 'B.acol-new-suit-support');
+    // After our Jacoby 2NT: game, or Blackwood when the hands are worth slam.
+    if (r === '2N' && SYS.jacoby && o >= 2) {
+      const xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1;
+      const [mp, pl, what] = x === B(4, o) ? [13, 7, 'a minimum (13-14)'] : x === '3N' ? [15, 6, '15-17'] : x === B(3, o) ? [18, 5, '18+'] : [13, 6, `a short ${SN[xs] ? SN[xs].replace(/s$/, '') : ''} suit`];
+      const st = acolSlamTry(h, o, mp, `Opener's answer shows ${what}`, pl);
+      if (st) return st;
+      return x === B(4, o) ? AP('Opener bid game.') : R(B(4, o), `Opener's ${plain(x)} shows ${what}. No slam between you: 4${SY[o]}.`, 'B.acol-jacoby-continue');
+    }
     // After our 2NT (10-12 balanced): opener's 3-level suit bid.
     if (r === '2N' && /^3[CDHS]$/.test(x)) {
       const xs = ST.indexOf(x[1]), l = L(h);
@@ -623,6 +645,7 @@ function acolIgnore(h, o, last) {
   const c = acolR1(h, o);
   if (!isCall(c)) return c;
   if (c.bid === 'P') return R('P', `${c.why} (The interference changes nothing.)`, 'F.acol-ignore');
+  if (c.id === 'B.acol-jacoby') return R(B(4, o), `With RHO in the auction, skip Jacoby and bid game: 4${SY[o]} (${L(h)[o]} trumps, ${hcp(h)} HCP).`, 'F.acol-ignore');
   if (last === 'X') return R(c.bid, `RHO's double changes nothing: ${c.why}`, 'F.acol-ignore');
   const y = ST.indexOf(last[1]);
   // The suit you would have bid is the one they overcalled: you can't bid it naturally now. Your
@@ -788,7 +811,7 @@ const ACOL_SETS = (() => {
         PO({ setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: [4, 5] }, [1, 4])), hcp: [13, 15] }, north: { lens: sp({ [M]: [5, 6] }, [1, 4]), hcp: [16, 19], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` }; } }),
         PO({ setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: [4, 5] }, [1, 4])), hcp: [16, 19] }, north: { lens: sp({ [M]: [5, 6] }, [1, 4]), hcp: [13, 16], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` }; } }),
         PO({ setup: r => ({ ...NTa, south: { lens: nmaj(r), hcp: [19, 22] } }), calls: 1 }),
-        want(PO({ setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: [4, 5] }, [1, 4])), hcp: [13, 15] }, north: { lens: sp({ [M]: [5, 6] }, [1, 4]), hcp: [18, 21], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` }; } }), 'G.acol-blackwood-answer', 40),   // partner asks: answer
+        want(SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [1, 4])); }, hcp: [13, 15], ok: h => /^1[HS]$/.test(acolOpening(h).bid || '') }, north: { lens: (r, h) => { const M = ST.indexOf(acolOpening(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 4]); }, hcp: [17, 20] } }), 'G.acol-blackwood-answer', 40),   // partner asks: answer
       ] },
     { id: 'a-comp', name: 'Overcalls and doubles', refs: 'F · H', acol: true,
       blurb: 'Overcalls (jump = strong), takeout doubles and advancing them, bidding over interference, their 1NT and their pre-empts.',

@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-31 (late): Acol Jacoby 2NT
+- **Jacoby 2NT over 1♥/1♠** (Acol): 4+ trumps and game values (13+, or 10+ with 6 losers or fewer), game forcing. Opener shows a singleton or void at the 3-level, otherwise 4M with 13-14, 3NT with 15-17, 3M with 18+. Responder then bids 4M, or 4NT when the points or the loser count say slam. A direct 4M is now the shape raise (7 losers, under 13 HCP). Balanced 10-12 over a major bids a new suit, then 2NT. With interference, Jacoby is off (bid 4M). A home-screen switch keeps the natural 2NT as an option; Jacoby is the default. On the Acol chart too (panel B).
+- Responder after opener's double raise of a minor to the 4-level: 4M with three of opener's major.
+- The opening 1NT now points to the chart's Opening bids panel.
+
 ## 2026-10-31 (evening): Acol transfers and an editable Acol chart
 - **Transfers over our 1NT** (Acol): 2♦ = 5+ hearts, 2♥ = 5+ spades, any strength; opener always completes. Then pass (0-10), invite with 11 (2NT with five, 3M with six) or bid game with 12+ or 6 losers or fewer (3NT with five, opener correcting to 4M with three; 4M with six). Weak long diamonds now go 2♠ then 3♦. A home-screen switch (Acol only) keeps the old natural weak take-outs as an option; transfers are the default.
 - **The Acol chart is now generated** from `docs/build_acol_chart.py` (rendered with `docs/render_acol.py`), in the same style as the 5CM chart, and describes the trainer's Acol rules, including today's review. The PDF you supplied is kept as `docs/Acol_Weak_NT_Flowchart_original.pdf`. Helvic and features are shown on it as options.
