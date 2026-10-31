@@ -6,6 +6,7 @@
 - **Fix:** the loser-count rule read 1♠ – 1NT – 2♦ as a jump and could push responder to game. Fixed in both systems.
 - **Helvic and Ogust in Acol too.** Each system has its own two switches on the home screen: Chart / Helvic when our 1NT is doubled, and Features / Ogust over the weak-two 2NT ask. Acol starts on Ogust (its chart) and 5CM on features. New Acol drill, *Our 1NT doubled*; Acol's Mixed drill follows the Helvic switch. Opposite a 12-14 no-trump the Helvic values pass needs 9+ (7+ opposite 15-17). Calls from an option that isn't on the Acol chart say so instead of pointing at a chart panel.
 - **Acol, 6-5 comes alive:** opener with 15-18 (or 13-14 with 5 losers or fewer) shows a second five-card suit, even as a reverse, before a jump rebid of the six-card suit: 1♣ – 1♠ – 2♥. After partner's simple preference, a two-suiter with 4 losers or fewer bids game. Responder with four cards in the reverse suit raises it.
+- **Acol, never skip a four-card major:** after a 2-level response, opener with 13-14 shows a four-card major at the 2-level (1♦ – 2♣ – 2♥). It isn't a reverse in strength. Responder raises to game with a fit and 12+, invites with 9-11, otherwise 3NT (12+), rebids a six-card suit, or bids 2NT.
 - **Fix:** with features, 2♦ – 2NT – answer: responder's game is 3NT, not 4♦.
 - Tests now deal every drill in both systems, and the weak-two drills with Ogust; every rule of both charts must come up.
 

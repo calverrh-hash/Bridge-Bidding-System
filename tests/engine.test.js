@@ -671,3 +671,13 @@ test('Acol: 6-5 comes alive: 1♣ – 1♠ – 2♥ reverse with 15 and six club
     same(acolSysCall(['1C', '1S', '2H', '3H'], h).bid, '4H', 'game after the heart raise');
   } finally { Object.assign(SYS, was); }
 });
+test('Acol: never skip a four-card major: 1♦ – 2♣ – 2♥ with 13, and responder\'s answers', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true;
+    const h = parseHand('3.K864.AKQJ6.1065');
+    same(acolSysCall(['1D', '2C'], h).bid, '2H', 'show the hearts');
+    same(acolSysCall(['1D', '2C', '2H'], parseHand('A72.QJ53.4.KQ982')).bid, '4H', 'fit and 12: game');
+    same(acolSysCall(['1D', '2C', '2H'], parseHand('J72.Q53.84.AKJ92')).bid, '2N', 'no fit, 11: 2NT');
+  } finally { Object.assign(SYS, was); }
+});

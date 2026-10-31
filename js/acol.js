@@ -161,6 +161,10 @@ function acolRebid(h, o, r) {
     return R(B(cheapest(o, r), o), `${p} HCP (15-18) with nothing else to show: rebid ${SN[o]}.`, 'D.acol-strong');
   }
   if (sup) return R(B(rlv + 1, rs), `13-14 with four ${SN[rs]}: raise to ${plain(B(rlv + 1, rs))}.`, 'D.acol-weak');
+  // Never skip a four-card major: after a 2-level response (9+) it can be shown at the 2-level
+  // with a minimum. It's not a reverse in strength.
+  const mj = rl === 2 && rs >= 0 ? [3, 2].find(s => s !== o && s !== rs && l[s] >= 4 && cheapest(s, r) === 2) : undefined;
+  if (mj !== undefined && bv(B(2, mj)) > bv(bar)) return R(B(2, mj), `13-14 with four ${SN[mj]}: never skip a four-card major. Partner's 2-level response shows 9+, so ${plain(B(2, mj))} doesn't promise extra strength here.`, 'D.acol-weak');
   const s2 = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 4 && bv(B(cheapest(s, r), s)) < bv(bar)).sort((a, b) => l[b] - l[a])[0];
   if (s2 !== undefined) { const b = B(cheapest(s2, r), s2); return R(b, `13-14: show your second suit below the barrier, ${plain(b)}.`, 'D.acol-weak'); }
   if (l[o] >= 5) return R(B(cheapest(o, r), o), `13-14 with ${NUM[l[o]]} ${SN[o]}: rebid them, ${plain(B(cheapest(o, r), o))}.`, 'D.acol-weak');
@@ -195,7 +199,14 @@ function acolResp2(h, seq) {
     return p >= 13 ? R(game(rs), `Opener's raise shows 13-14. With ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(xl + 1, rs), `Opener's raise shows 13-14. With ${p} (11-12), invite.`, 'D.acol-after') : R('P', `Opener's raise shows 13-14. With ${p}, pass.`, 'D.acol-after');
   }
   const js = xs >= 0 && xs !== o && xs !== rs && xl === cheapest(xs, r) + 1;
-  const rev = xs >= 0 && xs !== o && xs !== rs && !js && bv(x) > bv(bar);
+  const majAfter2 = rl === 2 && xl === 2 && xs >= 2;   // a 4-card major shown after our 2-level response: 13+, not a reverse
+  const rev = xs >= 0 && xs !== o && xs !== rs && !js && bv(x) > bv(bar) && !majAfter2;
+  if (majAfter2 && xs !== o && xs !== rs) {
+    if (l[xs] >= 4) return p >= 12 ? R(B(4, xs), `Opener's ${plain(x)} shows four ${SN[xs]} and 13+. With four of them and ${p} (12+), bid game.`, 'D.acol-after') : R(B(3, xs), `Opener's ${plain(x)} shows four ${SN[xs]} and 13+. With four of them and ${p} (9-11), invite: 3${SY[xs]}.`, 'D.acol-after');
+    if (p >= 12) return R('3N', `Opener's ${plain(x)} shows four ${SN[xs]} and 13+. No fit, ${p} (12+): 3NT.`, 'D.acol-after');
+    if (l[rs] >= 6) return R(B(3, rs), `Opener's ${plain(x)} shows four ${SN[xs]}. No fit; with ${NUM[l[rs]]} ${SN[rs]} and ${p}, rebid them: 3${SY[rs]}.`, 'D.acol-after');
+    return R('2N', `Opener's ${plain(x)} shows four ${SN[xs]} and 13+. No fit; with ${p} (9-11), 2NT invites.`, 'D.acol-after');
+  }
   if (js) {
     if (l[xs] >= 4 && xs >= 2) return R(B(4, xs), `Opener's jump shift is game forcing (19-22). With ${l[xs]} ${SN[xs]}, support: 4${SY[xs]}.`, 'D.acol-after');
     if (l[o] >= 3 && o >= 2) return R(B(4, o), `Opener's jump shift is game forcing. With ${l[o]} ${SN[o]}, 4${SY[o]}.`, 'D.acol-after');
