@@ -197,7 +197,7 @@ function afterWeakTwo(seq, h) {
     const a = seq[2], mx = a === '3H' || a === '3S', goodS = a === '3D' || a === '3S';
     const game = M >= 2 && t >= 2 ? B(4, M) : '3N', so = B(3, M);
     if (a === '3N') return R('P', `Opener's 3NT shows a solid AKQ suit: that's the contract. Pass.`, 'E.ogust-after');
-    if (mx || (goodS && p >= 16)) return R(game, `Opener's ${plain(a)} shows ${mx ? 'a maximum' : 'a minimum but a good suit'}${goodS ? ' and a good suit' : ''}. With ${p}, bid game: ${plain(game)}.`, 'E.ogust-after');
+    if (mx || (goodS && p >= 16)) return R(game, `Opener's ${plain(a)} shows ${mx ? (goodS ? 'a maximum and a good suit' : 'a maximum') : 'a minimum but a good suit'}. With ${p}, bid game: ${plain(game)}.`, 'E.ogust-after');
     return bv(so) > bv(a) ? R(so, `Opener's ${plain(a)} shows a minimum. With ${p}, sign off in ${plain(so)}.`, 'E.ogust-after') : R('P', `Opener's ${plain(a)} shows a minimum. With ${p}, pass.`, 'E.ogust-after');
   }
   if (n === 3 && r === '2N') {
@@ -453,21 +453,21 @@ function partnerShows(seq) {
   for (const i of pIdx) {
     const c = seq[i];
     if (!NAT(c)) {
-      if (c === '2N' && i === 2) los = 6;                       // opener's 18-19 2NT rebid
+      if (c === '2N' && i === 2) los = SYS.acol && seq[1] === B(2, ST.indexOf(seq[0][1])) ? 7 : 6;   // opener's 18-19 2NT rebid (Acol: 16-18 balanced after a minor raise)
       continue;
     }
     const s = ST.indexOf(c[1]), lv = +c[0];
-    if (i === 0) { len[s] = s >= 2 ? 5 : s === 1 ? 4 : 3; continue; }
+    if (i === 0) { len[s] = SYS.acol ? 4 : s >= 2 ? 5 : s === 1 ? 4 : 3; continue; }   // Acol: four-card suits
     if (i === 1 && o >= 2 && (c === '3C' || c === '3D')) { len[o] = 4; los = c === '3C' ? 8 : 9; continue; }   // Bergen
     const ours = seq.some((x, j) => (n - j) % 2 === 0 && NAT(x) && x[1] === c[1]);
     const mine = pIdx.some(j => j < i && NAT(seq[j]) && seq[j][1] === c[1]);
     if (ours) { len[s] = Math.max(len[s], popener ? 4 : 3); }   // a raise of our suit
-    else if (mine) { len[s] = Math.max(len[s] + 1, s >= 2 ? 6 : 5); }   // rebid of their own suit
+    else if (mine) { len[s] = SYS.acol ? Math.max(len[s] + 1, lv > (seq[i - 1] && /^\d/.test(seq[i - 1]) ? cheapest(s, seq[i - 1]) : 1) ? 6 : 5) : Math.max(len[s] + 1, s >= 2 ? 6 : 5); }   // rebid of their own suit
     else len[s] = Math.max(len[s], 4);                             // a new suit
     // Strength: jumps and reverses show extras.
     const prev = seq[i - 1], cheapLv = prev && /^\d/.test(prev) ? cheapest(s, prev) : 1;   // after 1NT, 2♦ is not a jump
     if (popener && i === 2) { if (lv > cheapLv) los = lv >= cheapLv + 1 && !ours && !mine ? 5 : 6; else if (!ours && !mine && bv(c) > bv(B(2, o))) los = 6; }
-    if (!popener && i === 1) los = ours ? (lv >= 3 ? 8 : 9) : (lv >= 2 ? 8 : 9);
+    if (!popener && i === 1) los = ours ? (lv >= 4 && SYS.acol ? 7 : lv >= 3 ? 8 : 9) : (lv >= 2 ? 8 : 9);
   }
   return { len, los };
 }
@@ -485,8 +485,10 @@ function fitGame(seq, h, c) {
     const game = s >= 2 ? 4 : 5, t = 24 - k - los;
     if (t < game + 6) continue;
     if (s <= 1 && b === '3N') continue;
+    if (SYS.acol && s <= 1 && seq.length === 2) continue;   // Acol opener's first rebid: show the hand first (partner may still have a major fit)
     const g = B(game, s);
     if (bv(g) <= bv(lastBid)) continue;
+    if (SYS.acol && t >= 12 && bv('4N') > bv(lastBid)) return R('4N', `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks: enough for slam if you're not missing two aces. Ask with 4NT (Blackwood).`, 'G.acol-blackwood');
     return R(g, `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks, enough for ${plain(g)}. With a fit, shape counts more than points.`, 'LTC.fit-game');
   }
   return c;

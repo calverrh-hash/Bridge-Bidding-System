@@ -20,7 +20,14 @@ function acolOpening(h) {
     if (p >= 12) return R('1N', `${p} HCP balanced: 1NT (12-14).`, 'A.acol-open-1nt');
     return R('P', `${p} HCP balanced: too weak to open.`, 'OB.acol-pass');
   }
-  if (p >= 13) { const s = acolLongest(l); return R(B(1, s), `${p} HCP unbalanced (13-22): open your longest suit, 1${SY[s]}${l.filter(n => n === l[s]).length > 1 ? ' (equal length: ♥ before ♠ before ♦ before ♣)' : ''}.`, 'OB.acol-suit'); }
+  // Shape counts: 11-12 unbalanced opens when HCP + the two longest suits reach 20 (rule of 20).
+  const two = [...l].sort((a, b) => b - a), r20 = p >= 11 && p + two[0] + two[1] >= 20;
+  if (p >= 13 || r20) {
+    // Two five-card (or longer) suits of equal length: open the higher-ranking.
+    const s = mx >= 5 ? [3, 2, 1, 0].find(t => l[t] === mx) : acolLongest(l), eq = l.filter(n => n === l[s]).length > 1;
+    const why = mx >= 5 && eq ? ' (5-5: open the higher-ranking suit)' : eq ? ' (equal length: ♥ before ♠ before ♦ before ♣)' : '';
+    return R(B(1, s), p >= 13 ? `${p} HCP unbalanced (13-22): open your longest suit, 1${SY[s]}${why}.` : `${p} HCP, but ${p} + ${two[0]} + ${two[1]} (your two longest suits) = ${p + two[0] + two[1]}: with this shape the hand is worth an opening (rule of 20). Open your longest suit, 1${SY[s]}${why}.`, 'OB.acol-suit');
+  }
   const s = acolLongest(l);
   if (mx >= 8 && p <= 9) return R(B(4, s), `${NUM[mx]}-card ${SN[s].replace(/s$/, '')} suit and ${p} HCP: pre-empt at the 4-level.`, 'H.acol-preempt');
   if (mx === 7 && p <= 9) return R(B(3, s), `Seven ${SN[s]} and ${p} HCP: pre-empt at the 3-level.`, 'H.acol-preempt');
@@ -30,7 +37,14 @@ function acolOpening(h) {
 
 // ---------- A: responses to 1NT (12-14) ----------
 function acolR1NT(h) {
-  const p = hcp(h), l = L(h), H = l[2], S = l[3];
+  const p = hcp(h), l = L(h), H = l[2], S = l[3], k = losers(h);
+  // Shape counts: a long major with 6 losers or fewer is worth game opposite 12-14 (about 8 losers).
+  const six0 = [3, 2].find(s => l[s] >= 6), five0 = [3, 2].find(s => l[s] === 5);
+  if (p <= 11 && k <= 6 && (six0 !== undefined || five0 !== undefined) && !(H >= 4 && S >= 4)) {
+    const lt = `${p} HCP, but only ${k} losers (${loserBreak(h)}): opposite a 12-14 no-trump (about 8 losers) that's 24 − (${k} + 8) = ${24 - k - 8} tricks. `;
+    if (six0 !== undefined) return R(B(4, six0), `${lt}With ${NUM[l[six0]]} ${SN[six0]}, bid game: 4${SY[six0]}.`, 'A.acol-major-game');
+    return R(B(3, five0), `${lt}With five ${SN[five0]}, 3${SY[five0]} (forcing). Partner bids 4${SY[five0]} with three, else 3NT.`, 'A.acol-major-3');
+  }
   if (H >= 4 && S >= 4 && Math.max(H, S) >= 5 && p <= 11) return R('2C', `${p} HCP, 5-4 in the majors: 2♣ Stayman, then pass if partner bids one of your majors, otherwise bid your five-card major to play.`, 'A.acol-stayman-weak');
   if (S >= 5 && p <= 11) return R('2C', `${p} HCP with weak spades: 2♠ would be McKendrick, so go through 2♣ Stayman, then bid 2♠ to play unless partner shows spades.`, 'A.acol-stayman-weak');
   const six = [3, 2].find(s => l[s] >= 6), five = [3, 2].find(s => l[s] === 5);
@@ -64,13 +78,17 @@ function acolAfter1NT(seq, h) {
     if (r === '2C') {
       const weak = p <= 10 || (p === 11 && Math.max(l[2], l[3]) >= 5 && Math.min(l[2], l[3]) >= 4) || (l[3] >= 5 && p <= 11);
       const M = a === '2H' ? 2 : a === '2S' ? 3 : -1;
+      const k = losers(h), ltc = `you have ${k} losers, partner about 8: 24 − (${k} + 8) = ${24 - k - 8} tricks`;
       if (weak) {
-        if (M >= 0 && l[M] >= 4) return R('P', `Partner showed ${SN[M]}, one of your suits: pass.`, 'A.acol-stayman-continue');
+        if (M >= 0 && l[M] >= 4) return k <= 6 ? R(B(4, M), `Partner showed ${SN[M]}, one of your suits. With a fit, shape counts: ${ltc}. Bid game: 4${SY[M]}.`, 'A.acol-stayman-continue') : R('P', `Partner showed ${SN[M]}, one of your suits: pass.`, 'A.acol-stayman-continue');
         const f = l[3] >= 5 ? 3 : 2;
+        if (k <= 6) return l[f] >= 6 ? R(B(4, f), `Partner didn't show your ${SN[f]}, but opener has at least two: with your ${NUM[l[f]]} that's a fit, and ${ltc}. Bid game: 4${SY[f]}.`, 'A.acol-stayman-continue') : R(B(3, f), `Partner didn't show your ${SN[f]}. With only ${k} losers the hand is worth game: 3${SY[f]} (forcing), and partner bids 4${SY[f]} with three, else 3NT.`, 'A.acol-stayman-continue');
         return R(B(2, f), `Partner didn't show your ${SN[f]}: bid 2${SY[f]}, to play.`, 'A.acol-stayman-continue');
       }
-      if (M >= 0 && l[M] >= 4) return p >= 13 ? R(B(4, M), `A ${SN[M].replace(/s$/, '')} fit, and ${p} (13+): 4${SY[M]}.`, 'A.acol-stayman-continue') : R(B(3, M), `A ${SN[M].replace(/s$/, '')} fit, ${p} HCP (11-12): invite with 3${SY[M]}.`, 'A.acol-stayman-continue');
-      if (a === '2H' && l[3] >= 4) return R('2S', `No heart fit, but four spades: 2♠. Partner bids 4♠ with four, else 3NT.`, 'A.acol-stayman-continue');
+      if (M >= 0 && l[M] >= 4) return p >= 13 || k <= 6 ? R(B(4, M), `A ${SN[M].replace(/s$/, '')} fit, and ${p >= 13 ? `${p} (13+)` : `${ltc}`}: 4${SY[M]}.`, 'A.acol-stayman-continue') : R(B(3, M), `A ${SN[M].replace(/s$/, '')} fit, ${p} HCP (11-12): invite with 3${SY[M]}.`, 'A.acol-stayman-continue');
+      // After 2♥ without a heart fit you must hold four spades (Stayman promised a major). 2♠ here
+      // would be the weak sign-off, so show the strength with no-trumps; opener with four spades bids them.
+      if (a === '2H' && l[3] >= 4) return p >= 13 ? R('3N', `No heart fit, so you hold the four spades: 3NT. Partner bids 4♠ with four spades too.`, 'A.acol-stayman-continue') : R('2N', `No heart fit, so you hold the four spades: invite with 2NT. Partner bids 3♠ or 4♠ with four spades, otherwise passes or bids 3NT.`, 'A.acol-stayman-continue');
       return p >= 13 ? R('3N', `No fit, ${p} HCP (13+): 3NT.`, 'A.acol-stayman-continue') : R('2N', `No fit, ${p} HCP (11-12): invite with 2NT.`, 'A.acol-stayman-continue');
     }
     if (r === '2S') {
@@ -81,9 +99,12 @@ function acolAfter1NT(seq, h) {
   }
   if (n === 4) {   // opener again
     const b = seq[3];
+    if (r === '2C' && seq[2] === '2D' && /^3[HS]$/.test(b)) { const M = ST.indexOf(b[1]); return l[M] >= 3 ? R(B(4, M), `Partner's ${plain(b)} shows five ${SN[M]} and game values (on shape). With ${l[M]}, 4${SY[M]}.`, 'A.acol-invite-answer') : R('3N', `Partner's ${plain(b)} shows five ${SN[M]}. With only ${l[M]}, 3NT.`, 'A.acol-invite-answer'); }
     if (r === '2C' && /^3[HS]$/.test(b)) { const M = ST.indexOf(b[1]); return p >= 13 ? R(B(4, M), `Partner invites with ${plain(b)}. With ${p} (13-14), accept: 4${SY[M]}.`, 'A.acol-invite-answer') : R('P', `Partner invites. With 12, pass.`, 'A.acol-invite-answer'); }
+    if (r === '2C' && b === '2N' && seq[2] === '2H' && l[3] >= 4) return p >= 13 ? R('4S', `Partner's 2NT after your 2♥ shows four spades and 11-12. You have four spades too, and ${p} (13-14): 4♠.`, 'A.acol-invite-answer') : R('3S', `Partner's 2NT after your 2♥ shows four spades and 11-12. You have four spades too but 12: 3♠, no further.`, 'A.acol-invite-answer');
     if (r === '2C' && b === '2N') return p >= 13 ? R('3N', `Partner invites with 2NT. With ${p} (13-14), 3NT.`, 'A.acol-invite-answer') : R('P', `Partner invites with 2NT. With 12, pass.`, 'A.acol-invite-answer');
-    if (r === '2C' && b === '2S' && seq[2] === '2H') return l[3] >= 4 ? R('4S', `Partner has four spades and so do you: 4♠.`, 'A.acol-invite-answer') : R('3N', `No spade fit: 3NT.`, 'A.acol-invite-answer');
+    if (r === '2C' && b === '3N' && seq[2] === '2H' && l[3] >= 4) return R('4S', `Partner's 3NT after your 2♥ shows four spades and game values. You have four spades too: 4♠.`, 'A.acol-invite-answer');
+    if (r === '2C' && b === '2S' && seq[2] === '2H') return R('P', `Partner's 2♠ is the weak sign-off (weak spades go through Stayman): pass.`, 'A.acol-invite-answer');
     return AP('Partner chose the contract.');
   }
   return AP('The contract is set.');
@@ -91,20 +112,30 @@ function acolAfter1NT(seq, h) {
 
 // ---------- B: responses to a suit opening ----------
 function acolR1(h, o) {
-  const p = hcp(h), l = L(h), t = l[o], bal = isBal(h), sh = shapeResp(h), sw = p <= 5 && sh ? shapeWhy(h) : '';
-  if (p <= 5 && !sh) return R('P', `${p} HCP: a response needs 6+. Pass.`, 'B.acol-pass');
+  const p = hcp(h), l = L(h), t = l[o], bal = isBal(h), fitM = t >= 4 && o >= 2;
+  // The chart: "HCP → losers is approximate: count real losers when shape is unusual". So losers
+  // only overrule points with a singleton or void, or five trumps.
+  const odd = l.some(n => n <= 1) || t >= 5, k = odd ? losers(h) : 99;
+  // Four-card support for a major: losers decide the raise as much as points (the chart's loser
+  // table: 9 losers 2M · 8 3M · 7 4M · 6 or fewer, like 16+, a new suit first, then support).
+  const sh = shapeResp(h) || (fitM && p <= 5 && losers(h) <= 9), sw = p <= 5 && sh ? shapeWhy(h) : '';
+  if (p <= 5 && !sh) return R('P', `${p} HCP: a response needs 6+ (or fewer with real shape: 9 losers or fewer). Pass.`, 'B.acol-pass');
   const pe = Math.max(p, sh ? 6 : 0);
-  if (t >= 4 && o >= 2) {
-    if (pe <= 9) return R(B(2, o), `${sw}${t}-card support, ${p} HCP: raise to 2${SY[o]} (6-9).`, 'B.acol-raise');
-    if (pe <= 12) return R(B(3, o), `${t}-card support, ${p} HCP: raise to 3${SY[o]} (10-12).`, 'B.acol-raise');
-    if (pe <= 15) return R(B(4, o), `${t}-card support, ${p} HCP: raise to 4${SY[o]} (13-15).`, 'B.acol-raise');
+  if (fitM && pe < 16 && k > 6) {
+    const byP = pe <= 9 ? 2 : pe <= 12 ? 3 : 4, byL = p <= 5 ? 2 : k <= 7 ? 4 : k <= 8 ? 3 : 2, lv = Math.max(byP, byL);
+    const rng = ['', '', '6-9', '10-12', '13-15'][lv];
+    const why = lv > byP ? `${t}-card support and ${p} HCP, but only ${k} losers (${loserBreak(h)}): with a fit, shape counts, and ${k} losers raise like ${rng}: ${plain(B(lv, o))}.` : `${sw}${t}-card support, ${p} HCP: raise to ${lv}${SY[o]} (${rng}).`;
+    return R(B(lv, o), why, 'B.acol-raise');
   }
-  if (t >= 4 && o < 2 && pe <= 12 && ![2, 3].some(s => l[s] >= 4)) return R(B(pe <= 9 ? 2 : 3, o), `${t}-card support for partner's ${SN[o]}, ${p} HCP: raise to ${pe <= 9 ? 2 : 3}${SY[o]} (${pe <= 9 ? '6-9' : '10-12'}).`, 'B.acol-raise');
-  // A new suit: longest (equal: lowest) at the 1-level with 6+, at the 2-level with 9+.
+  // A big fit and few losers but not the points to plan a slam: bid game straight away.
+  if (fitM && pe < 10 && k <= 6) return R(B(4, o), `${t}-card support and ${p} HCP, but only ${k} losers (${loserBreak(h)}): with a fit, shape counts. Bid game: 4${SY[o]}.`, 'B.acol-raise');
+  if (t >= 4 && o < 2 && pe <= 12 && ![2, 3].some(s => l[s] >= 4)) return R(B(pe <= 9 ? 2 : 3, o), `${sw}${t}-card support for partner's ${SN[o]}, ${p} HCP: raise to ${pe <= 9 ? 2 : 3}${SY[o]} (${pe <= 9 ? '6-9' : '10-12'}).`, 'B.acol-raise');
+  // A new suit: longest first; 5-5 the higher-ranking, 4-4 the lower. 1-level 6+, 2-level 9+.
   const others = [0, 1, 2, 3].filter(s => s !== o && l[s] >= 4);
   const one = others.filter(s => s > o);
-  const strong16 = pe >= 16 && t >= 4;
-  if (bal && !strong16 && !one.length) {
+  const strong16 = t >= 4 && (pe >= 16 || (fitM && k <= 6));
+  const hearts2 = o === 3 && l[2] >= 4 && pe >= 10;   // never skip a four-card major: 2♥ rather than 2NT
+  if (bal && !strong16 && !one.length && !hearts2) {
     if (pe <= 9) return R('1N', `${sw}${p} HCP, fairly balanced, no 4-card suit to show at the 1-level: 1NT (6-9).`, 'B.acol-1nt');
     if (pe <= 12) return R('2N', `${p} HCP balanced: 2NT (10-12).`, 'B.acol-2nt');
     if (pe <= 15) return R('3N', `${p} HCP balanced: 3NT (13-15).`, 'B.acol-3nt');
@@ -114,22 +145,57 @@ function acolR1(h, o) {
     if (pe <= 9) return R('1N', `${sw}${p} HCP and no suit to show at the 1-level: 1NT (6-9).`, 'B.acol-1nt');
     return bal ? R(pe <= 12 ? '2N' : '3N', `${p} HCP balanced: ${pe <= 12 ? '2NT (10-12)' : '3NT (13-15)'}.`, pe <= 12 ? 'B.acol-2nt' : 'B.acol-3nt') : gap('The chart has no response for this hand.');
   }
-  const mx = Math.max(...pool.map(s => l[s])), s = pool.filter(u => l[u] === mx)[0];
+  const mx = Math.max(...pool.map(s => l[s])), tied = pool.filter(u => l[u] === mx);
+  let s = mx >= 5 ? tied[tied.length - 1] : tied[0], how = tied.length > 1 ? (mx >= 5 ? ' (5-5: the higher-ranking)' : ' (equal length: the lower)') : '';
+  // Never skip a four-card major over 1♣/1♦: bid it unless a longer minor and 10+ let you show both.
+  const majs = pool.filter(u => u >= 2 && u > o);
+  if (o < 2 && s < 2 && majs.length && !(l[s] > Math.max(...majs.map(u => l[u])) && pe >= 10)) {
+    const mm = Math.max(...majs.map(u => l[u])), mt = majs.filter(u => l[u] === mm);
+    s = mm >= 5 ? mt[mt.length - 1] : mt[0];
+    how = l[s] < mx ? ` (never skip a four-card major: with ${p} HCP you may only get one bid, so show the major)` : mt.length > 1 ? (mm >= 5 ? ' (5-5: the higher-ranking)' : ' (4-4 majors: hearts first)') : ' (never skip a four-card major)';
+  }
   const b = B(s > o ? 1 : 2, s);
-  return R(b, `${sw}${strong16 ? `${t}-card support and ${p} HCP (16+): bid a new suit first, then support. ` : `${p} HCP: `}new suit, longest first (equal length: the lower): ${plain(b)}. ${s > o ? '1-level needs 6+' : '2-level needs 9+'}; forcing.`, strong16 ? 'B.acol-new-suit-support' : 'B.acol-new-suit');
+  return R(b, `${sw}${strong16 ? `${t}-card support and ${p} HCP${pe < 16 ? ` with only ${k} losers` : ''} (worth 16+): bid a new suit first, then support. ` : `${p} HCP: `}new suit, ${plain(b)}${how}. ${s > o ? '1-level needs 6+' : '2-level needs 9+'}; forcing.`, strong16 ? 'B.acol-new-suit-support' : 'B.acol-new-suit');
 }
 
 // ---------- C and D: opener's rebid ----------
+// Between suits of equal length: a major before a minor; hearts before spades (up the line).
+const pr = s => s >= 2 ? 13 - s : s;
 function acolRebid(h, o, r) {
   const p = hcp(h), l = L(h), bal = isBal(h), rs = /^\d[CDHS]$/.test(r) ? ST.indexOf(r[1]) : -1, rl = +r[0];
-  // Raises of opener's suit.
+  const k = losers(h), lt = (pl, need) => `you have ${k} losers, partner about ${pl}: 24 − (${k} + ${pl}) = ${24 - k - pl} tricks`;
+  // Raises of opener's suit. With a fit, losers count as well as points (the chart's loser table:
+  // partner's 2-level raise is about 9 losers, 3-level 8, 4-level 7).
   if (rs === o) {
-    if (rl === 2) return p >= 19 ? R(B(4, o), `Partner's raise shows 6-9. With ${p} (19+), bid game.`, 'B.acol-after-raise') : p >= 16 ? R(B(3, o), `Partner's raise shows 6-9. With ${p} (16+), try for game with 3${SY[o]}.`, 'B.acol-after-raise') : R('P', `Partner's raise shows 6-9. With ${p}, pass.`, 'B.acol-after-raise');
-    if (rl === 3) return acolSlamTry(h, o, 10, "Partner's raise to 3 (10-12)") || (p >= 14 ? R(o >= 2 ? B(4, o) : '3N', `Partner's raise shows 10-12. With ${p} (14+), bid game.`, 'B.acol-after-raise') : R('P', `Partner's raise shows 10-12. With ${p}, pass.`, 'B.acol-after-raise'));
-    return acolSlamTry(h, o, 13, "Partner's raise to 4 (13-15)") || AP('Partner bid game.');
+    const semi = h.every(x => x.length >= 2);   // no singleton or void: no-trumps are possible
+    if (o >= 2) {
+      if (rl === 2) return acolSlamTry(h, o, 6, "Partner's raise to 2 (6-9)", 9) || (p >= 19 || k <= 5 ? R(B(4, o), `Partner's raise shows 6-9. ${p >= 19 ? `With ${p} (19+)` : `With a fit, shape counts: ${lt(9)}`}: bid game.`, 'B.acol-after-raise') : p >= 16 || k === 6 ? R(B(3, o), `Partner's raise shows 6-9. With ${p >= 16 ? `${p} (16+)` : `${k} losers`}, try for game with 3${SY[o]}. Partner bids game with 8-9 (or 8 losers or fewer).`, 'B.acol-after-raise') : R('P', `Partner's raise shows 6-9. With ${p} and ${k} losers, pass.`, 'B.acol-after-raise'));
+      if (rl === 3) return acolSlamTry(h, o, 10, "Partner's raise to 3 (10-12)", 8) || (p >= 14 || k <= 6 ? R(B(4, o), `Partner's raise shows 10-12. ${p >= 14 ? `With ${p} (14+)` : `With a fit, shape counts: ${lt(8)}`}: bid game.`, 'B.acol-after-raise') : R('P', `Partner's raise shows 10-12. With ${p} and ${k} losers, pass.`, 'B.acol-after-raise'));
+      return acolSlamTry(h, o, 13, "Partner's raise to 4 (13-15)", 7) || AP('Partner bid game.');
+    }
+    // A minor fit: look for 3NT first; five of a minor needs 11 tricks.
+    if (rl === 2) {
+      if (p >= 19 && semi) return R('3N', `Partner's raise shows 6-9. With ${p} and no short suit, bid 3NT: nine tricks are easier than eleven.`, 'B.acol-after-raise');
+      if (p >= 16 && semi) return R('2N', `Partner's raise shows 6-9. With ${p} and no short suit, invite 3NT with 2NT. Partner bids 3NT with 8-9, else 3${SY[o]}.`, 'B.acol-after-raise');
+      if (p >= 16 || k <= 6) return R(B(3, o), `Partner's raise shows 6-9. With ${p >= 16 ? `${p} (16+)` : `${k} losers`} and a short suit, try for game with 3${SY[o]}. Partner bids 3NT with 8-9.`, 'B.acol-after-raise');
+      return R('P', `Partner's raise shows 6-9. With ${p}, pass.`, 'B.acol-after-raise');
+    }
+    if (rl === 3) {
+      if (!semi && k <= 5) return R(B(5, o), `Partner's raise shows 10-12. With a short suit, no-trumps are risky, and ${lt(8)}: bid 5${SY[o]}.`, 'B.acol-after-raise');
+      return p >= 14 || k <= 6 ? R('3N', `Partner's raise shows 10-12. With ${p}${p < 14 ? ` and ${k} losers` : ' (14+)'}, bid 3NT: nine tricks are easier than eleven.`, 'B.acol-after-raise') : R('P', `Partner's raise shows 10-12. With ${p}, pass.`, 'B.acol-after-raise');
+    }
+    return AP('Partner bid game.');
   }
-  if (r === '2N') return p >= 14 || bal ? R('3N', `Partner's 2NT shows 10-12 balanced. With ${p}${bal ? ' balanced' : ' (14+)'}, bid 3NT.`, 'B.acol-after-2nt') : R('P', `Partner's 2NT shows 10-12. With 13 unbalanced, pass.`, 'B.acol-after-2nt');
-  if (r === '3N') return AP('Partner bid game.');
+  if (r === '2N') {
+    const two = [0, 1, 2, 3].filter(t => t !== o && l[t] >= 5).sort((a, b) => b - a)[0];
+    if (o >= 2 && l[o] >= 6) return R(B(4, o), `Partner's 2NT shows 10-12 balanced, so at least two ${SN[o]}: with your ${NUM[l[o]]}, that's an 8-card fit. Bid 4${SY[o]}.`, 'B.acol-after-2nt');
+    if (two !== undefined) return R(B(3, two), `Partner's 2NT shows 10-12 balanced. You have ${NUM[l[o]]} ${SN[o]} and ${NUM[l[two]]} ${SN[two]}: show the second suit, 3${SY[two]} (forcing). Partner picks the game.`, 'B.acol-after-2nt');
+    if (o >= 2 && l[o] === 5 && p >= 14) return R(B(3, o), `Partner's 2NT shows 10-12 balanced. With five ${SN[o]} and ${p}, bid 3${SY[o]} (forcing): partner bids 4${SY[o]} with three, else 3NT.`, 'B.acol-after-2nt');
+    if (p >= 14 || bal) return R('3N', `Partner's 2NT shows 10-12 balanced. With ${p}${bal ? ' balanced' : ' (14+)'}, bid 3NT.`, 'B.acol-after-2nt');
+    if (o < 2 && l[o] >= 6) return R(B(3, o), `Partner's 2NT shows 10-12. With 13 and ${NUM[l[o]]} ${SN[o]}, 3${SY[o]}, to play.`, 'B.acol-after-2nt');
+    return R('P', `Partner's 2NT shows 10-12. With 13 unbalanced, pass.`, 'B.acol-after-2nt');
+  }
+  if (r === '3N') return o >= 2 && l[o] >= 6 && !bal ? R(B(4, o), `Partner's 3NT shows 13-15 balanced, so at least two ${SN[o]}. With ${NUM[l[o]]} ${SN[o]} and an unbalanced hand, 4${SY[o]} is the safer game.`, 'B.acol-after-3nt') : AP('Partner bid game.');
   const rlv = r === '1N' ? 1 : rl;
   // C: balanced 15-19 rebids no-trumps (raise partner's major with four).
   if (bal && !(rs >= 2 && l[rs] >= 4)) {
@@ -143,29 +209,31 @@ function acolRebid(h, o, r) {
     if (sup) return R(rs >= 2 ? B(4, rs) : '3N', `${p} HCP (19-22) with four ${SN[rs]}: bid game.`, 'D.acol-jump-shift');
     const s2 = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 4).sort((a, b) => l[b] - l[a])[0];
     if (s2 === undefined) return R(l[o] >= 6 && o >= 2 ? B(4, o) : '3N', `${p} HCP (19-22): bid game.`, 'D.acol-jump-shift');
-    const js = B(cheapest(s2, r) + 1, s2);
+    const cl = cheapest(s2, r), js = B(cl + 1 <= 3 ? cl + 1 : cl, s2);
+    if (cl + 1 > 3) return R(js, `${p} HCP (19-22): show your second suit, ${plain(js)}. After a 2-level response a new suit at the 3-level is already game forcing, so don't jump past 3NT.`, 'D.acol-jump-shift');
     return R(js, `${p} HCP (19-22): jump shift, ${plain(js)}, game forcing.`, 'D.acol-jump-shift');
   }
   // A 6-5 or 5-5 hand shows its second five-card suit, even as a reverse: with 15-18, or with
   // 13-14 when the shape makes up the difference (5 losers or fewer). Rebid it next time to show five.
   const five = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 5).sort((a, b) => l[b] - l[a] || b - a)[0];
   if (five !== undefined && !sup && (p >= 15 || losers(h) <= 5)) {
-    const b = B(cheapest(five, r), five), rev = bv(b) > bv(bar);
-    return R(b, `${p} HCP${p < 15 ? ` but only ${losers(h)} losers` : ''}, ${NUM[l[o]]} ${SN[o]} and ${NUM[l[five]]} ${SN[five]}: show the second suit, ${plain(b)}${rev ? ' (a reverse, forcing)' : ''}. Bid ${SN[five]} again next time to show five.`, 'D.acol-strong');
+    const c0 = cheapest(five, r), rev = bv(B(c0, five)) > bv(bar), jmp = !rev && losers(h) <= 4 && c0 + 1 <= 3;
+    const b = B(jmp ? c0 + 1 : c0, five);
+    return R(b, `${p} HCP${p < 15 ? ` but only ${losers(h)} losers` : ''}, ${NUM[l[o]]} ${SN[o]} and ${NUM[l[five]]} ${SN[five]}: show the second suit, ${plain(b)}${rev ? ' (a reverse, forcing)' : jmp ? ` (a jump: with only ${losers(h)} losers this is worth game, so make it forcing)` : ''}. Bid ${SN[five]} again next time to show five.`, jmp ? 'D.acol-jump-shift' : 'D.acol-strong');
   }
   if (p >= 15) {
     if (sup) return R(B(rlv + 2, rs), `${p} HCP (15-18) with four ${SN[rs]}: double raise to ${plain(B(rlv + 2, rs))}.`, 'D.acol-strong');
     if (l[o] >= 6) return R(B(3, o), `${p} HCP (15-18) with ${NUM[l[o]]} ${SN[o]}: jump rebid, 3${SY[o]}.`, 'D.acol-strong');
-    const s2 = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 4).sort((a, b) => l[b] - l[a] || b - a)[0];
+    const s2 = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 4).sort((a, b) => l[b] - l[a] || pr(b) - pr(a))[0];
     if (s2 !== undefined) { const b = B(cheapest(s2, r), s2); return R(b, `${p} HCP (15-18): show your second suit, ${plain(b)}${bv(b) > bv(bar) ? ' (a reverse)' : ''}.`, 'D.acol-strong'); }
     return R(B(cheapest(o, r), o), `${p} HCP (15-18) with nothing else to show: rebid ${SN[o]}.`, 'D.acol-strong');
   }
-  if (sup) return R(B(rlv + 1, rs), `13-14 with four ${SN[rs]}: raise to ${plain(B(rlv + 1, rs))}.`, 'D.acol-weak');
   // Never skip a four-card major: after a 2-level response (9+) it can be shown at the 2-level
-  // with a minimum. It's not a reverse in strength.
-  const mj = rl === 2 && rs >= 0 ? [3, 2].find(s => s !== o && s !== rs && l[s] >= 4 && cheapest(s, r) === 2) : undefined;
-  if (mj !== undefined && bv(B(2, mj)) > bv(bar)) return R(B(2, mj), `13-14 with four ${SN[mj]}: never skip a four-card major. Partner's 2-level response shows 9+, so ${plain(B(2, mj))} doesn't promise extra strength here.`, 'D.acol-weak');
-  const s2 = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 4 && bv(B(cheapest(s, r), s)) < bv(bar)).sort((a, b) => l[b] - l[a])[0];
+  // with a minimum. It's not a reverse in strength. A major comes before raising a minor.
+  const mj = rl === 2 && rs >= 0 ? [2, 3].find(s => s !== o && s !== rs && l[s] >= 4 && cheapest(s, r) === 2) : undefined;
+  if (mj !== undefined && (bv(B(2, mj)) > bv(bar) || (sup && rs < 2))) return R(B(2, mj), `13-14 with four ${SN[mj]}: never skip a four-card major. Partner's 2-level response shows 9+, so ${plain(B(2, mj))} doesn't promise extra strength here.`, 'D.acol-weak');
+  if (sup) return R(B(rlv + 1, rs), `13-14 with four ${SN[rs]}: raise to ${plain(B(rlv + 1, rs))}.`, 'D.acol-weak');
+  const s2 = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 4 && bv(B(cheapest(s, r), s)) < bv(bar)).sort((a, b) => l[b] - l[a] || pr(b) - pr(a))[0];
   if (s2 !== undefined) { const b = B(cheapest(s2, r), s2); return R(b, `13-14: show your second suit below the barrier, ${plain(b)}.`, 'D.acol-weak'); }
   if (l[o] >= 5) return R(B(cheapest(o, r), o), `13-14 with ${NUM[l[o]]} ${SN[o]}: rebid them, ${plain(B(cheapest(o, r), o))}.`, 'D.acol-weak');
   if (r === '1N') return R('P', `13-14 and partner's 1NT (6-9): pass.`, 'D.acol-weak');
@@ -185,7 +253,9 @@ function acolResp2(h, seq) {
     if (p + lo >= 33) return R('6N', `${why} With ${p} that's 33+: 6NT.`, 'C.acol-after-nt');
     if (x === '3N') return six !== undefined ? R(B(4, six), `${why} With ${NUM[l[six]]} ${SN[six]}, 4${SY[six]}.`, 'C.acol-after-nt') : R('P', `${why} Pass.`, 'C.acol-after-nt');
     const need = x === '1N' ? 10 : x === '2N' && rl === 1 ? 8 : 10;
+    if (p >= need && six === undefined && rs >= 2 && l[rs] === 5) return R(B(3, rs), `${why} With ${p} and five ${SN[rs]}, bid 3${SY[rs]} (forcing): opener bids 4${SY[rs]} with three, else 3NT.`, 'C.acol-after-nt');
     if (p >= need) return R(six !== undefined ? B(4, six) : '3N', `${why} With ${p}, bid game.`, 'C.acol-after-nt');
+    if (six !== undefined && (p >= need - 1 || losers(h) <= 7)) return R(B(4, six), `${why} Opener has at least two ${SN[six]}, so your ${NUM[l[six]]} make an 8-card fit. With a fit, shape counts: you have ${losers(h)} losers, opener about 6: 24 − (${losers(h)} + 6) = ${18 - losers(h)} tricks. Bid 4${SY[six]}.`, 'C.acol-after-nt');
     if (x === '1N' && p === 9) return R('2N', `${why} With 9, invite with 2NT.`, 'C.acol-after-nt');
     if (x === '1N' && six !== undefined) return R(B(2, six), `${why} With ${p} and ${NUM[l[six]]} ${SN[six]}, sign off in 2${SY[six]}.`, 'C.acol-after-nt');
     return R('P', `${why} With ${p}, pass.`, 'C.acol-after-nt');
@@ -193,9 +263,11 @@ function acolResp2(h, seq) {
   if (gameBid(x)) return AP('Opener bid game.');
   const bar = B(2, o), game = s => s >= 2 ? B(4, s) : '3N';
   // Opener raised responder's suit.
+  if (xs === rs && rs < 2 && xl < rl + 2) return p >= 12 ? R('3N', `Opener's raise shows 13-14 and four ${SN[rs]}. With ${p} (12+), try 3NT: nine tricks are easier than eleven.`, 'D.acol-after') : R('P', `Opener's raise shows 13-14. With ${p}, pass.`, 'D.acol-after');
   if (xs === rs) {
     const dbl = xl >= rl + 2;
-    if (dbl) return p >= 10 ? R(game(rs), `Opener's double raise shows 15-18. With ${p} (10+), bid game.`, 'D.acol-after') : R('P', `Opener's double raise shows 15-18. With ${p}, pass.`, 'D.acol-after');
+    const gm = rs >= 2 || bv('3N') > bv(x) ? game(rs) : B(5, rs);
+    if (dbl) return p >= 10 ? R(gm, `Opener's double raise shows 15-18. With ${p} (10+), bid game: ${plain(gm)}.`, 'D.acol-after') : R('P', `Opener's double raise shows 15-18. With ${p}, pass.`, 'D.acol-after');
     return p >= 13 ? R(game(rs), `Opener's raise shows 13-14. With ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(xl + 1, rs), `Opener's raise shows 13-14. With ${p} (11-12), invite.`, 'D.acol-after') : R('P', `Opener's raise shows 13-14. With ${p}, pass.`, 'D.acol-after');
   }
   const js = xs >= 0 && xs !== o && xs !== rs && xl === cheapest(xs, r) + 1;
@@ -208,7 +280,12 @@ function acolResp2(h, seq) {
     return R('2N', `Opener's ${plain(x)} shows four ${SN[xs]} and 13+. No fit; with ${p} (9-11), 2NT invites.`, 'D.acol-after');
   }
   if (js) {
+    const fitS = l[xs] >= 4 ? xs : l[o] >= 3 ? o : -1;
+    if (fitS >= 0) { const st = acolSlamTry(h, fitS, 19, "Opener's jump shift (19-22)", 4); if (st) return st; }
+    const own = rs >= 2 && l[rs] >= 6 ? rs : [3, 2].find(u => u !== o && u !== xs && l[u] >= 6);
+    if (fitS < 0 && own !== undefined && bv(B(cheapest(own, x), own)) < bv('4C')) { const b = B(cheapest(own, x), own); return R(b, `Opener's jump shift is game forcing. Show your ${NUM[l[own]]} ${SN[own]}: ${plain(b)}. Opener raises with two or more, otherwise bids 3NT.`, 'D.acol-after'); }
     if (l[xs] >= 4 && xs >= 2) return R(B(4, xs), `Opener's jump shift is game forcing (19-22). With ${l[xs]} ${SN[xs]}, support: 4${SY[xs]}.`, 'D.acol-after');
+    if (l[xs] >= 4 && h.some(t => t.length <= 1) && !(l[o] >= 3 && o >= 2)) return R(B(5, xs), `Opener's jump shift is game forcing (19-22). With ${l[xs]} ${SN[xs]} and a short suit, 5${SY[xs]}.`, 'D.acol-after');
     if (l[o] >= 3 && o >= 2) return R(B(4, o), `Opener's jump shift is game forcing. With ${l[o]} ${SN[o]}, 4${SY[o]}.`, 'D.acol-after');
     return R(bv('3N') > bv(x) ? '3N' : (o >= 2 ? B(4, o) : '3N'), `Opener's jump shift is game forcing: never pass. Bid game.`, 'D.acol-after');
   }
@@ -220,58 +297,126 @@ function acolResp2(h, seq) {
     return R(bv('2N') > bv(x) ? '2N' : '3N', `Opener's reverse is forcing: don't pass. With ${p}, ${bv('2N') > bv(x) ? '2NT' : '3NT'}.`, 'D.acol-after');
   }
   if (xs === o && xl === 3 && x === B(cheapest(o, r) + 1, o)) {   // jump rebid: 15-18, 6+ cards
+    // Your own long major is still worth showing: 3M is forcing, opener raises with two.
+    if (rs >= 2 && l[rs] >= 6 && l[o] <= 2 && (p >= 8 || losers(h) <= 6) && bv(B(3, rs)) > bv(x)) return R(B(3, rs), `Opener's jump rebid shows 15-18 with six ${SN[o]}. With ${NUM[l[rs]]} ${SN[rs]} of your own, bid 3${SY[rs]} (forcing): opener bids 4${SY[rs]} with two, else 3NT.`, 'D.acol-after');
     return p >= 10 ? R(l[o] >= 2 && o >= 2 ? B(4, o) : '3N', `Opener's jump rebid shows 15-18 with six. With ${p} (10+), bid game.`, 'D.acol-after') : R('P', `Opener's jump rebid shows 15-18. With ${p} (6-9), pass.`, 'D.acol-after');
   }
+  // Never skip a four-card major: an unbid major at the 2-level with 10+ (forcing one round).
+  const um = [2, 3].find(u => u !== o && u !== rs && u !== xs && l[u] >= 4 && cheapest(u, x) === 2);
+  if (um !== undefined && p >= 10 && xs >= 0 && xs < 2 && !(l[xs] >= 4 && xs !== o) && bv(B(2, um)) > bv(x)) return R(B(2, um), `Opener's ${plain(x)} doesn't deny four ${SN[um]}. Never skip a four-card major: with ${p}, bid 2${SY[um]} (forcing one round).`, 'D.acol-after');
+  // Your own six-card suit, and no fit for what opener has shown: rebid it.
+  const ownSix = rs >= 0 && l[rs] >= 6 && l[o] <= (rs >= 2 ? 3 : 2) && (xs === o || (xs >= 0 && l[xs] <= 3));
+  if (ownSix) {
+    const lv = cheapest(rs, x), b = p >= 13 ? (rs >= 2 ? B(4, rs) : '3N') : p >= 11 && (rs >= 2 || lv + 1 <= 3) ? B(lv + 1, rs) : B(lv, rs);
+    const jumped = /^\d/.test(b) && +b[0] > lv;
+    return R(b, `No fit for opener (${cardsOf(l[xs], xs)}${xs !== o ? `, ${cardsOf(l[o], o)}` : ''}), and you have ${NUM[l[rs]]} ${SN[rs]}: ${p >= 13 ? `with ${p} (13+), bid game` : jumped ? `with ${p} (11-12), jump to invite` : `rebid them, to play`}: ${plain(b)}.`, 'D.acol-after');
+  }
+  // A long unbid suit of your own (6+), no fit and a weak hand: show it at the 2-level, to play.
+  const un6 = [0, 1, 2, 3].find(u => u !== o && u !== rs && u !== xs && l[u] >= 6 && cheapest(u, x) === 2);
+  if (un6 !== undefined && r === '1N' && p <= 10 && xs >= 0 && l[xs] <= 2 && l[o] <= 2) return R(B(2, un6), `No fit for opener (${cardsOf(l[o], o)}, ${cardsOf(l[xs], xs)}), but ${NUM[l[un6]]} ${SN[un6]}: bid 2${SY[un6]}, to play.`, 'D.acol-after');
   if (xs === o) {   // simple rebid of a 5+ suit: 13-14
     if (l[o] >= 3) return p >= 13 ? R(game(o), `Opener rebids ${SN[o]} (13-14). With ${l[o]} of them and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(3, o), `Opener rebids ${SN[o]}. With ${l[o]} of them and ${p} (11-12), invite: 3${SY[o]}.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]} (13-14). With ${p}, pass.`, 'D.acol-after');
     return p >= 13 ? R('3N', `Opener rebids ${SN[o]}. With ${p} (13+), 3NT.`, 'D.acol-after') : p >= 11 ? R('2N', `Opener rebids ${SN[o]}. With ${p} (11-12), 2NT invites.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]}. With ${p}, pass.`, 'D.acol-after');
   }
   if (xs >= 0 && xs !== rs) {   // new suit below the barrier: 13-14
-    if (l[xs] >= 4) return p >= 13 ? R(game(xs), `Opener's ${plain(x)} shows ${SN[xs]}. With four and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(xl + 1, xs), `Opener's ${plain(x)}: with four ${SN[xs]} and ${p} (11-12), invite.`, 'D.acol-after') : R('P', `Opener's ${plain(x)}: with four ${SN[xs]} and ${p}, pass.`, 'D.acol-after');
-    if (p >= 13) return R('3N', `Opener's ${plain(x)} shows 13-14. With ${p} (13+), 3NT.`, 'D.acol-after');
-    if (p >= 11) return R('2N', `Opener's ${plain(x)} shows 13-14. With ${p} (11-12), 2NT invites.`, 'D.acol-after');
-    if (l[o] >= l[xs] && l[o] >= 2) return R(B(cheapest(o, x), o), `Opener's ${plain(x)} shows 13-14. With ${p}, give preference: ${plain(B(cheapest(o, x), o))}.`, 'D.acol-after');
-    return R('P', `Opener's ${plain(x)} shows 13-14. With ${p}, pass.`, 'D.acol-after');
+    const nw = `Opener's ${plain(x)} is a new suit, not a reverse (13-18, usually a minimum)`;
+    if (l[xs] >= 4) return p >= 13 ? R(game(xs), `${nw}. With four ${SN[xs]} and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(xl + 1, xs), `${nw}. With four ${SN[xs]} and ${p} (11-12), invite.`, 'D.acol-after') : R('P', `${nw}. With four ${SN[xs]} and ${p}, pass.`, 'D.acol-after');
+    if (p >= 13) return R('3N', `${nw}. With ${p} (13+), 3NT.`, 'D.acol-after');
+    if (p >= 11) return R('2N', `${nw}. With ${p} (11-12), 2NT invites.`, 'D.acol-after');
+    if (l[o] >= l[xs] && l[o] >= 2) return R(B(cheapest(o, x), o), `${nw}. With ${p}, give preference: ${plain(B(cheapest(o, x), o))}.`, 'D.acol-after');
+    return R('P', `${nw}. With ${p}, pass.`, 'D.acol-after');
   }
   return gap('The chart has no call here.');
 }
 // Opener's third call: answer invitations; otherwise pass.
 function acolOpener3(h, seq) {
-  const p = hcp(h), l = L(h), x = seq[2], a = seq[3];
+  const p = hcp(h), l = L(h), x = seq[2], a = seq[3], r = seq[1];
   if (gameBid(a) || a === '6N' || a === 'P') return AP('Partner chose the contract.');
   const as = /^\d[CDHS]$/.test(a) ? ST.indexOf(a[1]) : -1;
+  const o = ST.indexOf(seq[0][1]), xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, rs = /^\d[CDHS]$/.test(r) ? ST.indexOf(r[1]) : -1, ls = losers(h);
+  // Partner's 3M after our no-trump rebid shows five: raise with three.
+  if (/N$/.test(x) && as === rs && as >= 2 && +a[0] === 3) return l[as] >= 3 ? R(B(4, as), `Partner's ${plain(a)} shows five ${SN[as]} and game values. With ${l[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows five ${SN[as]}. With only ${l[as]}, 3NT.`, 'D.acol-opener-3');
+  // Partner's own major after our jump rebid: forcing, raise with two.
+  if (xs === o && +x[0] === 3 && as === rs && as >= 2 && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows six ${SN[as]} and is forcing. With ${l[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows six ${SN[as]}. With a singleton, 3NT.`, 'D.acol-opener-3');
+  // After our jump shift (game forcing), partner shows a long major: raise with two.
+  if (xs >= 0 && xs !== o && +x[0] === cheapest(xs, r) + 1 && as >= 2 && as !== xs && as !== o && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows a long suit. With ${l[as]} ${SN[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows a long suit. With a singleton, 3NT.`, 'D.acol-opener-3');
+  // Partner's new major at the 2-level (forcing one round).
+  if (as >= 2 && as !== o && as !== xs && as !== rs && +a[0] === 2 && r !== '1N') {
+    if (l[as] >= 4) return p >= 15 ? R(B(4, as), `Partner's ${plain(a)} shows four ${SN[as]}, 10+. You have four too and ${p}: 4${SY[as]}.`, 'D.acol-opener-3') : R(B(3, as), `Partner's ${plain(a)} shows four ${SN[as]}, 10+. You have four too, minimum: 3${SY[as]}.`, 'D.acol-opener-3');
+    if (rs >= 2 && l[rs] >= 3 && bv(B(cheapest(rs, a), rs)) > bv(a)) { const b = B(cheapest(rs, a), rs); return R(b, `No four ${SN[as]}, but three ${SN[rs]}: show the support, ${plain(b)}.`, 'D.acol-opener-3'); }
+    return p >= 15 ? R('3N', `No fit for ${SN[as]}. With ${p}, 3NT.`, 'D.acol-opener-3') : R('2N', `No fit for ${SN[as]}. With a minimum, 2NT.`, 'D.acol-opener-3');
+  }
   // After our reverse, partner's simple preference shows 6-9 and a fit: with a two-suiter of
   // 4 losers or fewer, the shape is worth game.
-  const o = ST.indexOf(seq[0][1]), xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, ls = losers(h);
   if (xs >= 0 && xs !== o && bv(x) > bv(B(2, o)) && (as === o || as === xs) && +a[0] === 3 && ls <= 4) {
     const g = as >= 2 ? B(4, as) : B(5, as);
     return R(g, `Partner's ${plain(a)} shows 6-9 and a ${SN[as]} fit. Your ${NUM[l[o]]}-${NUM[l[xs]]} shape has only ${ls} losers, so bid game: ${plain(g)}.`, 'D.acol-opener-3');
   }
+  // Partner rebid their own suit without jumping: a sign-off.
+  if (as === rs && as >= 0 && +a[0] === cheapest(rs, x) && !/N$/.test(x)) return R('P', `Partner's ${plain(a)} rebids their own suit without a jump: a sign-off. Pass.`, 'D.acol-opener-3');
+  // After our reverse, partner's simple preference (6-9): game with 17+ (or 5 losers), otherwise stop.
+  if (xs >= 0 && xs !== o && xs !== rs && bv(x) > bv(B(2, o)) && +x[0] === cheapest(xs, r) && (as === o || as === xs) && +a[0] === cheapest(as, x)) {
+    const g = as >= 2 ? B(4, as) : '3N';
+    return p >= 17 || ls <= 5 ? R(g, `Partner's ${plain(a)} is preference after your reverse (6-9). With ${p >= 17 ? `${p} (17+)` : `${ls} losers`}, bid game: ${plain(g)}.`, 'D.acol-opener-3') : R('P', `Partner's ${plain(a)} is preference after your reverse (6-9). With ${p}, stop here: pass.`, 'D.acol-opener-3');
+  }
   if (a === '2N') { const need = x === '1N' ? 16 : 14; return p >= need ? R('3N', `Partner invites with 2NT. With ${p}, accept: 3NT.`, 'D.acol-opener-3') : R('P', `Partner invites with 2NT. With ${p}, pass.`, 'D.acol-opener-3'); }
-  if (as >= 0 && +a[0] === 3) return p >= 14 || (as >= 2 && l[as] >= 4 && p >= 13) ? R(as >= 2 ? B(4, as) : '3N', `Partner's ${plain(a)} invites. With ${p}, accept.`, 'D.acol-opener-3') : R('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`, 'D.acol-opener-3');
+  if (as >= 0 && +a[0] === 3) {
+    const ok = p >= 14 || (as >= 2 && l[as] >= 4 && p >= 13) || (as >= 2 && l[as] >= 3 && ls <= 6);
+    const g = as === rs && as >= 2 && l[as] < 2 ? '3N' : as >= 2 ? B(4, as) : '3N';
+    return ok ? R(g, `Partner's ${plain(a)} invites. With ${p}${p < 14 ? ` and ${ls} losers` : ''}, accept: ${plain(g)}.`, 'D.acol-opener-3') : R('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`, 'D.acol-opener-3');
+  }
   return R('P', `Partner's ${plain(a)} is a sign-off or preference: pass.`, 'D.acol-opener-3');
+}
+// Responder's third call: after showing an unbid major at the 2-level.
+function acolResp3(h, seq) {
+  const p = hcp(h), l = L(h), o = ST.indexOf(seq[0][1]), r = seq[1], y = seq[3], z = seq[4];
+  const rs = /^\d[CDHS]$/.test(r) ? ST.indexOf(r[1]) : -1, ys = /^2[HS]$/.test(y) ? ST.indexOf(y[1]) : -1;
+  if (ys < 0 || rs < 0 || gameBid(z) || z === 'P') return AP('The contract is set.');
+  if (z === B(3, ys)) return p >= 12 ? R(B(4, ys), `Opener raised your ${SN[ys]} (13-14). With ${p} (12+), 4${SY[ys]}.`, 'D.acol-after') : R('P', `Opener raised your ${SN[ys]} with a minimum. With ${p}, pass.`, 'D.acol-after');
+  if (z[1] === r[1]) return p >= 12 ? R(l[rs] >= 5 ? B(4, rs) : '3N', `Opener shows three ${SN[rs]}. With ${p} (12+), ${l[rs] >= 5 ? `4${SY[rs]}` : '3NT'}.`, 'D.acol-after') : R('P', `Opener shows three ${SN[rs]}. With ${p}, pass.`, 'D.acol-after');
+  if (z === '2N') return p >= 12 ? R('3N', `Opener has no fit and a minimum. With ${p} (12+), 3NT.`, 'D.acol-after') : R('P', `Opener has no fit and a minimum. With ${p}, pass.`, 'D.acol-after');
+  return AP('The contract is set.');
 }
 function acolAfter1Suit(seq, h) {
   const n = seq.length, o = ST.indexOf(seq[0][1]), r = seq[1];
   // Trumps for Blackwood: a suit both partners have bid before 4NT.
   const pre = seq.slice(0, seq.indexOf('4N') < 0 ? seq.length : seq.indexOf('4N'));
   const T = [3, 2, 1, 0].find(s => pre.some((c, i) => i % 2 === 0 && c[1] === ST[s] && /^\d/.test(c)) && pre.some((c, i) => i % 2 === 1 && c[1] === ST[s] && /^\d/.test(c)));
-  if (seq.includes('4N')) return T !== undefined ? acolBlackwood(seq, h, T) : AP('');
+  // The asker knows the fit: a responder who bid a new suit planning to support opener plays in opener's suit.
+  const i4 = seq.indexOf('4N'), mineAsk = i4 >= 0 && (seq.length - i4) % 2 === 0;   // I asked (my turn to decide)
+  // Otherwise the suit partner bid in which I hold most cards (3+).
+  const pSuits = pre.filter((c, j) => j % 2 !== i4 % 2 && /^\d[CDHS]$/.test(c)).map(c => ST.indexOf(c[1]));
+  const pBest = pSuits.filter(u => L(h)[u] >= 3).sort((a, b) => L(h)[b] - L(h)[a])[0];
+  const Tm = mineAsk && i4 % 2 === 1 && acolR1(h, o).id === 'B.acol-new-suit-support' ? o : T !== undefined ? T : mineAsk ? pBest : T;
+  // Answering (aces or kings) doesn't depend on the trump suit; only the asker needs it.
+  if (seq.includes('4N')) return !mineAsk ? acolBlackwood(seq, h, Tm !== undefined ? Tm : o) : Tm !== undefined ? acolBlackwood(seq, h, Tm) : AP('');
   if (n === 1) return acolR1(h, o);
   if (n === 2) return acolRebid(h, o, r);
   if (n === 3) {
     const x = seq[2], rs = /^\d[CDHS]$/.test(r) ? ST.indexOf(r[1]) : -1;
     // Raised by opener after responder's 2M raise / 3M raise.
     if (rs === o) {
-      if (x === B(3, o) && +r[0] === 2) return hcp(h) >= 8 ? R(B(4, o), `Opener's 3${SY[o]} is a game try (16+). With ${hcp(h)} (8-9), accept: 4${SY[o]}.`, 'B.acol-after-raise') : R('P', `Opener's game try: with ${hcp(h)} (6-7), pass.`, 'B.acol-after-raise');
+      const k = losers(h), g = o >= 2 ? B(4, o) : '3N';
+      if (x === B(3, o) && +r[0] === 2) return hcp(h) >= 8 || (o >= 2 && k <= 8) ? R(g, `Opener's 3${SY[o]} is a game try (16+). With ${hcp(h) >= 8 ? `${hcp(h)} (8-9)` : `${k} losers`}, accept: ${plain(g)}${o < 2 ? ' (nine tricks rather than eleven)' : ''}.`, 'B.acol-after-raise') : R('P', `Opener's game try: with ${hcp(h)} (6-7) and ${k} losers, pass.`, 'B.acol-after-raise');
+      if (x === '2N' && +r[0] === 2) return hcp(h) >= 8 ? R('3N', `Opener's 2NT invites 3NT (16-18 with no short suit). With ${hcp(h)} (8-9), accept: 3NT.`, 'B.acol-after-raise') : R(B(3, o), `Opener's 2NT invites 3NT. With ${hcp(h)} (6-7), sign off in 3${SY[o]}.`, 'B.acol-after-raise');
       return AP('Opener chose the contract.');
     }
     // 16+ with support: new suit, then support.
-    if (acolR1(h, o).id === 'B.acol-new-suit-support') return acolSlamTry(h, o, 13, "Opener's opening (13+)") || R(o >= 2 ? B(4, o) : '3N', `You bid a new suit first with ${L(h)[o]}-card support and 16+: now support, game in ${o >= 2 ? SN[o] : 'no-trumps'}.`, 'B.acol-new-suit-support');
+    const xs0 = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, strongX = x === '3N' || (x === '2N' && /^2/.test(r)) || (xs0 >= 0 && (+x[0] > cheapest(xs0, r) || (xs0 !== o && bv(x) > bv(B(2, o)))));
+    if (acolR1(h, o).id === 'B.acol-new-suit-support') return acolSlamTry(h, o, strongX ? 15 : 13, strongX ? "Opener's strong rebid (15+)" : "Opener's opening (13+)", strongX ? 6 : 7) || R(o >= 2 ? B(4, o) : '3N', `You bid a new suit first with ${L(h)[o]}-card support and 16+: now support, game in ${o >= 2 ? SN[o] : 'no-trumps'}.`, 'B.acol-new-suit-support');
+    // After our 2NT (10-12 balanced): opener's 3-level suit bid.
+    if (r === '2N' && /^3[CDHS]$/.test(x)) {
+      const xs = ST.indexOf(x[1]), l = L(h);
+      if (xs === o && o < 2) return R('P', `Opener's 3${SY[o]} is a sign-off: pass.`, 'B.acol-after-2nt');
+      if (o >= 2 && l[o] >= 3) return R(B(4, o), `Opener shows five ${SN[o]}${xs !== o ? ` and a second suit` : ''}. With ${l[o]} ${SN[o]}, 4${SY[o]}.`, 'B.acol-after-2nt');
+      if (xs !== o && xs >= 2 && l[xs] >= 4) return R(B(4, xs), `Opener shows a second suit, ${SN[xs]}. With four of them, 4${SY[xs]}.`, 'B.acol-after-2nt');
+      return R('3N', `Opener's ${plain(x)} looks for a fit. With no fit, 3NT.`, 'B.acol-after-2nt');
+    }
     if (r === '2N' || r === '3N' || x === 'P' || gameBid(x)) return AP('Opener chose the contract.');
     return acolResp2(h, seq);
   }
   if (n === 4) return acolOpener3(h, seq);
+  if (n === 5) return acolResp3(h, seq);
   return AP('The contract is set.');
 }
 
@@ -313,8 +458,11 @@ function acolAfter2C(seq, h) {
       if (p <= 3) return R('2N', `Partner shows five ${SN[s]}. With 0-3, 2NT.`, 'E.acol-2c-continue');
       return l[s] >= 3 ? R(B(4, s), `Partner shows five ${SN[s]}. With ${l[s]} and 4+ HCP, 4${SY[s]}.`, 'E.acol-2c-continue') : R('3N', `Partner shows five ${SN[s]}. With only ${l[s]}, 3NT.`, 'E.acol-2c-continue');
     }
+    const M = [3, 2].filter(u => l[u] >= 5).sort((a, b) => l[b] - l[a])[0];
+    if (M !== undefined) return R(B(3, M), `Partner shows a long minor. You have ${NUM[l[M]]} ${SN[M]}: show them, 3${SY[M]}. Partner raises with three, otherwise bids 3NT.`, 'E.acol-2c-continue');
     return R('3N', `Partner shows a long minor. 3NT.`, 'E.acol-2c-continue');
   }
+  if (n === 4 && /^3[CD]$/.test(x) && /^3[HS]$/.test(seq[3])) { const M = ST.indexOf(seq[3][1]); return l[M] >= 3 ? R(B(4, M), `Partner shows five or more ${SN[M]}. With ${l[M]}, 4${SY[M]}.`, 'E.acol-2c-continue') : R('3N', `Partner shows ${SN[M]}, but you have only ${l[M]}: 3NT.`, 'E.acol-2c-continue'); }
   if (n === 4 && seq[3] === '2N') { const s = ST.indexOf(x[1]); return l[s] >= 6 ? R(B(4, s), `Partner is weak (0-3). With six ${SN[s]}, 4${SY[s]}.`, 'E.acol-2c-continue') : R('3N', `Partner is weak (0-3): 3NT.`, 'E.acol-2c-continue'); }
   return AP('Partner chose the contract.');
 }
@@ -323,10 +471,13 @@ function acolAfter2C(seq, h) {
 // Once a fit is found and the two hands hold 31+, ask for aces with 4NT (5♣ 0/4, 5♦ 1, 5♥ 2,
 // 5♠ 3); missing two: 5 of the suit; missing one: 6; all four: 5NT asks kings (6♣ 0/4 …).
 const aces = h => [0, 1, 2, 3].filter(s => has(h, s, 14)).length;
-function acolSlamTry(h, T, minP, desc) {
-  const p = hcp(h);
-  if (p + minP < 31) return null;
-  return R('4N', `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you and a ${SN[T]} fit: ask for aces with 4NT (Blackwood).`, 'G.acol-blackwood');
+// Slam: 31+ points between you, or (with a fit) the loser count says 12 tricks: 24 − (yours + partner's) ≥ 12.
+// pl: partner's losers, estimated from their bids.
+function acolSlamTry(h, T, minP, desc, pl) {
+  const p = hcp(h), k = losers(h);
+  if (p + minP >= 31) return R('4N', `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you and a ${SN[T]} fit: ask for aces with 4NT (Blackwood).`, 'G.acol-blackwood');
+  if (pl && 24 - k - pl >= 12 && p + minP >= 25) return R('4N', `${desc}: a ${SN[T]} fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${pl}. 24 − (${k} + ${pl}) = ${24 - k - pl} tricks, enough for slam if you're not missing two aces: ask with 4NT (Blackwood).`, 'G.acol-blackwood');
+  return null;
 }
 function acolBlackwood(seq, h, T) {
   const i4 = seq.indexOf('4N'), k = seq.length - 1 - i4, a = aces(h);
@@ -352,6 +503,22 @@ function acolBlackwood(seq, h, T) {
   return AP('The contract is set.');
 }
 
+// Partner's weak two, when you have a long suit of your own and little support: the chart's
+// 2NT ask is for hands that may play in partner's suit. Returns null to use the chart's responses.
+function acolWeakTwoResp(h, w) {
+  const p = hcp(h), l = L(h), k = losers(h), gd = s => [14, 13, 12].filter(r => has(h, s, r)).length >= 2;
+  // Four trumps and 14+: the fit is there, so bid game rather than ask.
+  if (l[w] >= 4 && p >= 14) { const g = w >= 2 ? B(4, w) : B(5, w); return R(g, `Partner's weak two shows six ${SN[w]}; with your ${NUM[l[w]]} that's a ${6 + l[w]}-card fit, and ${p} HCP: bid game, ${plain(g)}. No need to ask.`, 'E.acol-weak-two-own-suit'); }
+  const own = [3, 2].find(s => s !== w && l[s] >= 6 && gd(s));
+  if (own !== undefined && l[w] <= 2 && (p >= 14 || k <= 5)) return R(B(4, own), `Partner's weak two shows 5-10 and six ${SN[w]}. You have ${l[w] ? `only ${cardsOf(l[w], w)}` : `a void in ${SN[w]}`} but ${NUM[l[own]]} good ${SN[own]} of your own and ${p >= 14 ? `${p} HCP` : `${k} losers`}: bid game in your suit, 4${SY[own]}.`, 'E.acol-weak-two-own-suit');
+  if (l[w] === 0 && p >= 14) {
+    const m = [1, 0].find(s => s !== w && l[s] >= 6 && gd(s));
+    if (m !== undefined && p >= 16) return R('3N', `Partner's weak two shows six ${SN[w]}, and you have none: no point asking. With ${NUM[l[m]]} good ${SN[m]} and ${p}, 3NT.`, 'E.acol-weak-two-own-suit');
+    return R('P', `Partner's weak two shows six ${SN[w]}, and you have none: a misfit. Don't ask with 2NT; pass and go quietly.`, 'E.acol-weak-two-own-suit');
+  }
+  return null;
+}
+
 // ---------- The uncontested dispatcher ----------
 function acolSysCall(seq, h) {
   const n = seq.length;
@@ -366,7 +533,8 @@ function acolSysCall(seq, h) {
   if (o === '1N') return acolAfter1NT(seq, h);
   if (o === '2N') return acolAfter2NT(seq, h, 3);
   if (o === '2C') return acolAfter2C(seq, h);
-  if (/^2[DHS]$/.test(o)) return afterWeakTwo(seq, h);
+  if (/^2[DHS]$/.test(o) && n === 2 && (gameBid(seq[1]) || seq[1] === '3N')) return AP('Partner chose the contract.');
+  if (/^2[DHS]$/.test(o)) return (n === 1 && acolWeakTwoResp(h, ST.indexOf(o[1]))) || afterWeakTwo(seq, h);
   if (/^1[CDHS]$/.test(o)) return acolAfter1Suit(seq, h);
   if (/^[34][CDHS]$/.test(o)) return afterPreempt(seq, h);
   return gap('The chart has no auctions after this opening.');
@@ -396,10 +564,15 @@ function acolVs1NT(h) {
 }
 function acolAdvance(h, x) {
   const p = hcp(h), l = L(h), un = [0, 1, 2, 3].filter(s => s !== x);
-  const mx = Math.max(...un.map(s => l[s])), s = un.filter(u => l[u] === mx).sort((a, b) => b - a)[0];
-  if (p >= 12) { const g = s >= 2 ? B(4, s) : stop(h, x) ? '3N' : B(5, s); return R(g, `Partner's double asks for your longest suit. With ${p} (12+), bid game: ${plain(g)}.`, 'F.acol-advance'); }
+  const mx = Math.max(...un.map(s => l[s]));
+  let s = un.filter(u => l[u] === mx).sort((a, b) => b - a)[0];
+  // A four-card (or longer) major comes before a longer minor: the double promised the majors.
+  const mj = un.filter(u => u >= 2 && l[u] >= 4).sort((a, b) => l[b] - l[a] || b - a)[0];
+  if (s < 2 && mj !== undefined) s = mj;
+  const what = l[s] < mx ? `your best suit, and a major comes first: ${NUM[l[s]]} ${SN[s]}` : `your longest suit, ${SN[s]}`;
+  if (p >= 12) { const g = s >= 2 ? B(4, s) : stop(h, x) ? '3N' : B(5, s); return R(g, `Partner's double asks for ${what}. With ${p} (12+), bid game: ${plain(g)}.`, 'F.acol-advance'); }
   const b = B(cheapest(s, B(1, x)) + (p >= 9 ? 1 : 0), s);
-  return R(b, `Partner's double asks for your longest suit, ${SN[s]}. With ${p} (${p >= 9 ? '9-11: jump' : '0-8: cheapest'}), ${plain(b)}. Don't pass.`, 'F.acol-advance');
+  return R(b, `Partner's double asks for ${what}. With ${p} (${p >= 9 ? '9-11: jump' : '0-8: cheapest'}), ${plain(b)}. Don't pass.`, 'F.acol-advance');
 }
 function acolAfterOvercall(h, ov) {
   const p = hcp(h), l = L(h), y = ST.indexOf(ov[1]), lv = +ov[0], t = l[y], jump = false;
@@ -418,6 +591,17 @@ function acolIgnore(h, o, last) {
   if (c.bid === 'P') return R('P', `${c.why} (The interference changes nothing.)`, 'F.acol-ignore');
   if (last === 'X') return R(c.bid, `RHO's double changes nothing: ${c.why}`, 'F.acol-ignore');
   const y = ST.indexOf(last[1]);
+  // The suit you would have bid is the one they overcalled: you can't bid it naturally now. Your
+  // length there is a stopper, so show the strength in no-trumps (or pass).
+  if (/^\d[CDHS]$/.test(c.bid) && ST.indexOf(c.bid[1]) === y) {
+    const p = hcp(h), l = L(h), nt = p >= 13 ? '3N' : p >= 10 ? '2N' : '1N';
+    // Another suit to show instead (5+ cards, or 4 at the 1-level).
+    const alt = [3, 2, 1, 0].filter(u => u !== y && u !== o && (l[u] >= 5 || (l[u] >= 4 && cheapest(u, last) === 1))).sort((a, b) => l[b] - l[a] || b - a)
+      .find(u => cheapest(u, last) === 1 || p >= 9 || (l[u] >= 5 && losers(h) <= 7));
+    if (alt !== undefined) { const b = B(cheapest(alt, last), alt); return R(b, `You would have bid ${plain(c.bid)}, but that's the suit RHO overcalled. Show your other suit instead: ${plain(b)}${b[0] === '2' && p < 9 ? ` (the 2-level needs 9+, but your shape, ${losers(h)} losers, makes up for it)` : ''}.`, 'F.acol-ignore'); }
+    if (!stop(h, y) || bv(nt) <= bv(last)) return R('P', `You would have bid ${plain(c.bid)}, but that's the suit RHO overcalled. Pass for now: your ${SN[y]} may defend well.`, 'F.acol-ignore');
+    return R(nt, `You would have bid ${plain(c.bid)}, but RHO has bid ${SN[y]}. Your ${SN[y]} make a good stopper, so show your ${p} HCP in no-trumps: ${plain(nt)} (${nt === '1N' ? '6-9' : nt === '2N' ? '10-12' : '13-15'}).`, 'F.acol-ignore');
+  }
   if (c.bid[1] === 'N') {
     if (!stop(h, y)) return R('P', `You would have bid ${plain(c.bid)}, but no-trumps needs a good ${SN[y]} stopper: pass.`, 'F.acol-ignore');
     const b = bv(c.bid) > bv(last) ? c.bid : (+c.bid[0] + 1) + 'N';
@@ -425,7 +609,9 @@ function acolIgnore(h, o, last) {
   }
   if (bv(c.bid) > bv(last)) return R(c.bid, `Ignore RHO's ${plain(last)}: ${c.why}`, 'F.acol-ignore');
   const s = ST.indexOf(c.bid[1]), b = B(cheapest(s, last), s);
-  if (+b[0] - +c.bid[0] >= 1 && hcp(h) < 9 && s !== o) return R('P', `You would have bid ${plain(c.bid)}, but now it needs the ${b[0]}-level (9+): pass.`, 'F.acol-ignore');
+  const shape = L(h)[s] >= 5 && losers(h) <= 7;   // shape makes up for points
+  if (+b[0] - +c.bid[0] >= 1 && hcp(h) < 9 && s !== o && !shape) return R('P', `You would have bid ${plain(c.bid)}, but now it needs the ${b[0]}-level (9+): pass.`, 'F.acol-ignore');
+  if (+b[0] - +c.bid[0] >= 1 && hcp(h) < 9 && s !== o) return R(b, `You would have bid ${plain(c.bid)}. It now needs the ${b[0]}-level (9+), but with ${NUM[L(h)[s]]} ${SN[s]} and only ${losers(h)} losers the shape makes up for the points: ${plain(b)}.`, 'F.acol-ignore');
   return R(b, `Ignore RHO's ${plain(last)}: bid ${plain(b)} as you would have done.`, 'F.acol-ignore');
 }
 // Our 1NT doubled, by the Acol chart: responder signs off in a 5+ card ♦/♥/♠ suit or passes;
@@ -460,8 +646,12 @@ function acolCompetitive(st, h) {
     if (/^[34][CDHS]$/.test(open.call)) {
       const p = hcp(h), l = L(h), x = suit(open.call), un = [0, 1, 2, 3].filter(s => s !== x);
       if (p < 12) return R('P', `${p} HCP over a pre-empt: pass (12+ to act).`, 'H.acol-vs-preempt');
-      const s = un.filter(u => l[u] >= 6).sort((a, b) => l[b] - l[a])[0];
-      if (s !== undefined) { const b = B(l[s] >= 7 ? 4 : cheapest(s, open.call), s); return R(b, `${p} HCP with ${NUM[l[s]]} ${SN[s]}: ${plain(b)}.`, 'H.acol-vs-preempt'); }
+      const s = un.filter(u => l[u] >= 6).sort((a, b) => l[b] - l[a] || b - a)[0];   // equal length: the higher-ranking
+      if (s !== undefined) {
+        const k = losers(h), big = s >= 2 && k <= 5;
+        const b = B(l[s] >= 7 || big ? Math.max(4, cheapest(s, open.call)) : cheapest(s, open.call), s);
+        return R(b, `${p} HCP with ${NUM[l[s]]} ${SN[s]}${big && l[s] < 7 ? ` and only ${k} losers: bid game` : ''}: ${plain(b)}.`, 'H.acol-vs-preempt');
+      }
       if (un.every(u => l[u] >= 3)) return R('X', `${p} HCP with 3+ in every unbid suit: takeout double.`, 'H.acol-vs-preempt');
       return R('P', `No long suit and no takeout shape: pass.`, 'H.acol-vs-preempt');
     }
@@ -542,6 +732,7 @@ const ACOL_SETS = (() => {
         SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [19, 22], ok: ub }, north: { hcp: [6, 12] } }),
         want(SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [13, 16] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [10, 12] } }), 'B.acol-after-2nt', 40),
         want(SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [13, 18] }, north: { hcp: [6, 13] } }), 'D.acol-opener-3', 40),
+        want(SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [6, 6] }, [0, 4])); }, hcp: [13, 16], ok: ub }, north: { lens: (r, h) => { const M = ST.indexOf(acolOpening(h).bid[1]); return sp({ [M]: [2, 3] }, [2, 4]); }, hcp: [13, 15] } }), 'B.acol-after-3nt', 60),
       ] },
     { id: 'a-big', name: '2NT, weak twos and 2♣', refs: 'E', acol: true,
       blurb: '2NT 20-22, the 2NT ask over a weak two (Ogust or features), and 2♣ auctions from both sides.',
@@ -551,6 +742,7 @@ const ACOL_SETS = (() => {
         SO({ south: { lens: balL, hcp: [20, 22] }, north: { lens: majSpec, hcp: [0, 10] } }),
         ...['E.weak-two-pass', 'E.weak-two-raise', 'E.weak-two-ask', ['GUIDE.weak-two-after-ask', 'E.ogust-after']].map(wtP),
         want(SO({ south: { lens: r => sixOf(r, [1, 2, 3]), hcp: [5, 10] }, north: { hcp: [14, 18] } }), ['E.ogust-answer', 'E.weak-two-answer'], 60),
+        want(PO({ calls: 1, setup: r => { const w = pick(r, [1, 2, 3]); return { south: { lens: rl(r, sp({ [w]: [4, 5] }, [0, 5])), hcp: [14, 17] }, north: { lens: sp({ [w]: [6, 6] }, [0, 4]), hcp: [5, 10], opens: B(2, w) }, note: `Partner opened a weak 2${SY[w]}.` }; } }), 'E.acol-weak-two-own-suit', 60),
         PO({ setup: r => ({ south: { lens: rl(r, sp({}, [0, 6])), hcp: [0, 7] }, north: { lens: 'bal', hcp: [23, 24], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }) }),
         PO({ setup: r => { const s = ri(r, 2, 3); return { south: { lens: rl(r, sp({ [s]: [1, 4] }, [0, 6])), hcp: [0, 7] }, north: { lens: sp({ [s]: [5, 7] }, [0, 4]), hcp: [23, 26], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; } }),
         SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [23, 26] }, north: { hcp: [0, 7] } }),

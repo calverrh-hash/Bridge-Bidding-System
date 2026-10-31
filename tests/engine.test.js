@@ -681,3 +681,25 @@ test('Acol: never skip a four-card major: 1♦ – 2♣ – 2♥ with 13, and re
     same(acolSysCall(['1D', '2C', '2H'], parseHand('J72.Q53.84.AKJ92')).bid, '2N', 'no fit, 11: 2NT');
   } finally { Object.assign(SYS, was); }
 });
+test('Acol review: the strong NT principles apply to Acol too', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true;
+    const P = parseHand;
+    same(acolOpening(P('AQ862.KQ842.32.2')).bid, '1S', 'rule of 20: 11 HCP 5-5 opens, the higher suit');
+    same(acolOpening(P('AKJ62.AQJ84.32.2')).bid, '1S', '5-5 majors: 1♠');
+    same(acolR1(P('KQ32.86.AT7.T976'), 0).bid, '1S', 'never skip a four-card major over 1♣');
+    same(acolR1(P('AK9.-.AJ954.QJ985'), 2).bid, '2D', '5-5 response: the higher suit');
+    same(acolR1(P('QJT84.Q9874.Q6.J'), 3).bid, '4S', 'five trumps and 7 losers: game');
+    same(acolR1(P('K32.Q432.Q432.K2'), 2).bid, '3H', 'flat 10 with four trumps: still 3♥');
+    same(acolSysCall(['1N', '2C', '2H', '2S'], P('A985.AK75.T8.KT3')).bid, 'P', 'Stayman then 2♠ is the weak sign-off');
+    same(acolSysCall(['1N', '2C', '2H', '2N'], P('AJ65.KQ32.84.K32')).bid, '4S', '2♥ – 2NT: four spades too, 13+: 4♠');
+    same(acolSysCall(['1H', '3N'], P('Q4.AQ9632.6.AQ85')).bid, '4H', '1♥ – 3NT with six hearts, unbalanced: 4♥');
+    same(acolSysCall(['1D', '2D'], P('K4.J85.AQ93.AK92')).bid, '2N', 'balanced 17 after a minor raise: 2NT, not 3♦');
+    same(acolSysCall(['1D', '1H', '1S'], P('4.KQ8753.AJ4.872')).bid, '2H', 'responder rebids a six-card major');
+    same(acolIgnore(P('AJ864.KQJT74.J.2'), 1, '1H').bid, '1S', 'never bid their suit: show the other one');
+    same(acolSysCall(['1S', '2D', '4D', '4N', '5H'], P('Q984.AKQ.K987.A6')).bid, '5N', 'Blackwood: all four aces');
+    same(acolSysCall(['1S', '2D', '4D', '4N', '5H', '5N', '6H'], P('Q984.AKQ.K987.A6')).bid, '7S', 'the grand slam is in the agreed major, not the side suit');
+    same(acolSysCall(['1H', '1S', '2D'], P('JT3.Q9.Q76.A9542')).bid !== undefined, true, 'no crash');
+  } finally { Object.assign(SYS, was); }
+});

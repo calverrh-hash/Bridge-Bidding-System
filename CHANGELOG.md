@@ -1,5 +1,16 @@
 # Changelog
 
+## 2026-10-31 (later): Acol reviewed against the strong NT principles
+Every Acol drill was dealt for five seeds and each auction checked. The principles agreed for 5CM now apply in Acol too:
+- **Shape counts (loser count).** Opening: 11-12 HCP opens when HCP + the two longest suits reach 20. Raising a major with four trumps: 9 losers 2M, 8 losers 3M, 7 losers 4M, 6 or fewer a new suit then support. Losers only overrule points with a singleton, void or five trumps, as the Acol chart says. Opener after a raise: 2M + 5 losers bids game, 6 losers tries; 3M + 6 losers bids game. Over 1NT: a long major with 6 losers or fewer is worth game; after Stayman finds a fit, 6 losers bids game. Responder's six-card major after opener's NT rebid bids game on shape. In competition, a 5-card suit with 7 losers can bid at the 2-level.
+- **Slam on shape.** Blackwood when the loser count says 12 tricks (as well as 31+ points), after a raise, a new suit then support, a jump shift or a fit found on losers. The asker plays in the agreed suit (a new suit then support plays in opener's suit, not the side suit).
+- **Never skip a four-card major.** Over 1♣/1♦ a weak responder bids the major; responder shows an unbid major at the 2-level with 10+; opener shows a major before raising a minor; equal suits: major first.
+- **5-5 opens and responds with the higher-ranking suit.** 4-4 keeps the chart's order.
+- **Six-card suits are worth showing:** responder rebids a six-card suit with no fit (and a six-card major after opener's jump rebid or jump shift, forcing); opener with six in a major bids 4M over a 3NT or 2NT response.
+- **Minor fits look for 3NT first:** after a minor raise opener bids 2NT/3NT with no short suit; game tries in a minor are accepted with 3NT.
+- **Fixes:** 1NT – 2♣ – 2♥ – 2♠ is the weak sign-off (opener passes); with four spades and 11-12 responder bids 2NT, 13+ 3NT, and opener with four spades bids them. Opener's jump shift never jumps past 3NT. The overcalled suit is never bid as if it were ours. Partner's weak two with four trumps and 14+: game, no 2NT ask; with a void in partner's suit, no ask.
+- The Acol PDF chart is unchanged: these are trainer rules on top of it.
+
 ## 2026-10-31
 - **Acol / weak NT as a second system.** A switch on the home screen chooses 5CM / strong NT or Acol / weak NT. Acol follows `docs/Acol_Weak_NT_Flowchart_A3.pdf`: 1NT 12-14 (McKendrick, 2NT, Stayman, weak take-outs, 3M/4M), balanced 15-19 opens a suit and rebids no-trumps, four-card suits (equal length ♥ > ♠ > ♦ > ♣), raises 2/3/4 by strength, Ogust over weak twos, Blackwood, strong jump overcalls, no negative doubles (bid as if they hadn't), 16+ penalty double of their 1NT. The rules are in `js/acol.js`, with its own nine drills (`ACOL_SETS`); progress is kept separately. The general trainer rules (loser count with a fit, responding on shape) apply in both systems.
 - **Ogust option for 5CM:** a second switch answers the weak-two 2NT ask with Ogust (3♣ min poor · 3♦ min good · 3♥ max poor · 3♠ max good · 3NT AKQ) instead of features. On the 5CM chart too.
