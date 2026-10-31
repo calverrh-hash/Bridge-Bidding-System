@@ -69,9 +69,10 @@ const PO = ({ setup, calls = 2 }) => rng => {
 // want: keep only deals where South is asked chart rule `id` (tries a few deals per call), so
 // every rule on the chart gets practised, however rare its hand.
 const want = (recipe, id, tries = 40) => (rng, opts) => {
+  const ids = [].concat(id);
   for (let t = 0; t < tries; t++) {
     const q = recipe(rng, opts);
-    if (q && q.steps.some(s => s.ans.id === id)) return q;
+    if (q && q.steps.some(s => ids.includes(s.ans.id))) return q;
   }
   return null;
 };
@@ -369,7 +370,7 @@ const SETS = [
         want(PO({ setup: r => ({ ...NT2, south: { lens: nmaj(r), hcp: [4, 10] } }), calls: 1 }), 'E.2nt-game'),
         want(PO({ setup: r => { const M = anyMajor(r); return { ...NT2, south: { lens: rl(r, sp({ [M]: [5, 6], [5 - M]: [0, 3] }, [0, 4])), hcp: [0, 5] } }; } }), 'E.2nt-transfer-continue', 40),
         // Partner opens a weak two: pass, raise, or ask with 2NT (and decide after the answer).
-        ...['E.weak-two-pass', 'E.weak-two-raise', 'E.weak-two-ask', 'GUIDE.weak-two-after-ask'].map(id => want(PO({ calls: 1, setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: id === 'E.weak-two-raise' ? [3, 4] : [0, 4] }, [0, 6])), hcp: id === 'E.weak-two-pass' ? [0, 13] : id === 'E.weak-two-raise' ? [4, 13] : [14, 18] }, north: { lens: sp({ [M]: [6, 6] }, [0, 4]), hcp: [5, 10], opens: B(2, M) }, note: `Partner opened a weak 2${SY[M]}.` }; } }), id, 60)),
+        ...['E.weak-two-pass', 'E.weak-two-raise', 'E.weak-two-ask', ['GUIDE.weak-two-after-ask', 'E.ogust-after']].map(id => want(PO({ calls: 1, setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: id === 'E.weak-two-raise' ? [3, 4] : [0, 4] }, [0, 6])), hcp: id === 'E.weak-two-pass' ? [0, 13] : id === 'E.weak-two-raise' ? [4, 13] : [14, 18] }, north: { lens: sp({ [M]: [6, 6] }, [0, 4]), hcp: [5, 10], opens: B(2, M) }, note: `Partner opened a weak 2${SY[M]}.` }; } }), id, 60)),
         // Partner pre-empts: pass, or raise to game with 3+ aces and kings.
         ...['E.preempt-pass', 'E.preempt-raise'].map(id => want(PO({ calls: 1, setup: r => { const s = ri(r, 0, 3); return { south: { lens: rl(r, sp({ [s]: [1, 3] }, [1, 5])), hcp: id === 'E.preempt-raise' ? [12, 18] : [6, 14] }, north: { lens: sp({ [s]: [7, 7] }, [0, 3]), hcp: [4, 10], opens: B(3, s) }, note: 'Partner opened with a pre-empt.' }; } }), id, 60)),
       ];
@@ -482,7 +483,12 @@ const weight = k => k.startsWith('rec:') ? 4 : /^(call|pcall|res):/.test(k) ? 3 
 // opts.helvic: our side plays Helvic Wriggle when 1NT is doubled.
 function buildSet(def, seed, opts) {
   opts = opts || {};
-  if (def.mixed) return buildMixed(def, seed, opts);
+  const was = { ...SYS };
+  SYS.acol = !!def.acol; SYS.ogust = !!opts.ogust;
+  try { return def.mixed ? buildMixed(def, seed, opts) : buildPlain(def, seed, opts); }
+  finally { Object.assign(SYS, was); }
+}
+function buildPlain(def, seed, opts) {
   let hsh = 0;
   for (const c of def.id) hsh = (hsh * 31 + c.charCodeAt(0)) | 0;
   const rng = mulberry(seed * 7919 + hsh), recipes = def.recipes;
@@ -544,7 +550,7 @@ function buildMixed(def, seed, opts) {
     const target = d.recipes.indexOf(uniq[shuffle(mulberry(9001 + di), uniq.map((_, u) => u))[app % uniq.length]]);
     const recs = shuffle(rng, d.recipes.map((_, r) => r)), cands = [];
     let tries = 0, i = 0;
-    while (cands.length < MIX_CANDS && tries < 600) {
+    while (cands.length < MIX_CANDS && tries < 60) {
       tries++;
       const q = d.recipes[target](rng, opts);
       if (q && q.steps && q.steps.length && (d.slam || !slamHand(q))) { q.rec = d.id + ':' + target; q.src = d.id; cands.push(q); }

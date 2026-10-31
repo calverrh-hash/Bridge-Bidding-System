@@ -44,6 +44,10 @@ const B = (l, s) => l + ST[s];                         // B(2, 3) -> '2S'
 const bv = b => (+b[0] - 1) * 5 + ST.indexOf(b[1]);    // bid rank: 1C = 0 ... 7N = 34
 // A chart answer. id names the rule and starts with its chart letter (the ref shown to the user):
 // R('2C', why, 'A.stayman') is the Stayman rule in chart A.
+// Which system the rules follow while a set is dealt: 5-card majors / strong NT (the default)
+// or Acol / weak NT; and whether the weak-two 2NT ask is answered with Ogust instead of features.
+// buildSet sets these for the set it deals and puts them back afterwards.
+const SYS = { acol: false, ogust: false };
 const R = (bid, why, id) => ({ bid, why, id, ref: id.split('.')[0] });
 // When the chart gives no single call, a rule returns one of these instead, saying why:
 //   amb(why)  the chart allows more than one call here (ambiguous)

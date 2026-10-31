@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-10-31
+- **Acol / weak NT as a second system.** A switch on the home screen chooses 5CM / strong NT or Acol / weak NT. Acol follows `docs/Acol_Weak_NT_Flowchart_A3.pdf`: 1NT 12-14 (McKendrick, 2NT, Stayman, weak take-outs, 3M/4M), balanced 15-19 opens a suit and rebids no-trumps, four-card suits (equal length ♥ > ♠ > ♦ > ♣), raises 2/3/4 by strength, Ogust over weak twos, Blackwood, strong jump overcalls, no negative doubles (bid as if they hadn't), 16+ penalty double of their 1NT. The rules are in `js/acol.js`, with its own nine drills (`ACOL_SETS`); progress is kept separately. The general trainer rules (loser count with a fit, responding on shape) apply in both systems.
+- **Ogust option for 5CM:** a second switch answers the weak-two 2NT ask with Ogust (3♣ min poor · 3♦ min good · 3♥ max poor · 3♠ max good · 3NT AKQ) instead of features. On the 5CM chart too.
+- **Fix:** the loser-count rule read 1♠ – 1NT – 2♦ as a jump and could push responder to game. Fixed in both systems.
+- Tests now deal every drill in both systems, and the weak-two drills with Ogust; every rule of both charts must come up.
+
 ## 2026-10-29
 - **1♥/1♠ – 3NT:** exactly three-card support, 13-15 balanced, choice of games. Opener passes with a flat 5-3-3-2, otherwise bids 4M (or asks RKCB with 31+). With 16+ or an unbalanced hand, responder still bids a new suit first, then supports. On the chart too.
 

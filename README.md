@@ -2,7 +2,7 @@
 
 Practice bidding drills for a 5-card majors / strong 1NT (15-17) system. You sit South and bid whole auctions. Partner is dealt a real hand and bids by the same chart. In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.
 
-There are 16 drills of 15 hands each. Each topic set is picked from a larger deal to cover as many different situations as possible. "New hands for every drill" on the home screen deals fresh hands everywhere at once. Mixed takes a hand from every drill. Every rule on the chart comes up in some drill within the first few deals; a test checks this.
+There are two systems, chosen on the home screen: 5-card majors / strong NT (16 drills) and Acol / weak NT (9 drills, `js/acol.js`), each with 15 hands per drill. Each topic set is picked from a larger deal to cover as many different situations as possible. "New hands for every drill" on the home screen deals fresh hands everywhere at once. Mixed takes a hand from every drill. Every rule on the chart comes up in some drill within the first few deals; a test checks this.
 
 ## The chart
 

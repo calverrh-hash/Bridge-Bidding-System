@@ -154,7 +154,7 @@ test('app: retry replays only the missed hands, then a fresh deal resets', () =>
 });
 test('app: damaged saved data is ignored, not fatal', () => {
   localStorage.setItem(KEY, '{not json');
-  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false } });
+  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: false, ogust: false } });
   localStorage.setItem(KEY, JSON.stringify({ seed: 'x', best: [1], prog: { comp: { seed: 1, res: 'oops' } }, opts: 'bad' }));
   DB = loadDB();
   same(seedOf('comp'), 1);

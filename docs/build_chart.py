@@ -120,7 +120,7 @@ D = ''.join([
 # ---------------- E ----------------
 E = f'''<div class="g2">{box('cnv','<b>2NT 20-22 bal:</b> pass 0-3 · 3NT 4+ · 3♣ Stayman (opener 3♦/3♥/3♠; then 4M with a fit, else 3NT) · 5-4 majors: 3♣, then Smolen over 3♦ (bid the four-card major) · 3♦/3♥ transfers (then pass 0-3; 4-5: <b>3NT = choice</b> with exactly 5, opener corrects to 4M with 3+; else 4M) · 4♦/4♥ Texas.')}{box('cnv','<b>2♣ 23+:</b> 2♦ negative 0-7 · positive 8+: 4+ suit 2♥/♠ or 5+ minor 3♣/♦; bal 8-9 2NT, 10-12 3NT. Opener after 2♦: 2♥/♠ 5+ suit · 3♣/♦ 5+ minor · 2NT 23-24 bal (0-1 pass, else as over 2NT) · 3NT 25-27 bal. <b>After a positive:</b> fit → 4NT (G) · no fit: own 5+ suit or 3NT (6NT with 33+); responder raises a major with 3, else 3NT.')}</div>
 <div class="sp"></div>
-{box('cnv','<b>Weak two (5-10 HCP, 6-card suit).</b> Responder: pass (2-card, under 14) · 3M with 3 trumps · 4M with 4+ trumps · <b>2NT ask with 14+</b>. Opener: 3M = minimum or no feature · bid an outside A/K = feature (8-10) · 3NT = solid AKQ suit.')}
+{box('cnv','<b>Weak two (5-10 HCP, 6-card suit).</b> Responder: pass (2-card, under 14) · 3M with 3 trumps · 4M with 4+ trumps · <b>2NT ask with 14+</b>. Opener: 3M = minimum or no feature · bid an outside A/K = feature (8-10) · 3NT = solid AKQ suit. <b>Or Ogust:</b> 3♣ min poor suit · 3♦ min good · 3♥ max poor · 3♠ max good (good = 2 of the top 3).')}
 <div class="sp"></div>
 {box('cnv','<b>Pre-empts:</b> 3♣-3♠ = 7-card suit · 4♣-4♠ = 8-card suit · 0-10 HCP. Partner: change suit only if longer; with 3-4 top honours bid game (3♣/3♦ → 3NT, 4m → 5m, 4M: pass). <b>Over an opposing pre-empt (12+):</b> 6-card suit overcall at the 3-level, 7-card suit at the 4-level; double = takeout (3+ in all unbid suits).')}'''
 

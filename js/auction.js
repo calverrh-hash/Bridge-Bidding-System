@@ -157,7 +157,7 @@ function after2C(seq, h) {
 function after2CPositive(seq, h) {
   const n = seq.length, p = hcp(h), l = L(h), r = seq[1];
   const rs = /^\d[CDHS]$/.test(r) ? ST.indexOf(r[1]) : -1;
-  if (seq.includes('4N')) return afterRKCB(seq, h, rs >= 0 ? rs : ST.indexOf(seq[2][1]));
+  if (seq.includes('4N')) return SYS.acol ? acolBlackwood(seq, h, rs >= 0 ? rs : ST.indexOf(seq[2][1])) : afterRKCB(seq, h, rs >= 0 ? rs : ST.indexOf(seq[2][1]));
   if (n === 2) {   // opener
     if (r === '2N' || r === '3N') {
       const rmin = r === '2N' ? 8 : 10, M = [3, 2].find(s => l[s] >= 5);
@@ -165,7 +165,7 @@ function after2CPositive(seq, h) {
       if (p + rmin >= 33) return R('6N', `Partner shows ${rmin}+ balanced: ${p} + ${rmin} = ${p + rmin}+, enough for 6NT.`, 'GUIDE.2c-positive-rebid');
       return r === '3N' ? R('P', `Partner's 3NT shows 10-12 balanced. ${p} + 10 is under 33: pass.`, 'GUIDE.2c-positive-rebid') : R('3N', `Partner's 2NT shows 8-9 balanced. ${p} + 8 is under 33: 3NT.`, 'GUIDE.2c-positive-rebid');
     }
-    if (rs >= 0 && l[rs] >= (rs >= 2 ? 4 : 3)) return slamTry(h, rs, 8, `Partner's positive ${plain(r)} (8+)`) || R(B(rs >= 2 ? 4 : 5, rs), `Partner's ${plain(r)} gives you a fit: game in ${SN[rs]}.`, 'GUIDE.2c-positive-rebid');
+    if (rs >= 0 && l[rs] >= (rs >= 2 ? 4 : 3)) return (SYS.acol ? acolSlamTry : slamTry)(h, rs, 8, `Partner's positive ${plain(r)} (8+)`) || R(B(rs >= 2 ? 4 : 5, rs), `Partner's ${plain(r)} gives you a fit: game in ${SN[rs]}.`, 'GUIDE.2c-positive-rebid');
     const own = [3, 2, 1, 0].filter(s => s !== rs && l[s] >= 5).sort((a, b) => l[b] - l[a])[0];
     if (own !== undefined) { const b = B(cheapest(own, r), own); return R(b, `No fit for partner's ${plain(r)} yet. Show your own suit: ${plain(b)}.`, 'GUIDE.2c-positive-rebid'); }
     return R('3N', `No fit for partner's ${plain(r)}: 3NT.`, 'GUIDE.2c-positive-rebid');
@@ -193,13 +193,20 @@ function afterWeakTwo(seq, h) {
     return gap('The chart has no further calls after a weak two here.');
   }
   // Responder after the answer to the 2NT ask. The chart stops here; trainer guides.
+  if (n === 3 && r === '2N' && (SYS.ogust || SYS.acol)) {   // after the Ogust answer
+    const a = seq[2], mx = a === '3H' || a === '3S', goodS = a === '3D' || a === '3S';
+    const game = M >= 2 && t >= 2 ? B(4, M) : '3N', so = B(3, M);
+    if (a === '3N') return R('P', `Opener's 3NT shows a solid AKQ suit: that's the contract. Pass.`, 'E.ogust-after');
+    if (mx || (goodS && p >= 16)) return R(game, `Opener's ${plain(a)} shows ${mx ? 'a maximum' : 'a minimum but a good suit'}${goodS ? ' and a good suit' : ''}. With ${p}, bid game: ${plain(game)}.`, 'E.ogust-after');
+    return bv(so) > bv(a) ? R(so, `Opener's ${plain(a)} shows a minimum. With ${p}, sign off in ${plain(so)}.`, 'E.ogust-after') : R('P', `Opener's ${plain(a)} shows a minimum. With ${p}, pass.`, 'E.ogust-after');
+  }
   if (n === 3 && r === '2N') {
     const a = seq[2], game = t >= 2 ? B(4, M) : '3N', where = t >= 2 ? `with ${t} ${SN[M]} the major is the game: ${plain(game)}` : `with only ${t} ${SN[M]}, ${plain(game)}`;
     if (a === '3N') return R('P', `Opener's 3NT shows a solid AKQ suit: that's the contract. Pass.`, 'GUIDE.weak-two-after-ask');
     if (a === B(3, M)) return p >= 17 ? R(game, `Opener's 3${SY[M]} shows a minimum or no feature. With ${p} (17+) there's still game; ${where}.`, 'GUIDE.weak-two-after-ask') : R('P', `Opener's 3${SY[M]} shows a minimum or no feature. With ${p} (14-16) game is unlikely: pass.`, 'GUIDE.weak-two-after-ask');
     return R(game, `Opener's ${plain(a)} shows a feature and a maximum (8-10), so bid game; ${where}.`, 'GUIDE.weak-two-after-ask');
   }
-  if (n === 4 && gameBid(seq[3])) return AP('Partner chose the game.');
+  if (n === 4 && (gameBid(seq[3]) || /^3[DHS]$/.test(seq[3]) || seq[3] === 'P')) return AP('Partner chose the contract.');
   return gap('The chart has no further calls after a weak two here.');
 }
 
@@ -458,7 +465,7 @@ function partnerShows(seq) {
     else if (mine) { len[s] = Math.max(len[s] + 1, s >= 2 ? 6 : 5); }   // rebid of their own suit
     else len[s] = Math.max(len[s], 4);                             // a new suit
     // Strength: jumps and reverses show extras.
-    const prev = seq[i - 1], cheapLv = prev && NAT(prev) ? cheapest(s, prev) : 1;
+    const prev = seq[i - 1], cheapLv = prev && /^\d/.test(prev) ? cheapest(s, prev) : 1;   // after 1NT, 2♦ is not a jump
     if (popener && i === 2) { if (lv > cheapLv) los = lv >= cheapLv + 1 && !ours && !mine ? 5 : 6; else if (!ours && !mine && bv(c) > bv(B(2, o))) los = 6; }
     if (!popener && i === 1) los = ours ? (lv >= 3 ? 8 : 9) : (lv >= 2 ? 8 : 9);
   }
@@ -486,6 +493,7 @@ function fitGame(seq, h, c) {
 }
 
 function chartSysCall(seq, h) {
+  if (SYS.acol) return acolSysCall(seq, h);
   const n = seq.length;
   if (n === 0) return openingBid(h);
   const o = seq[0];
@@ -528,6 +536,7 @@ function auctionState(dealer, calls) {
 
 // Contested auctions. Chart F covers only your first call after the other side opens.
 function competitive(st, h) {
+  if (SYS.acol) return acolCompetitive(st, h);
   const { tagged, seat, partner, lho, rho } = st;
   if (tagged.some(x => x.by === seat)) return gap('Once the opponents have bid, the chart covers only the first call over them.');
   const bids = tagged.filter(x => x.call !== 'P'), open = bids[0], last = tagged[tagged.length - 1];

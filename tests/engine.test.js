@@ -373,18 +373,27 @@ function checkQuestion(q, where) {
   }
 }
 const SEEDS = 8;
-for (const d of SETS) for (const helvic of d.helvic ? [false, true] : [false]) {
-  const name = d.id + (helvic ? ' (Helvic)' : '');
+// Every set in both systems; Helvic sets both ways; the weak-two sets with Ogust too.
+const VARIANTS = [];
+for (const d of SETS.concat(ACOL_SETS)) for (const helvic of d.helvic ? [false, true] : [false]) {
+  VARIANTS.push({ d, helvic, ogust: false });
+  if (!d.acol && ['open-unbal', 'big', 'mixed'].includes(d.id) && !helvic) VARIANTS.push({ d, helvic, ogust: true });
+}
+for (const { d, helvic, ogust } of VARIANTS) {
+  const name = d.id + (helvic ? ' (Helvic)' : '') + (ogust ? ' (Ogust)' : '');
   test(`set "${name}": ${setSize(d)} good hands for seeds 1-${SEEDS}, built quickly`, () => {
     for (let seed = 1; seed <= SEEDS; seed++) {
-      const t0 = performance.now(), qs = buildSet(d, seed, { helvic }), ms = performance.now() - t0;
+      const t0 = performance.now(), qs = buildSet(d, seed, { helvic, ogust }), ms = performance.now() - t0;
+      const was = { ...SYS }; SYS.acol = !!d.acol; SYS.ogust = ogust;
+      try {
       same(qs.length, setSize(d), `seed ${seed} size`);
       check(ms < 1000, `seed ${seed} took ${ms.toFixed(0)} ms`);
       const keys = new Set(qs.map(q => JSON.stringify(q.hand)));
-      check(keys.size === qs.length || d.id === 'comp' || d.id === 'mixed', `seed ${seed}: repeated hand`);
+      check(keys.size === qs.length || /comp|mixed/.test(d.id), `seed ${seed}: repeated hand`);
       if (!d.slam) qs.forEach((q, i) => check(!slamHand(q), `${name}#${seed}/${i}: a slam hand in a non-slam drill`));
       qs.forEach((q, i) => checkQuestion(q, `${name}#${seed}/${i}`));
       qs.forEach(q => q.steps.forEach(st => { if (st.kind !== 'num') ASKED.add(st.ans.id); }));
+      } finally { Object.assign(SYS, was); }
     }
   });
 }
@@ -399,7 +408,7 @@ test('rule coverage: every chart rule is asked of you in some drill (seeds 1-8)'
 });
 test('no drill auction stops early: every hand reaches a contract (seeds 1-4)', () => {
   const stops = [];
-  for (const d of SETS) for (let s = 1; s <= 4; s++) buildSet(d, s, {}).forEach(q => { if (q.stop) stops.push(`${d.id}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
+  for (const d of SETS.concat(ACOL_SETS)) for (let s = 1; s <= 4; s++) buildSet(d, s, {}).forEach(q => { if (q.stop) stops.push(`${d.id}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
   same(stops, [], 'auctions that stop');
 });
 test('buildSet is deterministic for a seed', () => {
@@ -573,6 +582,28 @@ test('1M - 3NT: three-card support, 13-15 balanced; opener chooses', () => {
   same(r1M(parseHand('64.KQ5.A75.KJ975'), 2).bid, '3N');
   same(sysCall(['1H', '3N'], parseHand('K2.AJ843.K74.Q32')).bid, 'P');    // 5-3-3-2: pass
   same(sysCall(['1H', '3N'], parseHand('K2.AJ8432.K74.Q3')).bid, '4H');   // six hearts: 4H
+});
+test('regression: after 1♠ – 1NT, opener\'s 2♦ is not a jump (no 5♦ on losers)', () => {
+  check(sysCall(['1S', '1N', '2D'], parseHand('92.A108432.A542.4')).bid !== '5D');
+});
+test('Acol: openings, 1NT responses, raises and Blackwood follow the Acol chart', () => {
+  const was = { ...SYS }; SYS.acol = true;
+  try {
+    same(openingBid(parseHand('AJ83.AJ.K63.9732')).bid, '1N', '12-14 balanced: 1NT');
+    same(openingBid(parseHand('AJ83.AJ.KQ3.Q732')).bid, '1S', '16 balanced: a suit (equal length: spades over clubs)');
+    same(openingBid(parseHand('AJ83.AJ84.K3.Q73')).bid, '1H', '4-4 majors: hearts first');
+    same(sysCall(['1N'], parseHand('K32.Q32.A432.Q32')).bid, '2S', '11: McKendrick');
+    same(sysCall(['1N'], parseHand('K32.Q32.A432.K32')).bid, '2N', '12: 2NT');
+    same(sysCall(['1H'], parseHand('K32.Q432.Q432.K2')).bid, '3H', '4-card support, 10-12: 3♥');
+    same(sysCall(['1H', '4H', '4N'], parseHand('Q986.AQ52.J75.A3')).bid, '5H', 'Blackwood: two aces');
+  } finally { Object.assign(SYS, was); }
+});
+test('Ogust: the weak-two opener answers by strength and suit quality', () => {
+  const was = { ...SYS }; SYS.ogust = true;
+  try {
+    same(wtAns(parseHand('KQ10943.32.432.32'), 3).bid, '3D', 'minimum, good suit');
+    same(wtAns(parseHand('KJ10943.A2.432.32'), 3).bid, '3H', 'maximum, poor suit');
+  } finally { Object.assign(SYS, was); }
 });
 test('only the slam drills keep slam hands', () => {
   same(SETS.filter(d => d.slam).map(d => d.id), ['slam', 'mixed']);

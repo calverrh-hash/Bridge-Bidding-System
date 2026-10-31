@@ -27,6 +27,7 @@ function minorWhy(l) {
     : l[0] >= 4 ? '4-4 in the minors opens 1♦.' : '3-3 in the minors opens 1♣.';
 }
 function openingBid(h) {
+  if (SYS.acol) return acolOpening(h);
   const p = hcp(h), l = L(h), bal = isBal(h), fiveM = l[2] >= 5 || l[3] >= 5;
   if (p >= 23) return R('2C', `${p} HCP. 23+ opens 2♣ with any shape. It is game forcing.`, 'E.open-2c');
   if (bal && !fiveM) {
@@ -614,7 +615,12 @@ function wtResp(h, M) {
 // Weak-two opener answers the 2NT ask.
 function wtAns(h, M) {
   const p = hcp(h);
-  if (has(h, M, 14) && has(h, M, 13) && has(h, M, 12)) return R('3N', `Solid AKQ in ${SN[M]}: 3NT.`, 'E.weak-two-answer');
+  if (has(h, M, 14) && has(h, M, 13) && has(h, M, 12)) return R('3N', `Solid AKQ in ${SN[M]}: 3NT.`, SYS.ogust || SYS.acol ? 'E.ogust-answer' : 'E.weak-two-answer');
+  if (SYS.ogust || SYS.acol) {   // Ogust: 3♣ min poor · 3♦ min good · 3♥ max poor · 3♠ max good (good = two of the top three)
+    const g = [14, 13, 12].filter(r => has(h, M, r)).length >= 2, mx = p >= 8;
+    const b = mx ? (g ? '3S' : '3H') : (g ? '3D' : '3C');
+    return R(b, `Ogust: ${mx ? `maximum (${p}, 8-10)` : `minimum (${p}, 5-7)`} with a ${g ? 'good suit (two of the top three honours)' : 'poor suit'}: ${plain(b)}.`, 'E.ogust-answer');
+  }
   const f = [0, 1, 2, 3].filter(s => s !== M && (has(h, s, 14) || has(h, s, 13)));
   if (p <= 7) return R(B(3, M), `${p} HCP is a minimum (5-7): 3${SY[M]}.`, 'E.weak-two-answer');
   if (!f.length) return R(B(3, M), `${p} HCP but no outside ace or king: 3${SY[M]} (no feature).`, 'E.weak-two-answer');
