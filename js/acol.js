@@ -36,7 +36,22 @@ function acolOpening(h) {
 }
 
 // ---------- A: responses to 1NT (12-14) ----------
+// Transfers over our 1NT (the switch on the home screen, on by default): 2♦ = 5+ hearts,
+// 2♥ = 5+ spades, any strength. Opener completes; responder then passes, invites or bids game.
+function acolR1NTTransfer(h) {
+  const p = hcp(h), l = L(h), H = l[2], S = l[3], k = losers(h);
+  if (H >= 4 && S >= 4 && Math.max(H, S) === 5 && Math.min(H, S) === 4 && p <= 10 && k > 6) return R('2C', `${p} HCP, 5-4 in the majors: 2♣ Stayman, then pass if partner bids one of your majors, otherwise bid your five-card major to play.`, 'A.acol-stayman-weak');
+  if (p >= 11 && (H === 4 || S === 4) && Math.max(H, S) <= 4) return null;   // Stayman, as without transfers
+  const M = S >= 5 && S >= H ? 3 : H >= 5 ? 2 : -1;
+  if (M >= 0) {
+    const t = M === 2 ? '2D' : '2H', plan = p >= 12 || k <= 6 ? (l[M] >= 6 ? `then 4${SY[M]}` : 'then 3NT, offering partner the choice') : p === 11 ? (l[M] >= 6 ? `then 3${SY[M]} to invite` : 'then 2NT to invite') : 'then pass';
+    return R(t, `${p} HCP with ${NUM[l[M]]} ${SN[M]}${H >= 5 && S >= 5 ? ' (5-5: transfer to spades)' : ''}: ${plain(t)}, a transfer to ${SN[M]}. Partner bids 2${SY[M]}; you ${plan}.`, 'A.acol-transfer');
+  }
+  if (p <= 10 && l[1] >= 6) return R('2S', `${p} HCP with ${NUM[l[1]]} diamonds: 2♦ would be a transfer, so bid 2♠ (McKendrick, or a weak long minor), then 3♦ to play.`, 'A.acol-weak-minor');
+  return null;
+}
 function acolR1NT(h) {
+  if (SYS.transfers) { const t = acolR1NTTransfer(h); if (t) return t; }
   const p = hcp(h), l = L(h), H = l[2], S = l[3], k = losers(h);
   // Shape counts: a long major with 6 losers or fewer is worth game opposite 12-14 (about 8 losers).
   const six0 = [3, 2].find(s => l[s] >= 6), five0 = [3, 2].find(s => l[s] === 5);
@@ -51,7 +66,7 @@ function acolR1NT(h) {
   if (p >= 12 && six !== undefined) return R(B(4, six), `${p} HCP with ${NUM[l[six]]} ${SN[six]}: 4${SY[six]}.`, 'A.acol-major-game');
   if (p >= 12 && five !== undefined) return R(B(3, five), `${p} HCP with five ${SN[five]}: 3${SY[five]} (forcing). Partner bids 4${SY[five]} with three, else 3NT.`, 'A.acol-major-3');
   if (p >= 11 && (H === 4 || S === 4)) return R('2C', `${p} HCP with a four-card major: 2♣ Stayman (11+).`, 'A.acol-stayman');
-  if (p <= 11 && (H >= 5 || l[1] >= 5)) { const s = H >= 5 ? 2 : 1; return R(B(2, s), `${p} HCP (0-11) with ${NUM[l[s]]} ${SN[s]}: 2${SY[s]}, to play.`, 'A.acol-weak-suit'); }
+  if (p <= 11 && (H >= 5 || l[1] >= 5) && !SYS.transfers) { const s = H >= 5 ? 2 : 1; return R(B(2, s), `${p} HCP (0-11) with ${NUM[l[s]]} ${SN[s]}: 2${SY[s]}, to play.`, 'A.acol-weak-suit'); }
   if (p <= 10 && l[0] >= 6) return R('2S', `${p} HCP with ${NUM[l[0]]} clubs: 2♠ (McKendrick, or a weak long minor), then 3♣ to play.`, 'A.acol-weak-minor');
   const m6 = [0, 1].find(s => l[s] >= 6);
   if (p >= 12 && m6 !== undefined) return p >= 16 ? R(B(5, m6), `${p} HCP with ${NUM[l[m6]]} ${SN[m6]}: 5${SY[m6]}.`, 'A.acol-minor-game') : R('3N', `${p} HCP with ${NUM[l[m6]]} ${SN[m6]}: 3NT (12-15).`, 'A.acol-minor-game');
@@ -65,6 +80,24 @@ function acolR1NT(h) {
 function acolAfter1NT(seq, h) {
   const n = seq.length, p = hcp(h), l = L(h), r = seq[1];
   if (n === 1) return acolR1NT(h);
+  const tM = SYS.transfers ? (r === '2D' ? 2 : r === '2H' ? 3 : -1) : -1;
+  if (tM >= 0) {
+    if (n === 2) return R(B(2, tM), `Partner's ${plain(r)} is a transfer: complete it, 2${SY[tM]}.`, 'A.acol-transfer-complete');
+    if (n === 3) {
+      const k = losers(h), t = l[tM];
+      if (p >= 12 || k <= 6) return t >= 6 ? R(B(4, tM), `${p} HCP${p < 12 ? ` but only ${k} losers` : ''} with ${NUM[t]} ${SN[tM]}: game, 4${SY[tM]}.`, 'A.acol-transfer-continue') : R('3N', `${p} HCP${p < 12 ? ` but only ${k} losers` : ''} with five ${SN[tM]}: 3NT, offering the choice. Partner bids 4${SY[tM]} with three.`, 'A.acol-transfer-continue');
+      if (p === 11) return t >= 6 ? R(B(3, tM), `11 HCP with ${NUM[t]} ${SN[tM]}: invite with 3${SY[tM]}.`, 'A.acol-transfer-continue') : R('2N', `11 HCP with five ${SN[tM]}: invite with 2NT.`, 'A.acol-transfer-continue');
+      return R('P', `${p} HCP: pass 2${SY[tM]}.`, 'A.acol-transfer-continue');
+    }
+    if (n === 4) {
+      const b = seq[3];
+      if (b === '2N') return l[tM] >= 3 ? (p >= 13 ? R(B(4, tM), `Partner's 2NT invites with five ${SN[tM]}. With ${l[tM]} and ${p} (13-14), 4${SY[tM]}.`, 'A.acol-transfer-answer') : R(B(3, tM), `Partner's 2NT invites with five ${SN[tM]}. With ${l[tM]} but 12, 3${SY[tM]}.`, 'A.acol-transfer-answer')) : p >= 13 ? R('3N', `Partner's 2NT invites. With ${p} (13-14) and two ${SN[tM]}, 3NT.`, 'A.acol-transfer-answer') : R('P', `Partner's 2NT invites. With 12, pass.`, 'A.acol-transfer-answer');
+      if (b === B(3, tM)) return p >= 13 ? R(B(4, tM), `Partner's 3${SY[tM]} invites with six. With ${p} (13-14), 4${SY[tM]}.`, 'A.acol-transfer-answer') : R('P', `Partner's 3${SY[tM]} invites. With 12, pass.`, 'A.acol-transfer-answer');
+      if (b === '3N') return l[tM] >= 3 ? R(B(4, tM), `Partner shows five ${SN[tM]} and game values. With ${l[tM]}, 4${SY[tM]}.`, 'A.acol-transfer-answer') : R('P', `Partner shows five ${SN[tM]}. With only ${l[tM]}, pass 3NT.`, 'A.acol-transfer-answer');
+      return AP('Partner chose the contract.');
+    }
+    return AP('The contract is set.');
+  }
   if (n === 2) {   // opener
     if (r === '2C') return stayAns(h);
     if (r === '2S') return p <= 13 ? R('2N', `McKendrick: ${p} HCP (12-13), 2NT.`, 'A.acol-mckendrick-answer') : R('3C', `McKendrick: 14 HCP, 3♣.`, 'A.acol-mckendrick-answer');
@@ -93,6 +126,7 @@ function acolAfter1NT(seq, h) {
     }
     if (r === '2S') {
       if (p === 11) return a === '2N' ? R('P', `Partner has 12-13: with 11, pass 2NT.`, 'A.acol-mckendrick-continue') : R('3N', `Partner has 14: with 11 that's 25, bid 3NT.`, 'A.acol-mckendrick-continue');
+      if (l[1] >= 6 && l[1] > l[0]) return R('3D', `Weak with long diamonds: 3♦ to play.`, 'A.acol-mckendrick-continue');
       return a === '2N' ? R('3C', `Weak with long clubs: 3♣ to play.`, 'A.acol-mckendrick-continue') : R('P', `Weak with long clubs: pass 3♣.`, 'A.acol-mckendrick-continue');
     }
     return AP('Partner chose the contract.');

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-10-31 (evening): Acol transfers and an editable Acol chart
+- **Transfers over our 1NT** (Acol): 2♦ = 5+ hearts, 2♥ = 5+ spades, any strength; opener always completes. Then pass (0-10), invite with 11 (2NT with five, 3M with six) or bid game with 12+ or 6 losers or fewer (3NT with five, opener correcting to 4M with three; 4M with six). Weak long diamonds now go 2♠ then 3♦. A home-screen switch (Acol only) keeps the old natural weak take-outs as an option; transfers are the default.
+- **The Acol chart is now generated** from `docs/build_acol_chart.py` (rendered with `docs/render_acol.py`), in the same style as the 5CM chart, and describes the trainer's Acol rules, including today's review. The PDF you supplied is kept as `docs/Acol_Weak_NT_Flowchart_original.pdf`. Helvic and features are shown on it as options.
+
 ## 2026-10-31 (later): Acol reviewed against the strong NT principles
 Every Acol drill was dealt for five seeds and each auction checked. The principles agreed for 5CM now apply in Acol too:
 - **Shape counts (loser count).** Opening: 11-12 HCP opens when HCP + the two longest suits reach 20. Raising a major with four trumps: 9 losers 2M, 8 losers 3M, 7 losers 4M, 6 or fewer a new suit then support. Losers only overrule points with a singleton, void or five trumps, as the Acol chart says. Opener after a raise: 2M + 5 losers bids game, 6 losers tries; 3M + 6 losers bids game. Over 1NT: a long major with 6 losers or fewer is worth game; after Stayman finds a fit, 6 losers bids game. Responder's six-card major after opener's NT rebid bids game on shape. In competition, a 5-card suit with 7 losers can bid at the 2-level.

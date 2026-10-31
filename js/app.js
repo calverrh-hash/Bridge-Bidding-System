@@ -20,7 +20,7 @@ const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 function loadDB() {
   const d = store.get(), o = (k) => isObj(d[k]) ? d[k] : {};
   return { seed: o('seed'), best: o('best'), prog: o('prog'), opts: { helvic: o('opts').helvic === true, acol: o('opts').acol === true, ogust: o('opts').ogust === true,
-    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false } };
+    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false, acolTransfers: o('opts').acolTransfers !== false } };
 }
 let DB = loadDB();
 const save = () => store.set(DB);
@@ -33,7 +33,8 @@ const optKey = (ac, k) => ac ? 'acol' + k[0].toUpperCase() + k.slice(1) : k;
 const optOn = (d, k) => !!(d && DB.opts[optKey(d.acol, k)]);
 const ogustOn = d => optOn(d, 'ogust');
 const helvicOn = d => !!(d && d.helvic) && optOn(d, 'helvic');
-const keyOf = id => { const d = setDef(id); return id + (helvicOn(d) ? '~helvic' : '') + (ogustOn(d) ? '~ogust' : ''); };
+const transfersOn = d => !!(d && d.acol) && DB.opts.acolTransfers !== false;
+const keyOf = id => { const d = setDef(id); return id + (helvicOn(d) ? '~helvic' : '') + (ogustOn(d) ? '~ogust' : '') + (d && d.acol && !transfersOn(d) ? '~natural' : ''); };
 const seedOf = key => Number.isInteger(DB.seed[key]) && DB.seed[key] > 0 ? DB.seed[key] : 1;
 const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 
@@ -41,7 +42,7 @@ const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 const cache = {};
 function getSet(id) {
   const key = keyOf(id), seed = seedOf(key), k = key + '#' + seed;
-  if (!cache[k]) cache[k] = buildSet(setDef(id), seed, { helvic: helvicOn(setDef(id)), ogust: ogustOn(setDef(id)) });
+  if (!cache[k]) cache[k] = buildSet(setDef(id), seed, { helvic: helvicOn(setDef(id)), ogust: ogustOn(setDef(id)), transfers: transfersOn(setDef(id)) });
   return cache[k];
 }
 // A fingerprint of the dealt hands and answers. If the drills change, so does this,
@@ -67,13 +68,13 @@ function playedCount(id) {
 // ---------- Formatting ----------
 const REF_ACOL = {
   A: 'Acol chart A · Responses to 1NT (12-14)', B: 'Acol chart B · Responses to 1♣/♦/♥/♠', C: "Acol chart C · Opener's NT rebids", D: "Acol chart D · Opener's suit rebids",
-  E: 'Acol chart E · 2NT, weak twos, 2♣', F: 'Acol chart F · Overcalls and doubles', G: 'Acol chart G · Blackwood, losing tricks', H: 'Acol chart H · Pre-empts, their 1NT',
+  E: 'Acol chart E · 2NT, weak twos, 2♣', F: 'Acol chart F · Overcalls and doubles', G: 'Acol chart G · Blackwood, losing tricks', H: 'Acol chart H · Pre-empts, their 1NT, our 1NT doubled',
   OB: 'Acol chart · Opening bids', LTC: 'Acol chart G · Losing trick count', GUIDE: 'Trainer guide (the chart is silent here)',
 };
 // Options played in Acol that its chart doesn't have are labelled as such.
 const refOf = (id, rule) => {
-  if (DB.opts.acol && /helvic/.test(rule || '')) return 'Helvic Wriggle (the option you chose; not on the Acol chart)';
-  if (DB.opts.acol && /^(E\.weak-two-answer|GUIDE\.weak-two-after-ask)$/.test(rule || '')) return 'Weak-two features (the option you chose; the Acol chart plays Ogust)';
+  if (DB.opts.acol && /helvic/.test(rule || '')) return 'Acol chart H · Helvic Wriggle (option)';
+  if (DB.opts.acol && /^(E\.weak-two-answer|GUIDE\.weak-two-after-ask)$/.test(rule || '')) return 'Acol chart E · Weak-two features (option)';
   return (DB.opts.acol ? REF_ACOL : REF)[id] || '';
 };
 const REF = {
@@ -158,9 +159,12 @@ function home() {
     ${seg('m-chart', 'Chart', 'm-helvic', 'Helvic', hv, 'System when our 1NT is doubled')}</div>`;
   const ogustBox = `<div class="sys"><div><span class="eyebrow">Weak two: the 2NT ask</span><p>${og ? 'Ogust: 3♣ minimum, poor suit · 3♦ minimum, good suit · 3♥ maximum, poor suit · 3♠ maximum, good suit · 3NT AKQ.' : 'Features: 3M minimum or no feature · 3 of a new suit = an outside A or K with a maximum · 3NT AKQ.'}</p></div>
     ${seg('m-feature', 'Features', 'm-ogust', 'Ogust', og, 'Answer to the weak-two 2NT ask')}</div>`;
+  const tr = DB.opts.acolTransfers !== false;
+  const xferBox = !ac ? '' : `<div class="sys"><div><span class="eyebrow">Over our 1NT</span><p>${tr ? 'Transfers: 2♦ = 5+ hearts, 2♥ = 5+ spades, any strength; opener completes. Weak long diamonds: 2♠ then 3♦.' : 'Natural (the old Acol chart): 2♦/2♥ to play; weak spades go through Stayman.'}</p></div>
+    ${seg('m-natural', 'Natural', 'm-transfers', 'Transfers', tr, 'Responses to our 1NT')}</div>`;
   app.innerHTML = `<div class="intro"><span class="eyebrow">${ac ? 'Acol · weak NT' : '5-card majors · strong NT'}</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart. ${ac ? 'In the overcalls drill the opponents have opened or come in.' : 'In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.'}</p>
     <div class="actions" style="margin-top:4px"><button class="ghost" id="newall">New hands for every drill</button></div></div>
-    ${sysBox}${helvicBox}${ogustBox}
+    ${sysBox}${xferBox}${helvicBox}${ogustBox}
     <div class="sets">${cards}</div>`;
   app.querySelectorAll('.set').forEach(b => b.onclick = () => start(b.dataset.set));
   const opt = (k, v) => () => { DB.opts[k] = v; save(); render(); };
@@ -169,12 +173,14 @@ function home() {
   const hk = optKey(ac, 'helvic'), ok = optKey(ac, 'ogust');
   on('m-chart', opt(hk, false)); on('m-helvic', opt(hk, true));
   on('m-feature', opt(ok, false)); on('m-ogust', opt(ok, true));
+  on('m-natural', opt('acolTransfers', false)); on('m-transfers', opt('acolTransfers', true));
   document.getElementById('newall').onclick = newHandsEverywhere;
 }
 // Move every drill (chart and Helvic versions) to its next seed and clear unfinished progress.
 // Best scores are kept.
 function newHandsEverywhere() {
-  ALL_SETS().forEach(d => ['', '~helvic', '~ogust', '~helvic~ogust'].forEach(v => { const k = d.id + v; DB.seed[k] = seedOf(k) + 1; }));
+  const vs = ['', '~helvic', '~ogust', '~helvic~ogust'].flatMap(v => [v, v + '~natural']);
+  ALL_SETS().forEach(d => vs.forEach(v => { const k = d.id + v; DB.seed[k] = seedOf(k) + 1; }));
   DB.prog = {};
   save();
   render();
@@ -335,7 +341,7 @@ function crashed(e) {
     <div class="actions"><button class="primary" id="home">Back to the drills</button><button class="ghost" id="reset">Reset saved progress</button></div>
     <p class="muted"><small>${String(e && e.message || e).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</small></p>`;
   document.getElementById('home').onclick = goHome;
-  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true } }; save(); goHome(); };
+  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true } }; save(); goHome(); };
 }
 
 function render() {
