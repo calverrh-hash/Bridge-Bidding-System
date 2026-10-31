@@ -660,3 +660,14 @@ test('fuzz: 20,000 random deals never throw, bid illegally, or stop without a re
     }
   }
 });
+
+test('Acol: 6-5 comes alive: 1♣ – 1♠ – 2♥ reverse with 15 and six clubs, five hearts; game after preference', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true;
+    const h = parseHand('2.AKQ106.3.AQ8763');
+    same(acolSysCall(['1C', '1S'], h).bid, '2H', 'show the hearts');
+    same(acolSysCall(['1C', '1S', '2H', '3C'], h).bid, '5C', '3 losers: game after preference');
+    same(acolSysCall(['1C', '1S', '2H', '3H'], h).bid, '4H', 'game after the heart raise');
+  } finally { Object.assign(SYS, was); }
+});

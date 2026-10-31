@@ -146,6 +146,13 @@ function acolRebid(h, o, r) {
     const js = B(cheapest(s2, r) + 1, s2);
     return R(js, `${p} HCP (19-22): jump shift, ${plain(js)}, game forcing.`, 'D.acol-jump-shift');
   }
+  // A 6-5 or 5-5 hand shows its second five-card suit, even as a reverse: with 15-18, or with
+  // 13-14 when the shape makes up the difference (5 losers or fewer). Rebid it next time to show five.
+  const five = [0, 1, 2, 3].filter(s => s !== o && s !== rs && l[s] >= 5).sort((a, b) => l[b] - l[a] || b - a)[0];
+  if (five !== undefined && !sup && (p >= 15 || losers(h) <= 5)) {
+    const b = B(cheapest(five, r), five), rev = bv(b) > bv(bar);
+    return R(b, `${p} HCP${p < 15 ? ` but only ${losers(h)} losers` : ''}, ${NUM[l[o]]} ${SN[o]} and ${NUM[l[five]]} ${SN[five]}: show the second suit, ${plain(b)}${rev ? ' (a reverse, forcing)' : ''}. Bid ${SN[five]} again next time to show five.`, 'D.acol-strong');
+  }
   if (p >= 15) {
     if (sup) return R(B(rlv + 2, rs), `${p} HCP (15-18) with four ${SN[rs]}: double raise to ${plain(B(rlv + 2, rs))}.`, 'D.acol-strong');
     if (l[o] >= 6) return R(B(3, o), `${p} HCP (15-18) with ${NUM[l[o]]} ${SN[o]}: jump rebid, 3${SY[o]}.`, 'D.acol-strong');
@@ -197,6 +204,7 @@ function acolResp2(h, seq) {
   if (rev) {
     const fit = (l[xs] >= 4 && xs) || (l[o] >= 3 && o);
     if (p >= 10) return R(l[xs] >= 4 && xs >= 2 ? B(4, xs) : l[o] >= 3 && o >= 2 ? B(4, o) : '3N', `Opener's reverse shows 15-18. With ${p} (10+), bid game.`, 'D.acol-after');
+    if (l[xs] >= 4) return R(B(cheapest(xs, x), xs), `Opener's reverse is forcing. With ${p} (6-9) and four ${SN[xs]}, raise: ${plain(B(cheapest(xs, x), xs))}.`, 'D.acol-after');
     if (l[o] >= 2) return R(B(cheapest(o, x), o), `Opener's reverse is forcing. With ${p} (6-9), give preference: ${plain(B(cheapest(o, x), o))}.`, 'D.acol-after');
     return R(bv('2N') > bv(x) ? '2N' : '3N', `Opener's reverse is forcing: don't pass. With ${p}, ${bv('2N') > bv(x) ? '2NT' : '3NT'}.`, 'D.acol-after');
   }
@@ -221,6 +229,13 @@ function acolOpener3(h, seq) {
   const p = hcp(h), l = L(h), x = seq[2], a = seq[3];
   if (gameBid(a) || a === '6N' || a === 'P') return AP('Partner chose the contract.');
   const as = /^\d[CDHS]$/.test(a) ? ST.indexOf(a[1]) : -1;
+  // After our reverse, partner's simple preference shows 6-9 and a fit: with a two-suiter of
+  // 4 losers or fewer, the shape is worth game.
+  const o = ST.indexOf(seq[0][1]), xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, ls = losers(h);
+  if (xs >= 0 && xs !== o && bv(x) > bv(B(2, o)) && (as === o || as === xs) && +a[0] === 3 && ls <= 4) {
+    const g = as >= 2 ? B(4, as) : B(5, as);
+    return R(g, `Partner's ${plain(a)} shows 6-9 and a ${SN[as]} fit. Your ${NUM[l[o]]}-${NUM[l[xs]]} shape has only ${ls} losers, so bid game: ${plain(g)}.`, 'D.acol-opener-3');
+  }
   if (a === '2N') { const need = x === '1N' ? 16 : 14; return p >= need ? R('3N', `Partner invites with 2NT. With ${p}, accept: 3NT.`, 'D.acol-opener-3') : R('P', `Partner invites with 2NT. With ${p}, pass.`, 'D.acol-opener-3'); }
   if (as >= 0 && +a[0] === 3) return p >= 14 || (as >= 2 && l[as] >= 4 && p >= 13) ? R(as >= 2 ? B(4, as) : '3N', `Partner's ${plain(a)} invites. With ${p}, accept.`, 'D.acol-opener-3') : R('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`, 'D.acol-opener-3');
   return R('P', `Partner's ${plain(a)} is a sign-off or preference: pass.`, 'D.acol-opener-3');
