@@ -602,7 +602,7 @@ test('1M - 3NT: three-card support, 13-15 balanced; opener chooses', () => {
 test('regression: after 1♠ – 1NT, opener\'s 2♦ is not a jump (no 5♦ on losers)', () => {
   check(sysCall(['1S', '1N', '2D'], parseHand('92.A108432.A542.4')).bid !== '5D');
 });
-test('Acol: openings, 1NT responses, raises and Blackwood follow the Acol chart', () => {
+test('Acol: openings, 1NT responses, raises and RKCB follow the Acol chart', () => {
   const was = { ...SYS }; SYS.acol = true;
   try {
     same(openingBid(parseHand('AJ83.AJ.K63.9732')).bid, '1N', '12-14 balanced: 1NT');
@@ -611,7 +611,8 @@ test('Acol: openings, 1NT responses, raises and Blackwood follow the Acol chart'
     same(sysCall(['1N'], parseHand('K32.Q32.A432.Q32')).bid, '2S', '11: McKendrick');
     same(sysCall(['1N'], parseHand('K32.Q32.A432.K32')).bid, '2N', '12: 2NT');
     same(sysCall(['1H'], parseHand('K32.Q432.Q432.K2')).bid, '3H', '4-card support, 10-12: 3♥');
-    same(sysCall(['1H', '4H', '4N'], parseHand('Q986.AQ52.J75.A3')).bid, '5H', 'Blackwood: two aces');
+    same(sysCall(['1H', '4H', '4N'], parseHand('Q986.AQ52.J75.A3')).bid, '5S', 'RKCB: two key cards with the trump queen');
+    same(sysCall(['1S', '2N', '3N', '4N'], parseHand('AQJ94.85.KQ93.A8')).bid, '5S', 'RKCB after Jacoby: ♠A ♣A and the ♠Q');
   } finally { Object.assign(SYS, was); }
 });
 test('Ogust: the weak-two opener answers by strength and suit quality', () => {
@@ -699,8 +700,8 @@ test('Acol review: the strong NT principles apply to Acol too', () => {
     same(acolSysCall(['1D', '2D'], P('K4.J85.AQ93.AK92')).bid, '2N', 'balanced 17 after a minor raise: 2NT, not 3♦');
     same(acolSysCall(['1D', '1H', '1S'], P('4.KQ8753.AJ4.872')).bid, '2H', 'responder rebids a six-card major');
     same(acolIgnore(P('AJ864.KQJT74.J.2'), 1, '1H').bid, '1S', 'never bid their suit: show the other one');
-    same(acolSysCall(['1S', '2D', '4D', '4N', '5H'], P('Q984.AKQ.K987.A6')).bid, '5N', 'Blackwood: all four aces');
-    same(acolSysCall(['1S', '2D', '4D', '4N', '5H', '5N', '6H'], P('Q984.AKQ.K987.A6')).bid, '7S', 'the grand slam is in the agreed major, not the side suit');
+    same(acolSysCall(['1S', '2D', '4D', '4N', '5H'], P('KQ84.AKQ.K987.A6')).bid, '5N', 'RKCB: all five key cards and the queen');
+    same(acolSysCall(['1S', '2D', '4D', '4N', '5H', '5N', '6C'], P('KQ84.AKQ.K987.A6')).bid, '7S', 'the grand slam is in the agreed major, not the side suit');
     same(acolSysCall(['1H', '1S', '2D'], P('JT3.Q9.Q76.A9542')).bid !== undefined, true, 'no crash');
   } finally { Object.assign(SYS, was); }
 });

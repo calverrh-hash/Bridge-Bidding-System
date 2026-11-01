@@ -69,7 +69,7 @@ function playedCount(id) {
 // ---------- Formatting ----------
 const REF_ACOL = {
   A: 'Acol chart A · Responses to 1NT (12-14)', B: 'Acol chart B · Responses to 1♣/♦/♥/♠', C: "Acol chart C · Opener's NT rebids", D: "Acol chart D · Opener's suit rebids",
-  E: 'Acol chart E · 2NT, weak twos, 2♣', F: 'Acol chart F · Overcalls and doubles', G: 'Acol chart G · Blackwood, losing tricks', H: 'Acol chart H · Pre-empts, their 1NT, our 1NT doubled',
+  E: 'Acol chart E · 2NT, weak twos, 2♣', F: 'Acol chart F · Overcalls and doubles', G: 'Acol chart G · RKCB, losing tricks', H: 'Acol chart H · Pre-empts, their 1NT, our 1NT doubled',
   OB: 'Acol chart · Opening bids', LTC: 'Acol chart G · Losing trick count', GUIDE: 'Trainer guide (the chart is silent here)',
 };
 // Options played in Acol that its chart doesn't have are labelled as such.
@@ -156,7 +156,7 @@ function home() {
   }).join('');
   const ac = DB.opts.acol, hv = DB.opts[optKey(ac, 'helvic')], og = DB.opts[optKey(ac, 'ogust')];
   const seg = (id1, l1, id2, l2, on2, label) => `<div class="seg" role="group" aria-label="${label}"><button id="${id1}" class="${on2 ? '' : 'on'}" aria-pressed="${!on2}">${l1}</button><button id="${id2}" class="${on2 ? 'on' : ''}" aria-pressed="${on2}">${l2}</button></div>`;
-  const sysBox = `<div class="sys"><div><span class="eyebrow">System</span><p>${ac ? 'Acol: weak 1NT (12-14), four-card suits, Blackwood. Follows the Acol chart.' : '5-card majors, strong 1NT (15-17), RKCB. Follows the 5CM / strong NT chart.'}</p></div>${seg('m-5cm', '5CM · strong NT', 'm-acol', 'Acol · weak NT', ac, 'Bidding system')}</div>`;
+  const sysBox = `<div class="sys"><div><span class="eyebrow">System</span><p>${ac ? 'Acol: weak 1NT (12-14), four-card suits, RKCB. Follows the Acol chart.' : '5-card majors, strong 1NT (15-17), RKCB. Follows the 5CM / strong NT chart.'}</p></div>${seg('m-5cm', '5CM · strong NT', 'm-acol', 'Acol · weak NT', ac, 'Bidding system')}</div>`;
   const helvicBox = `<div class="sys"><div><span class="eyebrow">When our 1NT is doubled</span><p>${hv ? `Helvic Wriggle: pass = values (${ac ? 9 : 7}+) or a wriggle (partner redoubles), XX = weak one-suiter (partner bids 2♣), 2♣/2♦/2♥ = that suit and the next one up.` : ac ? 'Chart: with a 5+ card ♦/♥/♠ suit sign off in it, otherwise pass.' : 'Chart: 2♦/2♥/2♠ natural sign-off (transfers off), redouble with 7+.'}</p></div>
     ${seg('m-chart', 'Chart', 'm-helvic', 'Helvic', hv, 'System when our 1NT is doubled')}</div>`;
   const ogustBox = `<div class="sys"><div><span class="eyebrow">Weak two: the 2NT ask</span><p>${og ? 'Ogust: 3♣ minimum, poor suit · 3♦ minimum, good suit · 3♥ maximum, poor suit · 3♠ maximum, good suit · 3NT AKQ.' : 'Features: 3M minimum or no feature · 3 of a new suit = an outside A or K with a maximum · 3NT AKQ.'}</p></div>

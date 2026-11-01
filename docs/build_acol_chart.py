@@ -85,9 +85,9 @@ ltc = '''<table class="lt"><tr><th colspan="2">Opener</th></tr><tr><th>Points</t
 <tr><td>12-14</td><td>7-8</td></tr><tr><td>15-17</td><td>6</td></tr><tr><td>18-19</td><td>5</td></tr><tr><td>20-22</td><td>4</td></tr><tr><td>23+</td><td>3</td></tr></table>
 <table class="lt"><tr><th colspan="2">Responder</th></tr><tr><th>Points</th><th>Losers</th></tr>
 <tr><td>0-5</td><td>10</td></tr><tr><td>6-9</td><td>9</td></tr><tr><td>10-11</td><td>8</td></tr><tr><td>12-15</td><td>7</td></tr><tr><td>16+</td><td>6</td></tr></table>'''
-G = f'''{box('cnv','<b>BLACKWOOD 4NT</b> once a trump suit is agreed (4NT straight over NT is quantitative). Replies: <b>5♣ 0 or 4</b> · <b>5♦ 1</b> · <b>5♥ 2</b> · <b>5♠ 3</b>.')}
+G = f'''{box('cnv','<b>RKCB 4NT</b> once a trump suit is agreed (4NT straight over NT is quantitative). Key cards = 4 aces + the K of trumps. Replies: <b>5♣ 0 or 3</b> · <b>5♦ 1 or 4</b> · <b>5♥ 2 without Q</b> · <b>5♠ 2 with Q</b>.')}
 {arrow}
-{box('reb','<b>Asker:</b> missing two aces → 5 of trumps · missing one → 6 · all four → 5NT for kings (6♣ 0/4 · 6♦ 1 · 6♥ 2 · 6♠ 3), then 6, or 7 with all four kings. Trumps = the agreed suit (a new suit then support plays in opener’s suit).')}
+{box('reb','<b>Asker:</b> missing two key cards → 5 of trumps · missing one → 6 · all five and the trump Q → 5NT for kings (partner bids his cheapest side king, or 6 of trumps with none), then 7 with a side king. Trumps = the agreed suit (a new suit then support plays in opener’s suit).')}
 {box('cnv','<b>WHEN TO ASK:</b> a fit and 31+ points between you, <b>or</b> the loser count says 12 tricks: 24 − (yours + partner’s) ≥ 12. Use 4NT only when there is room to stop at 5 of the suit.')}
 <div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card fit only, never NT). <b>24 − (opener’s losers + responder’s losers) = tricks</b>: 10 → game in a major, 11 → game in a minor, 12 → slam. Losers overrule points only with real shape (singleton, void, 5+ trumps).<div class="ltw">{ltc}</div></div>'''
 
@@ -114,7 +114,7 @@ html = f'''<!doctype html><html><head><meta charset="utf-8"><title>Acol Weak NT 
 {panel(212,383,689,622,'pE','E','2NT · 2♣ · WEAK TWOS (OGUST)',E)}
 {panel(212,630,689,808,'pH','H','PRE-EMPTS · THEIR 1NT · OUR 1NT DOUBLED',Hp)}
 {panel(697,383,932,808,'pF','F','OVERCALLS AND DOUBLES',F)}
-{panel(940,383,1175,808,'pG','G','BLACKWOOD · LOSING TRICKS',G)}
+{panel(940,383,1175,808,'pG','G','RKCB · LOSING TRICKS',G)}
 <div class="legend">{legend}</div>
 <div class="foot">Print on A3, or scale to fit A4. Arrows show the order of the auction.</div>
 </body></html>'''

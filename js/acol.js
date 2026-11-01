@@ -490,7 +490,7 @@ function acolAfter1Suit(seq, h) {
   const pSuits = pre.filter((c, j) => j % 2 !== i4 % 2 && /^\d[CDHS]$/.test(c)).map(c => ST.indexOf(c[1]));
   const pBest = pSuits.filter(u => L(h)[u] >= 3).sort((a, b) => L(h)[b] - L(h)[a])[0];
   const Tm = mineAsk && i4 % 2 === 1 && acolR1(h, o).id === 'B.acol-new-suit-support' ? o : T !== undefined ? T : mineAsk ? pBest : T;
-  // Answering (aces or kings) doesn't depend on the trump suit; only the asker needs it.
+  // Answering RKCB uses the agreed suit (or opener's suit) for the trump king and queen.
   if (seq.includes('4N')) return !mineAsk ? acolBlackwood(seq, h, Tm !== undefined ? Tm : o) : Tm !== undefined ? acolBlackwood(seq, h, Tm) : AP('');
   if (n === 1) return acolR1(h, o);
   if (n === 2) return acolRebid(h, o, r);
@@ -582,7 +582,7 @@ function acolAfter2C(seq, h) {
   return AP('Partner chose the contract.');
 }
 
-// ---------- G: Blackwood ----------
+// ---------- G: RKCB ----------
 // Once a fit is found and the two hands hold 31+, ask for aces with 4NT (5♣ 0/4, 5♦ 1, 5♥ 2,
 // 5♠ 3); missing two: 5 of the suit; missing one: 6; all four: 5NT asks kings (6♣ 0/4 …).
 const aces = h => [0, 1, 2, 3].filter(s => has(h, s, 14)).length;
@@ -590,32 +590,15 @@ const aces = h => [0, 1, 2, 3].filter(s => has(h, s, 14)).length;
 // pl: partner's losers, estimated from their bids.
 function acolSlamTry(h, T, minP, desc, pl) {
   const p = hcp(h), k = losers(h);
-  if (p + minP >= 31) return R('4N', `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you and a ${SN[T]} fit: ask for aces with 4NT (Blackwood).`, 'G.acol-blackwood');
-  if (pl && 24 - k - pl >= 12 && p + minP >= 25) return R('4N', `${desc}: a ${SN[T]} fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${pl}. 24 − (${k} + ${pl}) = ${24 - k - pl} tricks, enough for slam if you're not missing two aces: ask with 4NT (Blackwood).`, 'G.acol-blackwood');
+  if (p + minP >= 31) return R('4N', `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you and a ${SN[T]} fit: ask for key cards with 4NT (RKCB).`, 'G.acol-blackwood');
+  if (pl && 24 - k - pl >= 12 && p + minP >= 25) return R('4N', `${desc}: a ${SN[T]} fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${pl}. 24 − (${k} + ${pl}) = ${24 - k - pl} tricks, enough for slam if you're not missing two key cards: ask with 4NT (RKCB).`, 'G.acol-blackwood');
   return null;
 }
 function acolBlackwood(seq, h, T) {
-  const i4 = seq.indexOf('4N'), k = seq.length - 1 - i4, a = aces(h);
-  if (k === 0) { const b = ['5C', '5D', '5H', '5S', '5C'][a]; return R(b, `Aces: ${a}. ${plain(b)} shows ${a === 0 || a === 4 ? '0 or 4' : a}.`, 'G.acol-blackwood-answer'); }
-  if (k === 1) {
-    const rep = seq[i4 + 1], shown = { '5C': a >= 1 ? 0 : 4, '5D': 1, '5H': 2, '5S': 3 }[rep], tot = a + shown, miss = 4 - tot, five = B(5, T);
-    const head = `You hold ${a} ace${a === 1 ? '' : 's'}, partner shows ${shown}: ${tot} of 4.`;
-    if (miss >= 2) return bv(rep) < bv(five) ? R(five, `${head} Missing two: sign off in 5${SY[T]}.`, 'G.acol-blackwood-decide') : bv(rep) === bv(five) ? R('P', `${head} Missing two, and the reply is already 5${SY[T]}: pass.`, 'G.acol-blackwood-decide') : R(B(6, T), `${head} Missing two, but the reply is past 5${SY[T]}: 6${SY[T]}.`, 'G.acol-blackwood-decide');
-    if (miss === 1) return R(B(6, T), `${head} Missing one: 6${SY[T]}.`, 'G.acol-blackwood-decide');
-    return R('5N', `${head} All four aces: 5NT asks for kings.`, 'G.acol-blackwood-decide');
-  }
-  if (k === 2) {
-    if (seq[i4 + 2] !== '5N') return AP('Partner placed the contract.');
-    const kg = [0, 1, 2, 3].filter(s => has(h, s, 13)).length, b = ['6C', '6D', '6H', '6S', '6C'][kg];
-    return R(b, `Kings: ${kg}. ${plain(b)} shows ${kg === 0 || kg === 4 ? '0 or 4' : kg}.`, 'G.acol-blackwood-answer');
-  }
-  if (k === 3) {
-    const rep = seq[i4 + 3], mine = [0, 1, 2, 3].filter(s => has(h, s, 13)).length, shown = { '6C': mine >= 1 ? 0 : 4, '6D': 1, '6H': 2, '6S': 3 }[rep];
-    const all = mine + shown === 4;
-    if (all) return R(B(7, T), `All four aces and all four kings: bid the grand slam, 7${SY[T]}.`, 'G.acol-blackwood-decide');
-    return bv(B(6, T)) > bv(rep) ? R(B(6, T), `A king is missing: 6${SY[T]}.`, 'G.acol-blackwood-decide') : R('P', `A king is missing: stay in 6${SY[T]}.`, 'G.acol-blackwood-decide');
-  }
-  return AP('The contract is set.');
+  // Roman Key Card Blackwood, as in the strong NT system (5♣ 0/3 · 5♦ 1/4 · 5♥ 2 · 5♠ 2 + trump queen).
+  const r = afterRKCB(seq, h, T);
+  if (r && r.id) r.id = /answer$/.test(r.id) ? 'G.acol-blackwood-answer' : /^G\./.test(r.id) ? 'G.acol-blackwood-decide' : r.id;
+  return r;
 }
 
 // Partner's weak two, when you have a long suit of your own and little support: the chart's
@@ -863,8 +846,8 @@ const ACOL_SETS = (() => {
         PO({ setup: r => { const s = ri(r, 2, 3); return { south: { lens: rl(r, sp({ [s]: [1, 4] }, [0, 6])), hcp: [0, 7] }, north: { lens: sp({ [s]: [5, 7] }, [0, 4]), hcp: [23, 26], opens: '2C' }, note: 'Partner opened 2♣ (23+).' }; } }),
         SO({ south: { lens: r => rl(r, sp({}, [1, 6])), hcp: [23, 26] }, north: { hcp: [0, 7] } }),
       ] },
-    { id: 'a-slam', name: 'Slam: Blackwood', refs: 'G', acol: true, slam: true,
-      blurb: 'A fit and 31+ between you: ask for aces with 4NT, then kings, and pick the level.',
+    { id: 'a-slam', name: 'Slam: RKCB', refs: 'G', acol: true, slam: true,
+      blurb: 'A fit and 31+ between you: ask for key cards with 4NT (RKCB), then kings, and pick the level.',
       recipes: [
         SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [1, 4])); }, hcp: [16, 19], ok: h => /^1[HS]$/.test(acolOpening(h).bid || '') }, north: { lens: (r, h) => { const M = ST.indexOf(acolOpening(h).bid[1]); return sp({ [M]: [4, 5] }, [1, 4]); }, hcp: [13, 15] } }),
         PO({ setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: [4, 5] }, [1, 4])), hcp: [13, 15] }, north: { lens: sp({ [M]: [5, 6] }, [1, 4]), hcp: [16, 19], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` }; } }),
