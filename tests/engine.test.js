@@ -721,3 +721,12 @@ test('Acol: no fit and no stopper: a forcing new suit instead of 2NT', () => {
     same(acolSysCall(['1S', '2D', '2S'], parseHand('97.KJ2.AQT86.Q85')).bid, '2N', 'stoppers and no singleton: 2NT');
   } finally { Object.assign(SYS, was); }
 });
+test('Acol: shape responses: a weak 6-5 responds, a six-card suit goes to the 2-level with 8', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true; SYS.jacoby = true;
+    same(acolR1(parseHand('Q64.J4.63.KQ8532'), 3).bid, '2C', '8 HCP, six clubs over 1♠: 2♣');
+    same(acolR1(parseHand('6.T9543.KT9732.5'), 0).bid, '1D', '3 HCP 6-5 with 7 losers over 1♣: 1♦');
+    same(acolR1(parseHand('Q64.J4.632.K8532'), 3).bid, '1N', '5 HCP five clubs, 8 losers: still 1NT');
+  } finally { Object.assign(SYS, was); }
+});

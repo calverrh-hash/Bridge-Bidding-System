@@ -152,7 +152,9 @@ function acolR1(h, o) {
   const odd = l.some(n => n <= 1) || t >= 5, k = odd ? losers(h) : 99;
   // Four-card support for a major: losers decide the raise as much as points (the chart's loser
   // table: 9 losers 2M · 8 3M · 7 4M · 6 or fewer, like 16+, a new suit first, then support).
-  const sh = shapeResp(h) || (fitM && p <= 5 && losers(h) <= 9), sw = p <= 5 && sh ? shapeWhy(h) : '';
+  // Shape counts: 4-5 HCP with 9 losers or fewer, or any hand with a 5+ suit and 7 losers or fewer, responds.
+  const lz = losers(h), bigShape = Math.max(...l) >= 5 && lz <= 7;
+  const sh = shapeResp(h) || (fitM && p <= 5 && lz <= 9) || (p <= 5 && bigShape), sw = p <= 5 && sh ? shapeWhy(h) : '';
   if (p <= 5 && !sh) return R('P', `${p} HCP: a response needs 6+ (or fewer with real shape: 9 losers or fewer). Pass.`, 'B.acol-pass');
   const pe = Math.max(p, sh ? 6 : 0);
   // Jacoby 2NT (the switch, on by default): 4+ trumps and game values, 13+ HCP or 6 losers or fewer with 10+.
@@ -181,7 +183,9 @@ function acolR1(h, o) {
     if (pe <= 12) return R('2N', `${p} HCP balanced: 2NT (10-12).`, 'B.acol-2nt');
     if (pe <= 15) return R('3N', `${p} HCP balanced: 3NT (13-15).`, 'B.acol-3nt');
   }
-  const pool = (pe >= 9 ? others : one);
+  // 2-level: 9+, or 8 with a good six-card suit (7+ HCP and 6+ cards), or a 5+ suit with 7 losers or fewer.
+  const twoOK = u => l[u] >= 6 && p >= 7 || (l[u] >= 5 && lz <= 7 && p >= 6);
+  const pool = (pe >= 9 ? others : one.concat(others.filter(u => u < o && twoOK(u))));
   if (!pool.length) {
     if (pe <= 9) return R('1N', `${sw}${p} HCP and no suit to show at the 1-level: 1NT (6-9).`, 'B.acol-1nt');
     return bal ? R(pe <= 12 ? '2N' : '3N', `${p} HCP balanced: ${pe <= 12 ? '2NT (10-12)' : '3NT (13-15)'}.`, pe <= 12 ? 'B.acol-2nt' : 'B.acol-3nt') : gap('The chart has no response for this hand.');
@@ -190,13 +194,14 @@ function acolR1(h, o) {
   let s = mx >= 5 ? tied[tied.length - 1] : tied[0], how = tied.length > 1 ? (mx >= 5 ? ' (5-5: the higher-ranking)' : ' (equal length: the lower)') : '';
   // Never skip a four-card major over 1♣/1♦: bid it unless a longer minor and 10+ let you show both.
   const majs = pool.filter(u => u >= 2 && u > o);
-  if (o < 2 && s < 2 && majs.length && !(l[s] > Math.max(...majs.map(u => l[u])) && pe >= 10)) {
+  // (A 6-5 with the longer minor bids the minor first: with that shape you'll bid again.)
+  if (o < 2 && s < 2 && majs.length && !(l[s] > Math.max(...majs.map(u => l[u])) && (pe >= 10 || (l[s] >= 6 && Math.max(...majs.map(u => l[u])) >= 5)))) {
     const mm = Math.max(...majs.map(u => l[u])), mt = majs.filter(u => l[u] === mm);
     s = mm >= 5 ? mt[mt.length - 1] : mt[0];
     how = l[s] < mx ? ` (never skip a four-card major: with ${p} HCP you may only get one bid, so show the major)` : mt.length > 1 ? (mm >= 5 ? ' (5-5: the higher-ranking)' : ' (4-4 majors: hearts first)') : ' (never skip a four-card major)';
   }
   const b = B(s > o ? 1 : 2, s);
-  return R(b, `${sw}${strong16 ? `${t}-card support and ${p} HCP${pe < 16 ? ` with only ${k} losers` : ''} (worth 16+): bid a new suit first, then support. ` : `${p} HCP: `}new suit, ${plain(b)}${how}. ${s > o ? '1-level needs 6+' : '2-level needs 9+'}; forcing.`, strong16 ? 'B.acol-new-suit-support' : 'B.acol-new-suit');
+  return R(b, `${sw}${strong16 ? `${t}-card support and ${p} HCP${pe < 16 ? ` with only ${k} losers` : ''} (worth 16+): bid a new suit first, then support. ` : `${p} HCP: `}new suit, ${plain(b)}${how}. ${s > o ? '1-level needs 6+' : pe >= 9 ? '2-level needs 9+' : `The 2-level normally needs 9+, but ${l[s] >= 6 && p >= 7 ? `a six-card suit makes ${p} enough` : `with ${lz} losers the shape makes up for it`}`}; forcing.`, strong16 ? 'B.acol-new-suit-support' : 'B.acol-new-suit');
 }
 
 // ---------- C and D: opener's rebid ----------
