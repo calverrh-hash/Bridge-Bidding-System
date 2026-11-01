@@ -183,9 +183,7 @@ function acolR1(h, o) {
     if (pe <= 12) return R('2N', `${p} HCP balanced: 2NT (10-12).`, 'B.acol-2nt');
     if (pe <= 15) return R('3N', `${p} HCP balanced: 3NT (13-15).`, 'B.acol-3nt');
   }
-  // 2-level: 9+, or 8 with a good six-card suit (7+ HCP and 6+ cards), or a 5+ suit with 7 losers or fewer.
-  const twoOK = u => l[u] >= 6 && p >= 7 || (l[u] >= 5 && lz <= 7 && p >= 6);
-  const pool = (pe >= 9 ? others : one.concat(others.filter(u => u < o && twoOK(u))));
+  const pool = (pe >= 9 ? others : one);
   if (!pool.length) {
     if (pe <= 9) return R('1N', `${sw}${p} HCP and no suit to show at the 1-level: 1NT (6-9).`, 'B.acol-1nt');
     return bal ? R(pe <= 12 ? '2N' : '3N', `${p} HCP balanced: ${pe <= 12 ? '2NT (10-12)' : '3NT (13-15)'}.`, pe <= 12 ? 'B.acol-2nt' : 'B.acol-3nt') : gap('The chart has no response for this hand.');
@@ -201,7 +199,7 @@ function acolR1(h, o) {
     how = l[s] < mx ? ` (never skip a four-card major: with ${p} HCP you may only get one bid, so show the major)` : mt.length > 1 ? (mm >= 5 ? ' (5-5: the higher-ranking)' : ' (4-4 majors: hearts first)') : ' (never skip a four-card major)';
   }
   const b = B(s > o ? 1 : 2, s);
-  return R(b, `${sw}${strong16 ? `${t}-card support and ${p} HCP${pe < 16 ? ` with only ${k} losers` : ''} (worth 16+): bid a new suit first, then support. ` : `${p} HCP: `}new suit, ${plain(b)}${how}. ${s > o ? '1-level needs 6+' : pe >= 9 ? '2-level needs 9+' : `The 2-level normally needs 9+, but ${l[s] >= 6 && p >= 7 ? `a six-card suit makes ${p} enough` : `with ${lz} losers the shape makes up for it`}`}; forcing.`, strong16 ? 'B.acol-new-suit-support' : 'B.acol-new-suit');
+  return R(b, `${sw}${strong16 ? `${t}-card support and ${p} HCP${pe < 16 ? ` with only ${k} losers` : ''} (worth 16+): bid a new suit first, then support. ` : `${p} HCP: `}new suit, ${plain(b)}${how}. ${s > o ? '1-level needs 6+' : '2-level needs 9+'}; forcing.`, strong16 ? 'B.acol-new-suit-support' : 'B.acol-new-suit');
 }
 
 // ---------- C and D: opener's rebid ----------

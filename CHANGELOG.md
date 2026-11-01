@@ -1,7 +1,7 @@
 # Changelog
 
 ## 2026-11-01
-- **Acol responses, shape counts:** any hand with a 5+ suit and 7 losers or fewer responds (e.g. 3 HCP, 6-5 in the red suits); a new suit at the 2-level needs 9+, or 8 with a six-card suit, or a 5+ suit with 7 losers or fewer (1♠ – 2♣ with ♣KQ8532 and 8 HCP). 6-5 with a longer minor bids the minor first. On the Acol chart too (panel B).
+- **Acol responses, shape counts:** any hand with a 5+ suit and 7 losers or fewer responds (e.g. 3 HCP, 6-5 in the red suits). 6-5 with a longer minor bids the minor first. A new suit at the 2-level still needs 9+ (8 HCP with six clubs over 1♠ bids 1NT, which keeps the auction low). On the Acol chart too (panel B).
 - **Acol, responder with no fit after opener's minimum rebid:** 2NT/3NT only with the unbid suits stopped and no singleton in partner's suit; otherwise bid a second 4+ suit at the 3-level (forcing), e.g. 1♠ – 2♦ – 2♠ – 3♣ with no heart stopper. Opener then bids 3NT with a stopper, rebids a six-card suit, or supports; responder picks the game. On the Acol chart too (panel D).
 - **Acol, a weak six-card minor over partner's minor rebid** (1♣ – 1♦ – 2♣): rebid it only with 0-1 cards in partner's suit; with a doubleton, pass (partner's long suit is as good a trump suit). A six-card major is still rebid. On the Acol chart too (panel D).
 
