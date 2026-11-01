@@ -289,6 +289,20 @@ function acolRebid(h, o, r) {
   return R(nt, `13-14 with nothing else to show: ${plain(nt)}.`, 'D.acol-weak');
 }
 
+// No fit, 11+ and no-trumps in view: 2NT/3NT only with the unbid suits stopped and no singleton in
+// partner's suit; otherwise show a second 4+ suit (a new suit is forcing), so partner can pick the game.
+function acolNoFitNT(h, x, used, p, why) {
+  const l = L(h), unbid = [0, 1, 2, 3].filter(u => !used.includes(u));
+  const ntOK = l.every(n => n >= 2) && unbid.every(u => stop(h, u));
+  const nt = p >= 13 ? '3N' : '2N';
+  if (ntOK) return R(nt, `${why}. With ${p} (${p >= 13 ? '13+' : '11-12'}) and ${unbid.length ? `${unbid.map(u => SN[u]).join(' and ')} stopped` : 'a balanced hand'}, ${p >= 13 ? '3NT' : '2NT invites'}.`, 'D.acol-after');
+  const sec = unbid.filter(u => l[u] >= 4 && bv(B(cheapest(u, x), u)) < bv('3N')).sort((a, b) => l[b] - l[a] || b - a)[0];
+  if (sec !== undefined) {
+    const b = B(cheapest(sec, x), sec), bad = unbid.filter(u => u !== sec && !stop(h, u));
+    return R(b, `${why}. No-trumps doesn't suit this hand (${bad.length ? `no ${bad.map(u => SN[u].replace(/s$/, '')).join(' or ')} stopper` : `a singleton in partner's suit`}), so show your ${SN[sec]}: ${plain(b)}, forcing. Partner bids 3NT with ${bad.length ? `a ${bad.map(u => SN[u].replace(/s$/, '')).join('/')} stopper` : 'the unbid suits stopped'}, rebids a six-card suit, or supports you.`, 'D.acol-after');
+  }
+  return R(nt, `${why}. With ${p} and no second suit to show, ${p >= 13 ? '3NT' : '2NT invites'}.`, 'D.acol-after');
+}
 // Responder's second call.
 function acolResp2(h, seq) {
   const p = hcp(h), l = L(h), o = ST.indexOf(seq[0][1]), r = seq[1], x = seq[2];
@@ -368,13 +382,12 @@ function acolResp2(h, seq) {
   if (xs === o) {   // simple rebid of a 5+ suit: 13-14
     if (l[o] === 2 && rs >= 0 && rs < 2 && o < 2 && l[rs] >= 6 && p <= 10) return R('P', `Opener rebids ${SN[o]} (13-14, usually six). You have two of them and a weak hand: with a doubleton in partner's suit, ${SN[o]} is as good a trump suit as your ${SN[rs]}, so pass.`, 'D.acol-after');
     if (l[o] >= 3) return p >= 13 ? R(game(o), `Opener rebids ${SN[o]} (13-14). With ${l[o]} of them and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(3, o), `Opener rebids ${SN[o]}. With ${l[o]} of them and ${p} (11-12), invite: 3${SY[o]}.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]} (13-14). With ${p}, pass.`, 'D.acol-after');
-    return p >= 13 ? R('3N', `Opener rebids ${SN[o]}. With ${p} (13+), 3NT.`, 'D.acol-after') : p >= 11 ? R('2N', `Opener rebids ${SN[o]}. With ${p} (11-12), 2NT invites.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]}. With ${p}, pass.`, 'D.acol-after');
+    return p >= 11 ? acolNoFitNT(h, x, [o, rs], p, `Opener rebids ${SN[o]} (13-14)`) : R('P', `Opener rebids ${SN[o]}. With ${p}, pass.`, 'D.acol-after');
   }
   if (xs >= 0 && xs !== rs) {   // new suit below the barrier: 13-14
     const nw = `Opener's ${plain(x)} is a new suit, not a reverse (13-18, usually a minimum)`;
     if (l[xs] >= 4) return p >= 13 ? R(game(xs), `${nw}. With four ${SN[xs]} and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(xl + 1, xs), `${nw}. With four ${SN[xs]} and ${p} (11-12), invite.`, 'D.acol-after') : R('P', `${nw}. With four ${SN[xs]} and ${p}, pass.`, 'D.acol-after');
-    if (p >= 13) return R('3N', `${nw}. With ${p} (13+), 3NT.`, 'D.acol-after');
-    if (p >= 11) return R('2N', `${nw}. With ${p} (11-12), 2NT invites.`, 'D.acol-after');
+    if (p >= 11) return acolNoFitNT(h, x, [o, rs, xs], p, nw);
     if (l[o] >= l[xs] && l[o] >= 2) return R(B(cheapest(o, x), o), `${nw}. With ${p}, give preference: ${plain(B(cheapest(o, x), o))}.`, 'D.acol-after');
     return R('P', `${nw}. With ${p}, pass.`, 'D.acol-after');
   }
@@ -392,6 +405,16 @@ function acolOpener3(h, seq) {
   if (xs === o && +x[0] === 3 && as === rs && as >= 2 && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows six ${SN[as]} and is forcing. With ${l[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows six ${SN[as]}. With a singleton, 3NT.`, 'D.acol-opener-3');
   // After our jump shift (game forcing), partner shows a long major: raise with two.
   if (xs >= 0 && xs !== o && +x[0] === cheapest(xs, r) + 1 && as >= 2 && as !== xs && as !== o && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows a long suit. With ${l[as]} ${SN[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows a long suit. With a singleton, 3NT.`, 'D.acol-opener-3');
+  // Partner's new suit after our minimum rebid (no fit for us yet): forcing. 3NT with the
+  // unbid suit(s) stopped · six of our own suit: rebid it · support partner · else 3NT.
+  if (as >= 0 && as !== o && as !== xs && as !== rs && +a[0] === 3 && (xs === o || bv(x) < bv(B(2, o)) || +x[0] <= 2)) {
+    const unbid = [0, 1, 2, 3].filter(u => ![o, xs, rs, as].includes(u));
+    if (unbid.every(u => stop(h, u))) return R('3N', `Partner's ${plain(a)} is forcing and suggests no stopper in ${unbid.map(u => SN[u]).join(' and ') || 'the unbid suit'}. You have it stopped: 3NT.`, 'D.acol-opener-3');
+    if (l[o] >= 6 && o >= 2) return R(B(cheapest(o, a), o), `Partner's ${plain(a)} is forcing. No stopper in ${unbid.map(u => SN[u]).join(' and ')}, but six ${SN[o]}: ${plain(B(cheapest(o, a), o))}.`, 'D.acol-opener-3');
+    if (rs >= 0 && l[rs] >= 3) { const b = B(cheapest(rs, a), rs); return R(b, `Partner's ${plain(a)} is forcing. No stopper in ${unbid.map(u => SN[u]).join(' and ')}; with ${l[rs]} ${SN[rs]}, show the support: ${plain(b)}.`, 'D.acol-opener-3'); }
+    if (l[as] >= 4) { const b = B(cheapest(as, a), as); return R(b, `Partner's ${plain(a)} is forcing. With four ${SN[as]}, raise: ${plain(b)}.`, 'D.acol-opener-3'); }
+    return R(l[o] >= 6 ? B(cheapest(o, a), o) : '3N', `Partner's ${plain(a)} is forcing. Nothing better to say: ${l[o] >= 6 ? `rebid your ${SN[o]}` : '3NT'}.`, 'D.acol-opener-3');
+  }
   // Partner's new major at the 2-level (forcing one round).
   if (as >= 2 && as !== o && as !== xs && as !== rs && +a[0] === 2 && r !== '1N') {
     if (l[as] >= 4) return p >= 15 ? R(B(4, as), `Partner's ${plain(a)} shows four ${SN[as]}, 10+. You have four too and ${p}: 4${SY[as]}.`, 'D.acol-opener-3') : R(B(3, as), `Partner's ${plain(a)} shows four ${SN[as]}, 10+. You have four too, minimum: 3${SY[as]}.`, 'D.acol-opener-3');
@@ -422,6 +445,15 @@ function acolOpener3(h, seq) {
 // Responder's third call: after showing an unbid major at the 2-level.
 function acolResp3(h, seq) {
   const p = hcp(h), l = L(h), o = ST.indexOf(seq[0][1]), r = seq[1], y = seq[3], z = seq[4];
+  // After our forcing 3-level new suit (no stopper for no-trumps).
+  if (/^3[CDHS]$/.test(y) && /^\d[CDHS]$/.test(r) && y[1] !== r[1] && y[1] !== seq[0][1] && y[1] !== seq[2][1]) {
+    const rs = ST.indexOf(r[1]), ys = ST.indexOf(y[1]);
+    if (gameBid(z) || z === 'P' || /^[56]/.test(z)) return AP('Partner chose the contract.');
+    if (z[1] === seq[0][1]) return p >= 13 || (o >= 2 && l[o] >= 2) ? R(o >= 2 ? B(4, o) : B(5, o), `Opener shows six ${SN[o]}${l[o] >= 2 ? ` and you have ${l[o]}` : ''}: game, ${o >= 2 ? `4${SY[o]}` : `5${SY[o]}`}.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]} with no stopper for no-trumps. With ${p} and a singleton, stop: pass.`, 'D.acol-after');
+    const zs = ST.indexOf(z[1]);
+    if (zs === rs || zs === ys) { const g = zs >= 2 ? B(4, zs) : B(5, zs); return p >= 12 ? R(g, `Opener supports your ${SN[zs]}. With ${p}, game: ${plain(g)}.`, 'D.acol-after') : R('P', `Opener supports your ${SN[zs]}. With ${p}, stop here.`, 'D.acol-after'); }
+    return AP('The contract is set.');
+  }
   const rs = /^\d[CDHS]$/.test(r) ? ST.indexOf(r[1]) : -1, ys = /^2[HS]$/.test(y) ? ST.indexOf(y[1]) : -1;
   if (ys < 0 || rs < 0 || gameBid(z) || z === 'P') return AP('The contract is set.');
   if (z === B(3, ys)) return p >= 12 ? R(B(4, ys), `Opener raised your ${SN[ys]} (13-14). With ${p} (12+), 4${SY[ys]}.`, 'D.acol-after') : R('P', `Opener raised your ${SN[ys]} with a minimum. With ${p}, pass.`, 'D.acol-after');

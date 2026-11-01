@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-11-01
+- **Acol, responder with no fit after opener's minimum rebid:** 2NT/3NT only with the unbid suits stopped and no singleton in partner's suit; otherwise bid a second 4+ suit at the 3-level (forcing), e.g. 1♠ – 2♦ – 2♠ – 3♣ with no heart stopper. Opener then bids 3NT with a stopper, rebids a six-card suit, or supports; responder picks the game. On the Acol chart too (panel D).
 - **Acol, a weak six-card minor over partner's minor rebid** (1♣ – 1♦ – 2♣): rebid it only with 0-1 cards in partner's suit; with a doubleton, pass (partner's long suit is as good a trump suit). A six-card major is still rebid. On the Acol chart too (panel D).
 
 ## 2026-10-31 (late): Acol Jacoby 2NT

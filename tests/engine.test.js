@@ -712,3 +712,12 @@ test('Acol: weak six-card minor over partner\'s minor rebid: pass with a doublet
     same(acolSysCall(['1C', '1D', '2C'], parseHand('K107.A73.J108432.6')).bid, '2D', 'singleton club: 2♦');
   } finally { Object.assign(SYS, was); }
 });
+test('Acol: no fit and no stopper: a forcing new suit instead of 2NT', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true; SYS.jacoby = true;
+    same(acolSysCall(['1S', '2D', '2S'], parseHand('9.962.AQT86.AQ85')).bid, '3C', 'no heart stopper, singleton spade: 3♣');
+    same(acolSysCall(['1S', '2D', '2S', '3C'], parseHand('AKJ652.K73.4.K92')).bid, '3N', 'opener with a heart stopper: 3NT');
+    same(acolSysCall(['1S', '2D', '2S'], parseHand('97.KJ2.AQT86.Q85')).bid, '2N', 'stoppers and no singleton: 2NT');
+  } finally { Object.assign(SYS, was); }
+});
