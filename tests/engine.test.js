@@ -704,3 +704,11 @@ test('Acol review: the strong NT principles apply to Acol too', () => {
     same(acolSysCall(['1H', '1S', '2D'], P('JT3.Q9.Q76.A9542')).bid !== undefined, true, 'no crash');
   } finally { Object.assign(SYS, was); }
 });
+test('Acol: weak six-card minor over partner\'s minor rebid: pass with a doubleton, rebid with a singleton', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true;
+    same(acolSysCall(['1C', '1D', '2C'], parseHand('K107.A7.J108432.65')).bid, 'P', 'doubleton club: pass 2♣');
+    same(acolSysCall(['1C', '1D', '2C'], parseHand('K107.A73.J108432.6')).bid, '2D', 'singleton club: 2♦');
+  } finally { Object.assign(SYS, was); }
+});

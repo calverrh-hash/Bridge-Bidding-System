@@ -353,7 +353,10 @@ function acolResp2(h, seq) {
   const um = [2, 3].find(u => u !== o && u !== rs && u !== xs && l[u] >= 4 && cheapest(u, x) === 2);
   if (um !== undefined && p >= 10 && xs >= 0 && xs < 2 && !(l[xs] >= 4 && xs !== o) && bv(B(2, um)) > bv(x)) return R(B(2, um), `Opener's ${plain(x)} doesn't deny four ${SN[um]}. Never skip a four-card major: with ${p}, bid 2${SY[um]} (forcing one round).`, 'D.acol-after');
   // Your own six-card suit, and no fit for what opener has shown: rebid it.
-  const ownSix = rs >= 0 && l[rs] >= 6 && l[o] <= (rs >= 2 ? 3 : 2) && (xs === o || (xs >= 0 && l[xs] <= 3));
+  // A weak hand with a six-card minor, over partner's minor rebid: rebid it only when short (0-1) in
+  // partner's suit; with a doubleton partner's long suit is as good a trump suit, so pass.
+  const minorWeak = rs >= 0 && rs < 2 && p <= 10 && xs >= 0 && xs < 2;
+  const ownSix = rs >= 0 && l[rs] >= 6 && l[o] <= (rs >= 2 ? 3 : minorWeak ? 1 : 2) && (xs === o || (xs >= 0 && l[xs] <= (minorWeak ? 1 : 3)));
   if (ownSix) {
     const lv = cheapest(rs, x), b = p >= 13 ? (rs >= 2 ? B(4, rs) : '3N') : p >= 11 && (rs >= 2 || lv + 1 <= 3) ? B(lv + 1, rs) : B(lv, rs);
     const jumped = /^\d/.test(b) && +b[0] > lv;
@@ -363,6 +366,7 @@ function acolResp2(h, seq) {
   const un6 = [0, 1, 2, 3].find(u => u !== o && u !== rs && u !== xs && l[u] >= 6 && cheapest(u, x) === 2);
   if (un6 !== undefined && r === '1N' && p <= 10 && xs >= 0 && l[xs] <= 2 && l[o] <= 2) return R(B(2, un6), `No fit for opener (${cardsOf(l[o], o)}, ${cardsOf(l[xs], xs)}), but ${NUM[l[un6]]} ${SN[un6]}: bid 2${SY[un6]}, to play.`, 'D.acol-after');
   if (xs === o) {   // simple rebid of a 5+ suit: 13-14
+    if (l[o] === 2 && rs >= 0 && rs < 2 && o < 2 && l[rs] >= 6 && p <= 10) return R('P', `Opener rebids ${SN[o]} (13-14, usually six). You have two of them and a weak hand: with a doubleton in partner's suit, ${SN[o]} is as good a trump suit as your ${SN[rs]}, so pass.`, 'D.acol-after');
     if (l[o] >= 3) return p >= 13 ? R(game(o), `Opener rebids ${SN[o]} (13-14). With ${l[o]} of them and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 ? R(B(3, o), `Opener rebids ${SN[o]}. With ${l[o]} of them and ${p} (11-12), invite: 3${SY[o]}.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]} (13-14). With ${p}, pass.`, 'D.acol-after');
     return p >= 13 ? R('3N', `Opener rebids ${SN[o]}. With ${p} (13+), 3NT.`, 'D.acol-after') : p >= 11 ? R('2N', `Opener rebids ${SN[o]}. With ${p} (11-12), 2NT invites.`, 'D.acol-after') : R('P', `Opener rebids ${SN[o]}. With ${p}, pass.`, 'D.acol-after');
   }

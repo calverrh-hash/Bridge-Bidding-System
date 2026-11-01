@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-01
+- **Acol, a weak six-card minor over partner's minor rebid** (1♣ – 1♦ – 2♣): rebid it only with 0-1 cards in partner's suit; with a doubleton, pass (partner's long suit is as good a trump suit). A six-card major is still rebid. On the Acol chart too (panel D).
+
 ## 2026-10-31 (late): Acol Jacoby 2NT
 - **Jacoby 2NT over 1♥/1♠** (Acol): 4+ trumps and game values (13+, or 10+ with 6 losers or fewer), game forcing. Opener shows a singleton or void at the 3-level, otherwise 4M with 13-14, 3NT with 15-17, 3M with 18+. Responder then bids 4M, or 4NT when the points or the loser count say slam. A direct 4M is now the shape raise (7 losers, under 13 HCP). Balanced 10-12 over a major bids a new suit, then 2NT. With interference, Jacoby is off (bid 4M). A home-screen switch keeps the natural 2NT as an option; Jacoby is the default. On the Acol chart too (panel B).
 - Responder after opener's double raise of a minor to the 4-level: 4M with three of opener's major.
