@@ -730,3 +730,20 @@ test('Acol: shape responses: a weak 6-5 responds; the 2-level still needs 9+', (
     same(acolR1(parseHand('Q64.J4.632.K8532'), 3).bid, '1N', '5 HCP five clubs, 8 losers: still 1NT');
   } finally { Object.assign(SYS, was); }
 });
+
+test('Acol: opener\'s new suit after a 2-level response is forcing; minor raise to 3 looks for 3NT', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true; SYS.jacoby = true;
+    const A = (seq, h) => acolAfter1Suit(seq, parseHand(h)).bid;
+    same(A(['1S', '2D'], 'AKJ85.A876.K.Q98'), '2H', '17 HCP, 5-4: 2♥ (forcing), not a 3♥ jump shift');
+    same(A(['1S', '2D', '2H'], 'Q4.K543.AJ832.75'), '3H', 'four hearts, minimum: raise, never pass');
+    same(A(['1S', '2D', '2H'], 'Q74.K5.AJ832.754'), '2S', 'three spades, minimum: preference');
+    same(A(['1S', '2D', '2H', '2S'], 'AKJ85.A876.K.Q98'), '4S', '17 opposite preference: game');
+    same(A(['1S', '2C', '2D'], '74.Q5.K84.AJ8432'), '3C', 'no fit: rebid six clubs, never pass');
+    same(A(['1D', '3D'], 'A.KQ.AJT843.K872'), '3H', 'singleton ace: show the heart stopper on the way to 3NT');
+    same(A(['1D', '3D', '3H'], 'Q73.85.KQ52.AJ43'), '3N', 'spades and clubs stopped: 3NT');
+    same(A(['1D', '3D', '3H'], '873.A5.KQ52.QJ43'), '4D', 'no spade stopper: 4♦');
+    same(A(['1D', '3D', '3H', '4D'], 'A.KQ.AJT843.K872'), '5D', '5 losers: 5♦');
+  } finally { Object.assign(SYS, was); }
+});

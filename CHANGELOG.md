@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-11-01
+- Acol, opener's new suit after a 2-level response is forcing (12-18): with 17 and 5-4 (1♠ – 2♦), bid 2♥, not a 3♥ jump shift (19+). Responder never passes: raise with four, preference with three (opener bids game with 16+), else rebid a six-card suit or 2NT.
+- Acol, after a minor raise to 3 (10-12): with a singleton or void and game values, opener shows a stopper on the way to 3NT (1♦ – 3♦ – 3♥). Responder bids 3NT with the other suits stopped, else 4♦; opener then bids 5♦ with 5 losers or fewer.
 - **Acol responses, shape counts:** any hand with a 5+ suit and 7 losers or fewer responds (e.g. 3 HCP, 6-5 in the red suits). 6-5 with a longer minor bids the minor first. A new suit at the 2-level still needs 9+ (8 HCP with six clubs over 1♠ bids 1NT, which keeps the auction low). On the Acol chart too (panel B).
 - **Acol, responder with no fit after opener's minimum rebid:** 2NT/3NT only with the unbid suits stopped and no singleton in partner's suit; otherwise bid a second 4+ suit at the 3-level (forcing), e.g. 1♠ – 2♦ – 2♠ – 3♣ with no heart stopper. Opener then bids 3NT with a stopper, rebids a six-card suit, or supports; responder picks the game. On the Acol chart too (panel D).
 - **Acol, a weak six-card minor over partner's minor rebid** (1♣ – 1♦ – 2♣): rebid it only with 0-1 cards in partner's suit; with a doubleton, pass (partner's long suit is as good a trump suit). A six-card major is still rebid. On the Acol chart too (panel D).
