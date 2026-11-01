@@ -417,6 +417,11 @@ function after1Minor(seq, h) {
     if (preference(seq)) return AP('Partner gave preference to your first suit: pass.');
     if (inv !== undefined) return inv;
     if (gameBid(a)) return AP('Partner bid game.');
+    // After a 2-level response and our forcing 15+ rebid, partner's 3-level call: pick the game.
+    if (seq[0] === '1D' && r === '2C' && /^3[CDHS]$/.test(a) && hcp(h) >= 15) {
+      const as = ST.indexOf(a[1]), l = L(h), g = as >= 2 && l[as] >= 3 ? B(4, as) : '3N';
+      return R(g, `After partner's 2-level response you have game values between you (${hcp(h)} + 10). Partner's ${plain(a)}: ${g === '3N' ? 'no major fit, so 3NT' : `a ${SN[as]} fit, so ${plain(g)}`}.`, 'D.reverse-continue');
+    }
   }
   if (n === 5 && gameBid(seq[4])) return AP('Partner accepted the invitation.');
   return gap('The chart has no further calls in this auction.');

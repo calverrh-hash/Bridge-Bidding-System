@@ -758,3 +758,8 @@ test('Acol: over their 1NT, a long shapely suit overcalls with 8+', () => {
     same(acolVs1NT(parseHand('84.KT76432.43.J2')).bid, 'P', 'under 8 HCP: pass');
   } finally { Object.assign(SYS, was); }
 });
+
+test('5CM: over 1♦, four hearts and four clubs: 1♥, not 2♣', () => {
+  same(r1m(parseHand('AT6.Q972.A4.KT83'), 1).bid, '1H', '13 HCP 3-4-2-4: 1♥');
+  same(r1m(parseHand('AT6.Q972.4.KT832'), 1).bid, '2C', 'five clubs and 9+: 2♣ still first');
+});

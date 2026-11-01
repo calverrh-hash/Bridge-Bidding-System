@@ -318,6 +318,14 @@ function r1m(h, m) {
       return R(bd, `${pre}${pre ? '' : `${p} HCP: `}four diamonds and four ${SN[mj]}: over 1♣, show the major first, ${plain(bd)}, so a major-suit fit isn't lost. 1-level needs 6+; forcing.`, 'C.major-first');
     }
   }
+  // A 4-card major at the 1-level comes before a 4-card minor (4-4: never skip the major; up the line, ♥ first).
+  if (l[b] === 4 && b < 2) {
+    const mj = [2, 3].find(s => l[s] === 4);
+    if (mj !== undefined) {
+      const bd = B(1, mj);
+      return R(bd, `${pre}${pre ? '' : `${p} HCP: `}four ${SN[b]} and four ${SN[mj]}: show the major first, ${plain(bd)}, so a major-suit fit isn't lost. The ${SN[b].replace(/s$/, '')} suit can wait; 1-level needs 6+; forcing.`, 'C.major-first');
+    }
+  }
   const lv = b > m ? 1 : 2;
   if (lv === 2 && p < 9) return gap('The longest suit could only be bid at the 2-level, which needs 9+.');
   const tie = c.filter(s => l[s] === l[b]).length > 1;
@@ -361,7 +369,15 @@ function rebid(h, o, r, lvl) {
     if (l[o] >= 5) return R(B(2, o), `Unbalanced 11-14 with nothing else to show: simple rebid of your 5-card suit, 2${SY[o]}.`, 'D.rebid-suit');
     return gap('The chart has no minimum rebid for this hand.');
   }
-  if (lvl !== 1) return gap('The chart has no rebid with 15+ after a 2-level response.');
+  // After a 2-level response (10+) the hand is in the game zone: show the shape, everything is forcing.
+  if (lvl !== 1 && p <= 19) {
+    if (l[r] >= 4) return R(B(3, r), `${p} HCP with ${l[r]} ${SN[r]}: raise to 3${SY[r]}. After a 2-level response this is forcing (game values between you).`, 'D.double-raise');
+    if (l[o] >= 6) return R(B(3, o), `${p} HCP with ${NUM[l[o]]} ${SN[o]}: jump rebid to 3${SY[o]}, forcing after a 2-level response.`, 'D.jump-rebid');
+    const s2 = others.filter(s => l[s] >= 4).sort((a, b) => l[b] - l[a] || b - a)[0];
+    if (s2 !== undefined) { const b = B(cheapest(s2, resp), s2); return R(b, `${p} HCP: show your second suit, ${plain(b)}. After a 2-level response a new suit is forcing, so no need to jump.`, bv(b) > bv(bar) ? 'D.reverse' : 'D.six-five'); }
+    return R(B(cheapest(o, resp), o), `${p} HCP with nothing else to show: rebid ${SN[o]}, ${plain(B(cheapest(o, resp), o))}.`, 'D.rebid-suit');
+  }
+  if (lvl !== 1 && p <= 22) return gap('The chart has no rebid with 20+ after a 2-level response.');
   if (p <= 19) {
     if (l[r] >= 4) return R(B(3, r), `Unbalanced 15-19 with ${l[r]} ${SN[r]}: double raise to 3${SY[r]}.`, 'D.double-raise');
     // 6-5 with a five-card major (opened the longer minor): show the major now, and again later.

@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-11-01
+- 5CM, responses to 1♣/1♦: a 4-card major at the 1-level comes before a 4-card minor (1♦ – 1♥ with 3-4-2-4, not 2♣). Chart C updated. Opener's 15-19 rebid after 1♦ – 2♣ is now covered (raise to 3♣, jump rebid with six, or show a second suit, all forcing), then game.
 - Acol, over their 12-14 1NT: a seven-card suit, or six with 6 losers or fewer, overcalls at the 2-level with 8+ HCP (as well as a good six-card suit with 10+). 4-7-1-1 with ♥K10xxxxx and 9 HCP bids 2♥.
 - Acol now uses Roman Key Card Blackwood, the same as the strong NT system: key cards are the four aces and the trump king; 5♣ 0 or 3 · 5♦ 1 or 4 · 5♥ 2 without the trump queen · 5♠ 2 with it. Chart panel G and the Slam drill updated.
 - Acol, opener's new suit after a 2-level response is forcing (12-18): with 17 and 5-4 (1♠ – 2♦), bid 2♥, not a 3♥ jump shift (19+). Responder never passes: raise with four, preference with three (opener bids game with 16+), else rebid a six-card suit or 2NT.
