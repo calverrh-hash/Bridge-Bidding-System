@@ -658,7 +658,10 @@ function acolVs1NT(h) {
   if (p >= 16) return R('X', `${p} HCP (16+) over their 12-14 1NT: double for penalties.`, 'H.acol-vs-1nt');
   const s = [3, 2, 1, 0].find(u => l[u] >= 6 && good(h, u));
   if (s !== undefined && p >= 10) return R(B(2, s), `${p} HCP with a good ${NUM[l[s]]}-card ${SN[s].replace(/s$/, '')} suit: overcall 2${SY[s]}.`, 'H.acol-vs-1nt');
-  return R('P', `${p} HCP and no good six-card suit: pass their 1NT.`, 'H.acol-vs-1nt');
+  // Shape counts too: a seven-card suit, or six with 6 losers or fewer, and 8+ HCP.
+  const k = losers(h), sh = [3, 2, 1, 0].find(u => l[u] >= 7 || (l[u] >= 6 && k <= 6));
+  if (sh !== undefined && p >= 8) return R(B(2, sh), `${p} HCP with ${NUM[l[sh]]} ${SN[sh]} and ${k} losers: the shape is worth more than the points. Overcall 2${SY[sh]}: it competes against their weak 1NT and tells partner what to lead.`, 'H.acol-vs-1nt');
+  return R('P', `${p} HCP and no good six-card suit (or long, shapely suit with 8+): pass their 1NT.`, 'H.acol-vs-1nt');
 }
 function acolAdvance(h, x) {
   const p = hcp(h), l = L(h), un = [0, 1, 2, 3].filter(s => s !== x);

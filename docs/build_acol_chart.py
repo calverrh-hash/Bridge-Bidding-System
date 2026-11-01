@@ -94,7 +94,7 @@ G = f'''{box('cnv','<b>RKCB 4NT</b> once a trump suit is agreed (4NT straight ov
 Hp = f'''<div class="g2">
 <div>{box('cmp','<b>Pre-empts</b> (0-9): 3♣-3♠ 7-card suit · 4♣-4♠ 8-card suit. Partner: change suit only if yours is longer · with 3-4 top honours: 3m → 3NT, 3M → 4M, 4m → 5m.')}
 {box('cmp','<b>Over their pre-empt (12+):</b> 6-card suit at the 3-level (equal: the higher; a 6+ major with ≤5 losers: game) · 7-card suit at the 4-level · double = takeout. Partner: longest suit, game with 12+; raise to game with 12+ and 2-card support.')}</div>
-<div>{box('cmp','<b>Their 12-14 1NT:</b> double = 16+ penalty · suit overcall 10+ with a good 6+ suit.')}
+<div>{box('cmp','<b>Their 12-14 1NT:</b> double = 16+ penalty · 2-level overcall: 10+ with a good 6+ suit, or 8+ with a 7-card suit (or six with ≤6 losers).')}
 {box('cmp','<b>Our 1NT doubled:</b> 5+ suit sign-off 2♦/♥/♠, otherwise pass (opener passes the sign-off).')}
 {box('cnv','<b>HELVIC WRIGGLE</b> (option): pass = 9+ values (pass the forced XX) or a wriggle (after opener’s XX bid 4-card suits up the line) · XX = weak one-suiter (opener 2♣, pass or correct) · 2♣/♦/♥ = that suit and the next one up.')}</div>
 </div>'''

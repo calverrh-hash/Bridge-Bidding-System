@@ -748,3 +748,13 @@ test('Acol: opener\'s new suit after a 2-level response is forcing; minor raise 
     same(A(['1D', '3D', '3H', '4D'], 'A.KQ.AJT843.K872'), '5D', '5 losers: 5♦');
   } finally { Object.assign(SYS, was); }
 });
+
+test('Acol: over their 1NT, a long shapely suit overcalls with 8+', () => {
+  const was = { ...SYS };
+  try {
+    SYS.acol = true;
+    same(acolVs1NT(parseHand('AJ84.KT76432.4.J')).bid, '2H', '9 HCP, seven hearts, 6 losers: 2♥');
+    same(acolVs1NT(parseHand('Q84.KT7643.Q4.J2')).bid, 'P', '8 HCP, six poor hearts, 8 losers: pass');
+    same(acolVs1NT(parseHand('84.KT76432.43.J2')).bid, 'P', 'under 8 HCP: pass');
+  } finally { Object.assign(SYS, was); }
+});
