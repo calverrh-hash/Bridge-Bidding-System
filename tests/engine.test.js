@@ -781,3 +781,10 @@ test('splinters: 1M – double jump = 4+ trumps, game values up to 15, shortness
   same(callFor('1S 4D', 'AQJ852.AK4.75.K5'), '4N', 'nothing wasted, every suit controlled: RKCB');
   same(callFor('1S 4D 4S', 'K852.A963.4.KJ92'), 'P', 'opener signed off');
 });
+
+test('after opener\'s jump rebid in his major, a fit and 31+ asks with RKCB', () => {
+  same(callFor('1S 2H 3S', 'AQT74.AKQ54.A.J5'), '4N', '20 HCP opposite 15+, five spades: 4NT');
+  same(callFor('1S 2H 3S', '74.AKQ54.K92.J53'), '4S', '13 HCP: game');
+  const was = { ...SYS };
+  try { SYS.acol = true; same(acolSysCall(['1S', '2H', '3S'], parseHand('AQT74.AKQ54.A.J5')).bid, '4N', 'Acol: the same'); } finally { Object.assign(SYS, was); }
+});

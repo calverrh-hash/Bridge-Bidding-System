@@ -326,7 +326,7 @@ function after1Major(seq, h) {
     if (r === B(2, M) && x === B(3, M) && p <= 7 && losers(h) <= 8) return R(B(4, M), `Opener's 3${SY[M]} is a game try (about 6 losers). You have ${p} HCP but ${losers(h)} losers (${loserBreak(h)}): 24 − (6 + ${losers(h)}) = ${18 - losers(h)} tricks, so accept with 4${SY[M]}.`, 'B.game-try-answer');
     if (r === B(2, M) && x === B(3, M)) return p <= 7 ? R('P', `Opener's 3${SY[M]} is a game try (16-18). With ${p} (6-7), pass.`, 'B.game-try-answer') : R(B(4, M), `Opener's 3${SY[M]} is a game try (16-18). With ${p} (8-9), accept with 4${SY[M]}.`, 'B.game-try-answer');
     if (r === '2N') return jacCont(h, M, x);
-    if (/^(3[CD]|3[HS]|2[HS])$/.test(r) && (x === B(3, M) || x === B(4, M))) return AP('Opener signed off.');
+    if ((/^3[CD]$/.test(r) || r[1] === seq[0][1]) && (x === B(3, M) || x === B(4, M))) return AP('Opener signed off.');
     if (x === B(4, M)) return AP('Opener bid game.');
     // "New suit first, then support": keep the promise unless opener raised the new suit.
     if (x[1] !== r[1] && r1M(h, M).id === 'B.new-suit-then-support') return supportAfterNewSuit(h, M, r, x);

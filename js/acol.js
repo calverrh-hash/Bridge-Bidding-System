@@ -370,7 +370,7 @@ function acolResp2(h, seq) {
   if (xs === o && xl === 3 && x === B(cheapest(o, r) + 1, o)) {   // jump rebid: 15-18, 6+ cards
     // Your own long major is still worth showing: 3M is forcing, opener raises with two.
     if (rs >= 2 && l[rs] >= 6 && l[o] <= 2 && (p >= 8 || losers(h) <= 6) && bv(B(3, rs)) > bv(x)) return R(B(3, rs), `Opener's jump rebid shows 15-18 with six ${SN[o]}. With ${NUM[l[rs]]} ${SN[rs]} of your own, bid 3${SY[rs]} (forcing): opener bids 4${SY[rs]} with two, else 3NT.`, 'D.acol-after');
-    return p >= 10 ? R(l[o] >= 2 && o >= 2 ? B(4, o) : '3N', `Opener's jump rebid shows 15-18 with six. With ${p} (10+), bid game.`, 'D.acol-after') : R('P', `Opener's jump rebid shows 15-18. With ${p} (6-9), pass.`, 'D.acol-after');
+    return p >= 10 ? ((l[o] >= 2 && acolSlamTry(h, o, 15, `Opener's jump rebid (15-18, six ${SN[o]}; your ${l[o]} make a fit)`, 6)) || R(l[o] >= 2 && o >= 2 ? B(4, o) : '3N', `Opener's jump rebid shows 15-18 with six. With ${p} (10+), bid game.`, 'D.acol-after')) : R('P', `Opener's jump rebid shows 15-18. With ${p} (6-9), pass.`, 'D.acol-after');
   }
   // Never skip a four-card major: an unbid major at the 2-level with 10+ (forcing one round).
   const um = [2, 3].find(u => u !== o && u !== rs && u !== xs && l[u] >= 4 && cheapest(u, x) === 2);

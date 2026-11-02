@@ -542,11 +542,11 @@ function respAfterRebid(h, seq) {
         : R('P', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (6-9), pass.`, 'D.after-jump-rebid');
     }
     if (rl === 2 && xl === 3 && o >= 2 && x === B(3, o)) {   // after a 2-level response (9+): game
-      return l[o] >= 2 ? R(B(4, o), `Opener's jump to ${plain(x)} shows six ${SN[o]} and extras. With ${p} (9+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-jump-rebid')
+      return l[o] >= 2 ? slamTry(h, o, 15, `Opener's jump to ${plain(x)} (six ${SN[o]}, 15+): a fit, since your ${l[o]} make 8+ trumps.`) || R(B(4, o), `Opener's jump to ${plain(x)} shows six ${SN[o]} and extras. With ${p} (9+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-jump-rebid')
         : R('3N', `Opener's jump to ${plain(x)} shows six ${SN[o]}. With ${p} (9+) but ${cardsOf(l[o], o)}, bid 3NT.`, 'D.after-jump-rebid');
     }
     if (rl === 1 && xl === 3 && o >= 2) {   // jump rebid of a major: 15-19, 6+ cards
-      if (p >= 10) return l[o] >= 2 ? R(B(4, o), `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (10+) and ${l[o]} ${SN[o]}, bid game: 4${SY[o]}.`, 'D.after-jump-rebid')
+      if (p >= 10) return l[o] >= 2 ? slamTry(h, o, 15, `Opener's jump to ${plain(x)} (six ${SN[o]}, 15-19): a fit, since your ${l[o]} make 8+ trumps.`) || R(B(4, o), `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (10+) and ${l[o]} ${SN[o]}, bid game: 4${SY[o]}.`, 'D.after-jump-rebid')
         : R('3N', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (10+) you want game, but with ${cardsOf(l[o], o)} there's no 8-card fit: 3NT.`, 'D.after-jump-rebid');
       return R('P', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (6-9), sign off: pass.`, 'D.after-jump-rebid');
     }

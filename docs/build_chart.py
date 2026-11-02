@@ -112,7 +112,7 @@ D = ''.join([
  box('reb','<b>Unbalanced 20-22:</b> jump shift 1♣-1♥-2♠, game forcing.'),
  box('rsp','<b>Responder then:</b> after weak: ≤10 pass or correct · <b>11-12 invite</b>: 3 of opener\'s suit with 3+ (over 2M, Hx = support), else own 6-card suit at the 3-level, else 2NT · <b>13+ game</b>: 4M with a fit, else 3NT. Opener accepts an invite with 13-14.'),
  box('rsp','<b>After 1NT (12-14):</b> ≤10 pass (6-card major: 2M) · 11-12 2NT (6-card major: 3M) · 13+ 3NT (6-card major: 4M). <b>After 2NT (18-19):</b> 7+ game; 5-card major: 3M forcing (opener 4M with 3, else 3NT). <b>After 2NT (12-14, 2-level reply):</b> 11+ game.'),
- box('rsp','<b>After a reverse:</b> 10+ game (4M with a fit, else 3NT) · 6-9: raise the 2nd major with 4, give preference, rebid a 5-card suit, or 2NT; opener goes on with 17+. <b>After a jump shift:</b> never pass: 4M with a fit, else 3NT. <b>After a jump rebid:</b> 10+ (9+ after a 2-level reply) game, else pass.'),
+ box('rsp','<b>After a reverse:</b> 10+ game (4M with a fit, else 3NT) · 6-9: raise the 2nd major with 4, give preference, rebid a 5-card suit, or 2NT; opener goes on with 17+. <b>After a jump shift:</b> never pass: 4M with a fit, else 3NT. <b>After a jump rebid:</b> 10+ (9+ after a 2-level reply) game, else pass; 31+ with a fit: 4NT (G).'),
  box('reb','<b>1M-1NT:</b> balanced pass (17-18 2NT, 19+ 3NT) · 6-card M: 2M (15-19 3M) · 4+ second suit: 2 of it (higher = reverse, 15+) · 20-22 jump shift. Responder: pass or preference; 8-10 accepts.'),
  box('note','Barrier = 2 of the opening suit; a new suit above it (reverse) shows extra strength. 5-5: open the higher, then show the lower.')])
 
