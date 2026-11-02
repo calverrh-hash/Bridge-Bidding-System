@@ -83,10 +83,9 @@ B = f'''
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 2M:</b> 11-15 pass · 16-18 3M try (8-9 or ≤8 losers → 4M, else pass) · 19+ 4M · <b>by losers: 6 → 3M, ≤5 → 4M</b>.')}{box('reb','<b>After 3M:</b> 15+ 4M (31+ combined → 4NT, G) · 13-14 use LTC · 11-12 pass (≤6 losers: 4M).')}</div>
 {lab('4+ trumps')}
-{box('rsp','<b>4+ trumps: 3♦ = 7-9</b> · <b>3♣ = 10-12</b> · <b>2NT Jacoby = 13+ or ≤7 losers</b> (GF); good 5+ side suit: bid it first.')}
+{box('rsp','<b>4+ trumps: 3♦ = 7-9</b> · <b>3♣ = 10-12</b> · <b>2NT Jacoby = 13+ or ≤7 losers</b> (GF); good 5+ side suit: bid it first. <b>SPLINTER</b> (GF, ≤15): double jump in a singleton (not A/K) or void: 1♥–3♠/4♣/4♦, 1♠–4♣/4♦/4♥.')}
 <div class="g2">{arrow}{arrow}</div>
 <div class="g2">{box('reb','<b>After 3♦:</b> 11-15 sign off 3M · 16+ 4M.')}{box('reb','<b>After 3♣:</b> 11-13 sign off 3M · 14+ 4M.')}</div>
-<div class="sp"></div>
 {box('cnv','<b>JACOBY 2NT - opener bids:</b> 4 new suit = good 5-card side suit · else 3 of a singleton/void · 3NT 15-17 flat · 4M 11-14 flat · <b>18+ with 2+ key cards: 4NT at once</b> (31+ combined), else 3M 18+ flat.')}
 {lab('0-2 trumps')}
 {box('rsp','<b>0-2 trumps:</b> over 1♥: 1♠ with 4+♠ (6+, forcing) · <b>1NT 6-10, any shape, not forcing</b> · new suit at 2-level 9+ (forcing). Opener rebids: see D.')}'''
@@ -137,7 +136,7 @@ ltc = '''<table class="lt"><tr><th colspan="2">Opener</th></tr><tr><th>Points</t
 <tr><td>11</td><td>8</td></tr><tr><td>12-14</td><td>7</td></tr><tr><td>15-17</td><td>6</td></tr><tr><td>18-19</td><td>5</td></tr><tr><td>20-22</td><td>4</td></tr><tr><td>23+</td><td>3</td></tr></table>
 <table class="lt"><tr><th colspan="2">Responder</th></tr><tr><th>Points</th><th>Losers</th></tr>
 <tr><td>0-5</td><td>10</td></tr><tr><td>6-9</td><td>9</td></tr><tr><td>10-11</td><td>8</td></tr><tr><td>12-15</td><td>7</td></tr><tr><td>16+</td><td>6</td></tr></table>'''
-G = f'''{box('cnv','<b>CONTROL BIDS</b> after Jacoby (slam possible, 29+ or LTC 12, but a suit without A/K/shortness, or a void): cheapest <b>ace or void</b> below 4M; skipping a suit denies one. Partner: cheapest ace/void, else 4M. All controlled → 4NT; else 4M.')}
+G = f'''{box('cnv','<b>After a splinter</b> opener counts K/Q/J there as wasted: 17+ working → as below, else 4M. <b>CONTROL BIDS</b> after Jacoby or a splinter (slam possible, 29+ or LTC 12, but a suit without A/K/shortness, or a void): cheapest <b>ace or void</b> below 4M; skipping a suit denies one. Partner: cheapest ace/void, else 4M. All controlled → 4NT; else 4M.')}
 {box('cnv','<b>RKCB 4NT</b> (only once a trump suit is agreed; otherwise quantitative). Key cards = 4 aces + the K of trumps. Replies: <b>5♣ 0 or 3</b> · <b>5♦ 1 or 4</b> · <b>5♥ 2 without Q</b> · <b>5♠ 2 with Q</b>.')}
 {arrow}
 {box('reb','<b>Asker:</b> missing two key cards → 5 of trumps · missing one → 6 of trumps · all five → 5NT (asks kings; show each king by bidding its suit in order). Cheapest non-trump bid asks for the trump Queen. <b>Warning:</b> with hearts trumps a 5♠ reply is past 5♥, so asker can only go 6♥ or 5NT.')}
@@ -168,7 +167,7 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 .panel{{position:absolute;border:1.2pt solid var(--c);border-radius:5pt;background:#fff;overflow:hidden}}
 .ph{{white-space:nowrap;background:var(--c);color:#fff;font-weight:700;font-size:8.4pt;height:17pt;padding:2.5pt 6pt;display:flex;align-items:center;gap:5pt}}
 .let{{flex-shrink:0;display:inline-flex;width:12pt;height:12pt;border-radius:50%;background:#fff;color:var(--c);align-items:center;justify-content:center;font-size:8pt}}
-.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.85pt;line-height:1.2}} .pB .b{{font-size:7pt}} .pD .pb{{gap:3pt}}
+.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.85pt;line-height:1.2}} .pB .b{{font-size:6.85pt;line-height:1.2}} .pB .pb{{gap:3pt}} .pG .b{{font-size:6.95pt}} .pD .pb{{gap:3pt}}
 .pA,.pB,.pC{{--c:#2E5E9E}} .pD{{--c:#408A54}} .pE{{--c:#B07A0F}} .pF{{--c:#A33A3A}} .pG{{--c:#6B4A99}} .pH{{--c:#7A3550}} .pK{{--c:#7A6B1A}} .pO{{--c:#1F3B5E}}
 .b{{border:0.8pt solid;border-radius:3pt;padding:3pt 4pt}}
 .rsp{{background:#E6F0FA;border-color:#4A7BC0}} .reb{{background:#E6F5EB;border-color:#4FA066}} .cnv{{background:#FFF2D6;border-color:#D19A2A}}

@@ -541,7 +541,7 @@ test('with a fit, shape counts: losers can push a minimum into game', () => {
 });
 test('Mixed: most slam hands are small slams', () => {
   const M = SETS.find(d => d.id === 'mixed'); let six = 0, seven = 0;
-  for (let s = 1; s <= 12; s++) buildSet(M, s).filter(q => q.src === 'slam').forEach(q => { if (/^6/.test(q.contract || '')) six++; if (/^7/.test(q.contract || '')) seven++; });
+  for (let s = 1; s <= 30; s++) buildSet(M, s).filter(q => q.src === 'slam').forEach(q => { if (/^6/.test(q.contract || '')) six++; if (/^7/.test(q.contract || '')) seven++; });
   check(six > seven, `small ${six}, grand ${seven}`);
 });
 test('any 1-suit auction: a fit plus losers reaches game (1H 1S 2D with 6 losers: 5D)', () => {
@@ -771,4 +771,13 @@ test('control bids (traditional): after Jacoby, cheapest ace or void first; RKCB
   same(callFor('1S 2N 3D 4C', 'A9743.K5.7.KQ862'), '4S', 'no ace or void to show: 4♠');
   same(callFor('1S 2N 3D 4C 4H', 'KQJ85.Q8742.AK10.-'), '4N', 'every suit controlled: RKCB');
   same(callFor('1S 2N 3D 4C 4S', 'KQJ85.Q8742.AK10.-'), 'P', 'hearts unguarded: stop');
+});
+
+test('splinters: 1M – double jump = 4+ trumps, game values up to 15, shortness; opener counts working points', () => {
+  same(callFor('1S', 'K852.A963.4.KJ92'), '4D', 'singleton diamond: 4♦ splinter');
+  same(callFor('1H', '4.KJ52.AQ93.K852'), '3S', 'over 1♥, 3♠ is the spade splinter');
+  same(callFor('1S', 'K852.A963.K.QJ92'), '2N', 'singleton king: no splinter, Jacoby');
+  same(callFor('1S 4D', 'AKJ85.K42.KQ.J52'), '4S', 'wasted ♦KQ: sign off');
+  same(callFor('1S 4D', 'AQJ852.AK4.75.K5'), '4N', 'nothing wasted, every suit controlled: RKCB');
+  same(callFor('1S 4D 4S', 'K852.A963.4.KJ92'), 'P', 'opener signed off');
 });

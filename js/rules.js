@@ -212,6 +212,12 @@ function r1M(h, M) {
         const s = side[0], b = B(s > M ? 1 : 2, s);
         return R(b, `${t}-card support and ${why}. With a good ${l[s]}-card ${SN[s].replace(/s$/, '')} suit, show it first (${plain(b)}, forcing), then support ${SN[M]} strongly: partner learns where your tricks come from.`, 'B.new-suit-then-support');
       }
+      // Splinter: game values up to 15 with a singleton (not the A or K) or a void: a double jump in the short suit.
+      const sp = splinterSuit(h, M);
+      if (sp !== undefined && p <= 15) {
+        const b = splinterBid(M, sp);
+        return R(b, `${t}-card support and ${why}, with ${l[sp] ? 'a singleton' : 'a void'} in ${SN[sp]}: splinter, ${plain(b)} (a double jump). It shows 4+ trumps, game values (up to 15) and shortness in ${SN[sp]}, so partner can judge whether his values fit: honours opposite your shortness are wasted.`, 'B.splinter');
+      }
       return R('2N', `${t}-card support and ${why}: Jacoby 2NT (4+ trumps, game forcing).`, 'B.jacoby');
     }
     if (p <= 6) return R(B(2, M), `${p <= 5 ? shapeWhy(h) : ''}${t}-card support and ${p} HCP: simple raise to 2${SY[M]} (6-9). 3♦ needs 7+.`, 'B.raise');
@@ -234,6 +240,31 @@ function r1M(h, M) {
   if (p <= 10) return amb('With 9-10 and fewer than three trumps, the chart allows 1NT or a new suit.');
   const n = newSuitM(h, M);
   return R(n, `Fewer than 3 ${SN[M]} and ${p} HCP: new suit at the 2-level (9+, forcing). Bid the longest; with equal length, the lower.`, 'B.new-suit');
+}
+// Splinters: 1♥ – 3♠/4♣/4♦, 1♠ – 4♣/4♦/4♥ (a double jump) = 4+ trumps, game values up to 15,
+// singleton (not the A or K) or void in the suit bid.
+function splinterSuit(h, M) {
+  const l = L(h), sh = [0, 1, 2, 3].filter(s => s !== M && (l[s] === 0 || (l[s] === 1 && !has(h, s, 14) && !has(h, s, 13))));
+  return sh.length === 1 ? sh[0] : sh.find(s => l[s] === 0);
+}
+const splinterBid = (M, s) => B(M === 2 && s === 3 ? 3 : 4, s);
+const isSplinter = (r, M) => [0, 1, 2, 3].some(s => s !== M && r === splinterBid(M, s));
+// Opener after a splinter: count the points that work (K, Q, J opposite the shortness are wasted).
+function splinterAns(h, M, r) {
+  const p = hcp(h), ss = ST.indexOf(r[1]), l = L(h);
+  const wasted = [[13, 3], [12, 2], [11, 1]].filter(([c]) => has(h, ss, c)).reduce((a, [, v]) => a + v, 0), work = p - wasted;
+  const k = losers(h);
+  const head = `Partner's ${plain(r)} is a splinter: 4+ ${SN[M]}, game values and ${SN[ss].replace(/s$/, '')} shortness.`;
+  const pts = `${p} HCP${wasted ? `, but ${wasted} of them (${[13, 12, 11].filter(c => has(h, ss, c)).map(c => cardName(ss, c)).join(' ')}) are wasted opposite the shortness` : ', none wasted opposite the shortness'}`;
+  const slam = work >= 17 || 24 - k - 7 >= 12;
+  if (!slam) return R(B(4, M), `${head} You have ${pts}, so ${work} working points and ${k} losers: not enough for slam (you want about 17 working points). Sign off in 4${SY[M]}.`, 'B.splinter-answer');
+  const side = [0, 1, 2, 3].filter(s => s !== M && s !== ss);
+  const hole = side.filter(s => !firstCtl(h, s) && !secondCtl(h, s)), voids = side.filter(s => l[s] === 0);
+  const why = `${head} You have ${pts}: ${work} working points${24 - k - 7 >= 12 ? ` and ${k} losers (partner about 7: 24 − ${k + 7} = ${17 - k} tricks)` : ''}, so slam is possible.`;
+  if (!hole.length && !voids.length && kcList(h, M).length >= 2) return R('4N', `${why} Every suit is controlled: ask for key cards with 4NT (RKCB).`, 'B.splinter-answer');
+  const c = cheapestCue(h, M, r);
+  if (c) return R(c[1], `${why} ${hole.length ? `But ${hole.map(s => SN[s]).join(' and ')} may be wide open` : voids.length ? 'With a void, RKCB is unreliable' : "With fewer than 2 key cards, don't ask"}: make a control bid, ${plain(c[1])}, your cheapest ace or void. Partner shows his cheapest ace or void, or signs off in 4${SY[M]}.`, 'G.cue-bid');
+  return R(B(4, M), `${why} But you have no ace or void to show below 4${SY[M]}, and a suit may be open: sign off in 4${SY[M]}.`, 'B.splinter-answer');
 }
 // Opener answers Jacoby 2NT.
 function jac(h, M) {

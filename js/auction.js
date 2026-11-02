@@ -273,6 +273,10 @@ const preference = seq => seq[3] && seq[3][1] === seq[0][1] && +seq[3][0] === 2 
 function after1Major(seq, h) {
   const n = seq.length, p = hcp(h), M = ST.indexOf(seq[0][1]), r = seq[1];
   if (seq.includes('4N')) return afterRKCB(seq, h, raisedSuit(seq) >= 0 ? raisedSuit(seq) : M);
+  // After a splinter: opener's control bid, then the control bidder decides (G).
+  if (isSplinter(r, M) && n === 3) return isCue(seq[2], M) ? cueReply(h, M, seq[2]) : AP('Opener signed off.');
+  if (isSplinter(r, M) && n === 4 && isCue(seq[2], M)) return cueDecide(h, M, seq[2], seq[3], r);
+  if (isSplinter(r, M) && n >= 5) return AP('The contract is set.');
   if (n === 1) return r1M(h, M);
   if (n === 2) {   // opener's rebid
     if (r === B(2, M)) {
@@ -298,6 +302,7 @@ function after1Major(seq, h) {
       if (p >= 18 && kcList(h, M).length >= 2) return slamTry(h, M, 13, `Partner's Jacoby 2NT (13+)`);
       return jac(h, M);
     }
+    if (isSplinter(r, M)) return splinterAns(h, M, r);
     if (r === B(4, M)) return AP('Partner\'s weak 4-level raise is to play.');
     if (r === '1N') return rebidOver1NT(h, M);
     if (r === '3N') {   // three-card support, 13-15 balanced: choose the game

@@ -2,6 +2,7 @@
 
 ## 2026-11-02
 
+- 5CM: splinters. 1♥ – 3♠/4♣/4♦ and 1♠ – 4♣/4♦/4♥ (a double jump) show 4+ trumps, game values up to 15 and a singleton (not the A or K) or void in the suit bid. Opener counts K/Q/J opposite the shortness as wasted: with about 17 working points (or the losers say 12 tricks) he makes a control bid or asks with 4NT; otherwise 4M. Chart B and G updated.
 - Control (cue) bids, traditional style, in both systems after Jacoby 2NT: when slam is possible (29+ between you, or the losers say 12 tricks) but a side suit has no ace, king or shortness in your hand, or you hold a void, bid your cheapest ace or void below 4M instead of RKCB (skipping a suit denies one). Partner shows his cheapest ace or void, or signs off in 4M. With every suit controlled the control bidder goes on with 4NT (RKCB); otherwise stops in 4M. Chart G (both charts) updated.
 
 ## 2026-11-01

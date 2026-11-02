@@ -117,6 +117,7 @@ const SETS = [
       return [
         major, major,
         want(SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [1, 4])); }, hcp: [11, 16], ok: opensAs(/^1[HS]$/) }, north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [3, 3] }, [2, 4]); }, hcp: [13, 15] } }), 'B.3nt-raise-answer', 60),   // partner's 3NT raise: pass or 4M
+        want(SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [1, 4])); }, hcp: [11, 16], ok: opensAs(/^1[HS]$/) }, north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: [3, 3] }, [2, 4]); }, hcp: [10, 12] } }), 'B.after-limit-raise', 60),   // partner's limit raise: game or pass
         SO({ south: { lens: r => rl(r, sp({ 2: [5, 5], 3: [5, 5] }, [0, 3])), hcp: [10, 17], ok: ub }, north: { hcp: [4, 14] } }),   // 5-5 majors
         SO({ south: { lens: r => rl(r, sp({ 2: [0, 4], 3: [0, 4] }, [0, 6])), hcp: [11, 14], ok: ub }, north: { hcp: [6, 14] } }),   // minor openings
         strong, strong,
