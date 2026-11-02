@@ -258,6 +258,9 @@ function jac(h, M) {
 // Jacoby responder after opener's flat answer x: settle or ask for key cards.
 function jacCont(h, M, x) {
   const p = hcp(h);
+  const [cm, cl] = x === B(4, M) ? [11, 7] : x === '3N' ? [15, 6] : x === B(3, M) ? [18, 5] : [11, 6];
+  const cue = cueStart(h, M, x, cm, cl, `Opener's ${plain(x)}`);
+  if (cue) return cue;
   if (x === B(4, M)) {
     if (p <= 16) return R('P', `Opener's 4${SY[M]} shows a flat 11-14. With ${p} you have at most ${p + 14} combined: pass.`, 'B.jacoby-signoff');
     if (p >= 20) {
@@ -655,6 +658,60 @@ function slamTry(h, T, minP, desc) {
   const kc = kcList(h, T).length, g = B(T >= 2 ? 4 : 5, T);
   if (kc < 2) return R(g, `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you, enough to think about slam, but you hold only ${kc} key card${kc === 1 ? '' : 's'}, so don't ask: bid game, ${plain(g)}.`, 'G.slam-game');
   return R('4N', `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you and a ${SN[T]} fit: ask for key cards with 4NT (RKCB).`, 'G.rkcb-ask');
+}
+
+// Control (cue) bids, traditional style: once a major fit is agreed and slam is possible, a new
+// suit below game shows first-round control (ace or void), cheapest first. Bypassing a suit denies
+// first-round control of it. Used instead of RKCB when a suit may be wide open, or with a void.
+const firstCtl = (h, s) => L(h)[s] === 0 || has(h, s, 14);
+const secondCtl = (h, s) => L(h)[s] === 1 || has(h, s, 13);
+const sNm = s => SN[s].replace(/s$/, '');
+const isCue = (b, T) => /^[34][CDHS]$/.test(b || '') && b[1] !== ST[T] && bv(b) < bv(B(4, T));
+// The cheapest first-round control to show above `last` and below game in T.
+function cheapestCue(h, T, last) {
+  return [0, 1, 2, 3].filter(u => u !== T && firstCtl(h, u)).map(u => [u, B(cheapest(u, last), u)])
+    .filter(([, b]) => bv(b) < bv(B(4, T))).sort((a, b) => bv(a[1]) - bv(b[1]))[0];
+}
+// Start: slam is possible (29+ between you, or the losers say 12 tricks), but a suit has no
+// control in your hand or you hold a void. Returns null to leave the normal rule (RKCB or game).
+function cueStart(h, T, last, minP, pl, desc) {
+  const p = hcp(h), k = losers(h), l = L(h), side = [0, 1, 2, 3].filter(s => s !== T);
+  const pts = p + minP >= 29, ltc = 24 - k - pl >= 12;
+  if (!pts && !ltc) return null;
+  const ps = /^[34][CDHS]$/.test(last) && last[1] !== ST[T] ? ST.indexOf(last[1]) : -1;   // partner's short suit or good suit: controlled
+  const hole = side.filter(s => s !== ps && !firstCtl(h, s) && !secondCtl(h, s)), voids = side.filter(s => l[s] === 0);
+  if (!hole.length && !voids.length) return null;
+  const c = cheapestCue(h, T, last);
+  if (!c) return null;
+  const [u, b] = c, why = pts ? `${p} + partner's ${minP}+ = ${p + minP}+` : `your ${k} losers + partner's about ${pl}: 24 − ${k + pl} = ${24 - k - pl} tricks`;
+  const skip = side.filter(s => s !== u && !firstCtl(h, s) && bv(B(cheapest(s, last), s)) < bv(b));
+  const worry = voids.length ? `with a ${sNm(voids[0])} void, RKCB can't tell you which aces partner holds` : `you have no control in ${hole.map(sNm).join(' or ')}`;
+  return R(b, `${desc}: a ${sNm(T)} fit, and slam is possible (${why}). But ${worry}, so make a control bid. ${plain(b)} shows first-round control (ace or void) of ${SN[u]}: the cheapest one you have${skip.length ? `, so it denies one in ${skip.map(s => SN[s]).join(' and ')}` : ''}. Partner shows his cheapest ace or void, or signs off in 4${SY[T]}.`, 'G.cue-bid');
+}
+// Partner's answer to a control bid: the cheapest ace or void of your own, else sign off.
+function cueReply(h, T, last) {
+  const ls = ST.indexOf(last[1]), c = cheapestCue(h, T, last), top = B(4, T);
+  const head = `Partner's ${plain(last)} is a control bid: an ace or void in ${SN[ls]}, and interest in slam in ${SN[T]}.`;
+  if (!c) return R(top, `${head} You have no ace or void to show below 4${SY[T]}, so sign off: 4${SY[T]}. That denies first-round control in the suits you skip.`, 'G.cue-bid-answer');
+  const [u, b] = c, skip = [0, 1, 2, 3].filter(s => s !== T && s !== u && !firstCtl(h, s) && bv(B(cheapest(s, last), s)) < bv(b));
+  return R(b, `${head} Co-operate: show your cheapest ace or void, ${plain(b)} (${has(h, u, 14) ? `the ${SY[u]}A` : `a ${sNm(u)} void`})${skip.length ? `. Skipping ${skip.map(s => SN[s]).join(' and ')} denies an ace or void there` : ''}.`, 'G.cue-bid-answer');
+}
+// The control bidder decides after partner's answer: every suit covered → RKCB; a suit where
+// neither of you has shown first-round control and you have no king or singleton → stop in game.
+function cueDecide(h, T, mine, reply, ans) {
+  const top = B(4, T), side = [0, 1, 2, 3].filter(s => s !== T), ps = reply === top ? -1 : ST.indexOf(reply[1]), ms = ST.indexOf(mine[1]);
+  const pa = ans && /^[34][CDHS]$/.test(ans) && ans[1] !== ST[T] ? ST.indexOf(ans[1]) : -1;   // shown earlier (shortness / good suit)
+  const lim = reply === top ? top : reply;
+  // Suits partner could have shown (above my cue, below his answer) but didn't.
+  const denied = side.filter(s => s !== ps && s !== ms && bv(B(cheapest(s, mine), s)) < bv(lim));
+  const open = side.filter(s => !firstCtl(h, s) && s !== ps && s !== pa && !secondCtl(h, s));
+  const said = ps >= 0 ? `Partner's ${plain(reply)} shows first-round control of ${SN[ps]}` : `Partner's 4${SY[T]} denies an ace or void${denied.length ? ` in ${denied.map(s => SN[s]).join(' and ')}` : ''}`;
+  if (open.length) {
+    const bad = open;
+    return reply === top ? R('P', `${said}. Nobody has shown control of ${bad.map(s => SN[s]).join(' or ')}, and you have neither the king nor shortness there: the opponents may cash two tricks. Stop: pass.`, 'G.cue-bid-decide')
+      : R(top, `${said}, but nobody has shown control of ${bad.map(s => SN[s]).join(' or ')} and you have neither the king nor shortness there: sign off in 4${SY[T]}.`, 'G.cue-bid-decide');
+  }
+  return R('4N', `${said}. Every side suit is now controlled, so the only question is how many key cards are missing: 4NT, RKCB.`, 'G.cue-bid-decide');
 }
 
 // Roman Key Card Blackwood (5♣ = 0 or 3, 5♦ = 1 or 4, 5♥ = 2 without the trump queen, 5♠ = 2 with it).

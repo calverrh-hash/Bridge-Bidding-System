@@ -150,7 +150,8 @@ test('slam: Jacoby opener with 18+ and 2+ key cards bids 4NT at once', () => {
   same(callFor('1H 2N', 'KQ2.KQJ32.KQ2.Q2'), '3H');   // 18 but one key card: 3♥ (flat 18+)
 });
 test('slam: 31+ asks with 2+ key cards, otherwise bids game', () => {
-  same(callFor('1H 2N 3H', 'A432.K432.AQ2.32'), '4N');
+  same(callFor('1H 2N 3H', 'A432.K432.AQ2.32'), '3S');   // two small clubs: a control bid first (G)
+  same(callFor('1H 2N 3H', 'AK32.KQ432.AQ2.2'), '4N');   // every suit controlled: RKCB at once
   same(callFor('1H 2N 3H', 'KQ32.Q432.KQ2.Q2'), '4H');
 });
 test('LTC: opener with 13-14 after a limit raise counts losers (chart B)', () => {
@@ -762,4 +763,12 @@ test('Acol: over their 1NT, a long shapely suit overcalls with 8+', () => {
 test('5CM: over 1♦, four hearts and four clubs: 1♥, not 2♣', () => {
   same(r1m(parseHand('AT6.Q972.A4.KT83'), 1).bid, '1H', '13 HCP 3-4-2-4: 1♥');
   same(r1m(parseHand('AT6.Q972.4.KT832'), 1).bid, '2C', 'five clubs and 9+: 2♣ still first');
+});
+
+test('control bids (traditional): after Jacoby, cheapest ace or void first; RKCB once every suit is controlled', () => {
+  same(callFor('1S 2N 3D', 'KQJ85.Q8742.AK10.-'), '4C', 'club void: control bid, not RKCB');
+  same(callFor('1S 2N 3D 4C', 'A9743.A5.7.KQ862'), '4H', 'partner shows the ♥A');
+  same(callFor('1S 2N 3D 4C', 'A9743.K5.7.KQ862'), '4S', 'no ace or void to show: 4♠');
+  same(callFor('1S 2N 3D 4C 4H', 'KQJ85.Q8742.AK10.-'), '4N', 'every suit controlled: RKCB');
+  same(callFor('1S 2N 3D 4C 4S', 'KQJ85.Q8742.AK10.-'), 'P', 'hearts unguarded: stop');
 });

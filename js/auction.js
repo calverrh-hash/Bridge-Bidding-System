@@ -327,6 +327,10 @@ function after1Major(seq, h) {
     if (x[1] !== r[1] && r1M(h, M).id === 'B.new-suit-then-support') return supportAfterNewSuit(h, M, r, x);
     return respAfterRebid(h, seq);
   }
+  // Control bids after Jacoby 2NT (G).
+  if (r === '2N' && n === 4 && isCue(seq[3], M)) return cueReply(h, M, seq[3]);
+  if (r === '2N' && n === 5 && isCue(seq[3], M)) return cueDecide(h, M, seq[3], seq[4], seq[2]);
+  if (r === '2N' && n === 6 && isCue(seq[3], M)) return AP('Partner signed off.');
   if (n === 4) {
     const a = seq[3], inv = openerAfterInvite(h, seq);
     if (/^2[CDHS]$/.test(a) && a[1] === seq[1][1] && seq[2][1] !== seq[1][1]) {   // responder rebid their own suit at the 2-level

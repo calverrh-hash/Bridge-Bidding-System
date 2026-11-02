@@ -87,6 +87,7 @@ ltc = '''<table class="lt"><tr><th colspan="2">Opener</th></tr><tr><th>Points</t
 <tr><td>0-5</td><td>10</td></tr><tr><td>6-9</td><td>9</td></tr><tr><td>10-11</td><td>8</td></tr><tr><td>12-15</td><td>7</td></tr><tr><td>16+</td><td>6</td></tr></table>'''
 G = f'''{box('cnv','<b>RKCB 4NT</b> once a trump suit is agreed (4NT straight over NT is quantitative). Key cards = 4 aces + the K of trumps. Replies: <b>5♣ 0 or 3</b> · <b>5♦ 1 or 4</b> · <b>5♥ 2 without Q</b> · <b>5♠ 2 with Q</b>.')}
 {arrow}
+{box('cnv','<b>CONTROL BIDS</b> after Jacoby (slam possible, 29+ or LTC 12, but a suit without A/K/shortness, or a void): cheapest <b>ace or void</b> below 4M; skipping a suit denies one. Partner: cheapest ace/void, else 4M. All controlled → 4NT; else 4M.')}
 {box('reb','<b>Asker:</b> missing two key cards → 5 of trumps · missing one → 6 · all five and the trump Q → 5NT for kings (partner bids his cheapest side king, or 6 of trumps with none), then 7 with a side king. Trumps = the agreed suit (a new suit then support plays in opener’s suit).')}
 {box('cnv','<b>WHEN TO ASK:</b> a fit and 31+ points between you, <b>or</b> the loser count says 12 tricks: 24 − (yours + partner’s) ≥ 12. Use 4NT only when there is room to stop at 5 of the suit.')}
 <div class="b cnv"><b>LOSING TRICK COUNT</b> (8+ card fit only, never NT). <b>24 − (opener’s losers + responder’s losers) = tricks</b>: 10 → game in a major, 11 → game in a minor, 12 → slam. Losers overrule points only with real shape (singleton, void, 5+ trumps).<div class="ltw">{ltc}</div></div>'''

@@ -491,6 +491,12 @@ function acolAfter1Suit(seq, h) {
   const pBest = pSuits.filter(u => L(h)[u] >= 3).sort((a, b) => L(h)[b] - L(h)[a])[0];
   const Tm = mineAsk && i4 % 2 === 1 && acolR1(h, o).id === 'B.acol-new-suit-support' ? o : T !== undefined ? T : mineAsk ? pBest : T;
   // Answering RKCB uses the agreed suit (or opener's suit) for the trump king and queen.
+  // After Jacoby 2NT the trump suit is opener's major, whatever was cue-bid on the way.
+  const jacT = r === '2N' && SYS.jacoby && o >= 2;
+  if (seq.includes('4N') && jacT) return acolBlackwood(seq, h, o);
+  if (jacT && n === 4 && isCue(seq[3], o)) return cueReply(h, o, seq[3]);
+  if (jacT && n === 5 && isCue(seq[3], o)) return cueDecide(h, o, seq[3], seq[4], seq[2]);
+  if (jacT && n === 6 && isCue(seq[3], o)) return AP('Partner signed off.');
   if (seq.includes('4N')) return !mineAsk ? acolBlackwood(seq, h, Tm !== undefined ? Tm : o) : Tm !== undefined ? acolBlackwood(seq, h, Tm) : AP('');
   if (n === 1) return acolR1(h, o);
   if (n === 2) return acolRebid(h, o, r);
@@ -515,6 +521,8 @@ function acolAfter1Suit(seq, h) {
     if (r === '2N' && SYS.jacoby && o >= 2) {
       const xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1;
       const [mp, pl, what] = x === B(4, o) ? [13, 7, 'a minimum (13-14)'] : x === '3N' ? [15, 6, '15-17'] : x === B(3, o) ? [18, 5, '18+'] : [13, 6, `a short ${SN[xs] ? SN[xs].replace(/s$/, '') : ''} suit`];
+      const cue = cueStart(h, o, x, mp, pl, `Opener's answer shows ${what}`);
+      if (cue) return cue;
       const st = acolSlamTry(h, o, mp, `Opener's answer shows ${what}`, pl);
       if (st) return st;
       return x === B(4, o) ? AP('Opener bid game.') : R(B(4, o), `Opener's ${plain(x)} shows ${what}. No slam between you: 4${SY[o]}.`, 'B.acol-jacoby-continue');
