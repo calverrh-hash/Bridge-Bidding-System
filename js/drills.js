@@ -33,11 +33,25 @@ function single(q) {
   return q && { dealer: q.dealer, hand: q.hand, partner: null, steps: [{ calls: q.calls, ans: q.ans, note: q.note }], calls: q.calls.concat(q.ans.bid), pn: [], contract: null, stop: null };
 }
 const Q = (dealer, calls, hand, ans, note) => ({ dealer, calls, hand, ans, note: note || '' });
-// A one-call question in a contested auction: South's chart call after `calls`, or null to try again.
-function oneCall(dealer, calls, h, note) {
-  if (!h) return null;
-  const a = chartCall(auctionState(dealer, calls), h);
-  return isCall(a) ? single(Q(dealer, calls, h, a, note)) : null;
+// A contested hand, bid to the end: the opponents' calls in `calls` are given (afterwards they
+// pass), partner is dealt a hand that makes partner's calls in `calls`, and the rest of the
+// auction is played by the chart for both of you. Null (try again) if no partner hand fits or
+// the auction can't be finished. nspec: optional { lens, hcp } for partner's hand.
+function oneCall(dealer, calls, h, note, rng, nspec) {
+  if (!h || !rng) return null;
+  if (!isCall(chartCall(auctionState(dealer, calls), h))) return null;
+  const fits = n => calls.every((c, i) => seatAfter(dealer, i) !== 'N' || (chartCall(auctionState(dealer, calls.slice(0, i)), n) || {}).bid === c);
+  const partnerBid = calls.some((c, i) => seatAfter(dealer, i) === 'N');
+  for (let t = 0; t < (partnerBid ? 3 : 6); t++) {
+    const n = dealOther(rng, h, nspec ? nspec.lens : sp({}, [0, 7]), nspec ? nspec.hcp[0] : 0, nspec ? nspec.hcp[1] : 24, partnerBid ? fits : undefined);
+    if (!n) return null;
+    CONT = true;
+    let sim;
+    try { sim = simulate(h, n, dealer, note, undefined, calls); } finally { CONT = false; }
+    if (sim.stop || !sim.contract || !sim.steps.length) continue;
+    return { dealer, hand: h, partner: n, steps: sim.steps, calls: sim.calls, pn: sim.pn, contract: sim.contract, stop: null };
+  }
+  return null;
 }
 
 // ---------- Recipe helpers ----------
@@ -248,7 +262,7 @@ const SETS = [
       // Overcall: RHO opens 1x.
       const OV = (lf, lo, hi) => rng => {
         const x = ri(rng, 0, 3);
-        return oneCall('E', [B(1, x)], deal(rng, lf(rng, x), lo, hi), `RHO opened 1${SY[x]}.`);
+        return oneCall('E', [B(1, x)], deal(rng, lf(rng, x), lo, hi), `RHO opened 1${SY[x]}.`, rng);
       };
       // Negative double: partner opens 1o, RHO overcalls 1v.
       const NEG = weak => rng => {
@@ -262,15 +276,15 @@ const SETS = [
           else o2 = { 0: [4, 6], 1: [4, 6], 3: [0, 3] };
         }
         const h = deal(rng, rl(rng, sp(o2, [0, 5])), weak ? 0 : 6, weak ? 5 : 11);
-        return oneCall('N', [B(1, o), B(1, v)], h, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`);
+        return oneCall('N', [B(1, o), B(1, v)], h, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`, rng, { lens: sp({ [o]: [4, 6] }, [0, 5]), hcp: [11, 19] });
       };
       // Advancing a takeout double: LHO opens 1x, partner doubles, RHO passes.
       const ADV = rng => {
         const x = ri(rng, 0, 3);
-        return oneCall('W', [B(1, x), 'X', 'P'], deal(rng, rl(rng, sp({ [x]: [0, 3] }, [0, 6])), 0, 14), `LHO opened 1${SY[x]}; partner made a takeout double.`);
+        return oneCall('W', [B(1, x), 'X', 'P'], deal(rng, rl(rng, sp({ [x]: [0, 3] }, [0, 6])), 0, 14), `LHO opened 1${SY[x]}; partner made a takeout double.`, rng, { lens: sp({ [x]: [0, 2] }, [3, 5]), hcp: [12, 19] });
       };
       // Cappelletti: RHO opens 1NT.
-      const CAP = (lf, lo, hi) => rng => oneCall('E', ['1N'], deal(rng, lf(rng), lo, hi), 'RHO opened a strong 1NT. You play Cappelletti.');
+      const CAP = (lf, lo, hi) => rng => oneCall('E', ['1N'], deal(rng, lf(rng), lo, hi), 'RHO opened a strong 1NT. You play Cappelletti.', rng, { lens: sp({}, [0, 6]), hcp: [0, 12] });
       // A 5-5 two-suiter for Michaels or the Unusual 2NT over 1x.
       const two = (r, x) => {
         const un = [0, 1, 2, 3].filter(s => s !== x);
@@ -294,13 +308,13 @@ const SETS = [
         rng => {
           const o = ri(rng, 0, 1), v = pick(rng, [2, 3]);
           const h = deal(rng, rl(rng, sp({ [o]: [5, 6], [v === 2 ? 3 : 2]: [0, 3] }, [0, 4])), 4, 8);
-          return oneCall('N', [B(1, o), B(1, v)], h, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`);
+          return oneCall('N', [B(1, o), B(1, v)], h, `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`, rng, { lens: sp({ [o]: [4, 6] }, [0, 5]), hcp: [11, 19] });
         },
         // Partner's weak jump overcall: raise to the level of the fit.
         rng => {
           const x = ri(rng, 0, 3), y = pick(rng, [0, 1, 2, 3].filter(t => t !== x)), ov = B(y > x ? 2 : 3, y);
           const h = deal(rng, rl(rng, sp({ [y]: [ri(rng, 1, 4), 4] }, [0, 5])), 3, 12);
-          return oneCall('W', [B(1, x), ov, 'P'], h, `LHO opened 1${SY[x]}; partner made a weak jump overcall, ${plain(ov)}.`);
+          return oneCall('W', [B(1, x), ov, 'P'], h, `LHO opened 1${SY[x]}; partner made a weak jump overcall, ${plain(ov)}.`, rng, { lens: sp({ [y]: [6, 6], [x]: [0, 3] }, [0, 4]), hcp: [5, 10] });
         },
         ADV,
         ADV,

@@ -554,7 +554,7 @@ function auctionState(dealer, calls) {
 function competitive(st, h) {
   if (SYS.acol) return acolCompetitive(st, h);
   const { tagged, seat, partner, lho, rho } = st;
-  if (tagged.some(x => x.by === seat)) return gap('Once the opponents have bid, the chart covers only the first call over them.');
+  if (tagged.some(x => x.by === seat)) return CONT ? contCall(st, h) : gap('Once the opponents have bid, the chart covers only the first call over them.');
   const bids = tagged.filter(x => x.call !== 'P'), open = bids[0], last = tagged[tagged.length - 1];
   const oneSuit = c => /^1[CDHS]$/.test(c), suit = c => ST.indexOf(c[1]);
   // RHO has just opened: overcall, takeout double, Michaels, Unusual 2NT, or Cappelletti over 1NT.
@@ -575,7 +575,7 @@ function competitive(st, h) {
   if (bids.length === 2 && open.by === lho && oneSuit(open.call) && bids[1].by === partner && bids[1].call === 'X' && last.by === rho && last.call === 'P') {
     return advance(h, suit(open.call));
   }
-  return gap('The chart has no call for this contested auction.');
+  return CONT ? contCall(st, h) : gap('The chart has no call for this contested auction.');
 }
 
 // The chart call for the player about to call, given the whole auction so far.
@@ -592,8 +592,8 @@ const auctionOver = calls => calls.length >= 4 && calls.slice(-3).every(c => c =
 // each with the auction so far), pn (North's calls with reasons), the final contract
 // (null unless the auction ended), and stop: the amb()/gap() that ended it early, with the
 // seat that had no call.
-function simulate(hS, hN, dealer, note, opponents) {
-  const calls = [], steps = [], pn = [];
+function simulate(hS, hN, dealer, note, opponents, pre) {
+  const calls = (pre || []).slice(), steps = [], pn = [];
   let stop = null;
   while (!auctionOver(calls) && calls.length < 60) {
     const st = auctionState(dealer, calls), seat = st.seat;

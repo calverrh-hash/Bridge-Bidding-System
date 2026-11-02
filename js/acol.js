@@ -746,7 +746,7 @@ function acolCompetitive(st, h) {
     }
   }
   if (tagged.some(x => x.by === seat)) {
-    return gap('Once the opponents have bid, the chart covers only the first call over them.');
+    return CONT ? contCall(st, h) : gap('Once the opponents have bid, the chart covers only the first call over them.');
   }
   const bids = tagged.filter(x => x.call !== 'P'), open = bids[0], last = tagged[tagged.length - 1];
   const oneSuit = c => /^1[CDHS]$/.test(c), suit = c => ST.indexOf(c[1]);
@@ -769,7 +769,7 @@ function acolCompetitive(st, h) {
   if (bids.length === 2 && open.by === partner && oneSuit(open.call) && bids[1].by === rho && last === bids[1] && (oneSuit(bids[1].call) || bids[1].call === 'X' || /^2[CDHS]$/.test(bids[1].call))) return acolIgnore(h, suit(open.call), bids[1].call);
   if (bids.length === 2 && open.by === lho && oneSuit(open.call) && bids[1].by === partner && bids[1].call === 'X' && last.by === rho && last.call === 'P') return acolAdvance(h, suit(open.call));
   if (bids.length === 2 && open.by === lho && oneSuit(open.call) && bids[1].by === partner && /^[12][CDHS]$/.test(bids[1].call) && last.by === rho && last.call === 'P') return acolAfterOvercall(h, bids[1].call);
-  return gap('The chart has no call for this contested auction.');
+  return CONT ? contCall(st, h) : gap('The chart has no call for this contested auction.');
 }
 
 // ---------- Acol drills ----------
@@ -869,18 +869,19 @@ const ACOL_SETS = (() => {
     { id: 'a-comp', name: 'Overcalls and doubles', refs: 'F · H', acol: true,
       blurb: 'Overcalls (jump = strong), takeout doubles and advancing them, bidding over interference, their 1NT and their pre-empts.',
       recipes: (() => {
-        const OV = (lf, lo, hi) => r => { const x = ri(r, 0, 3); return oneCall('E', [B(1, x)], deal(r, lf(r, x), lo, hi), `RHO opened 1${SY[x]}.`); };
+        const OV = (lf, lo, hi) => r => { const x = ri(r, 0, 3); return oneCall('E', [B(1, x)], deal(r, lf(r, x), lo, hi), `RHO opened 1${SY[x]}.`, r); };
         return [
           OV(r => rl(r, sp({}, [0, 6])), 8, 15), OV(r => rl(r, sp({}, [0, 6])), 8, 15),
           OV((r, x) => rl(r, sp({ [x]: [0, 2] }, [3, 4])), 12, 17),
+          OV(r => rl(r, sp({}, [0, 4])), 3, 10),   // no good suit, too weak to double: pass
           OV((r, x) => balL(r), 16, 18),
           OV((r, x) => { const s = pick(r, [0, 1, 2, 3].filter(t => t !== x)); return rl(r, sp({ [s]: [6, 7], [x]: [0, 2] }, [0, 4])); }, 13, 16),
-          r => oneCall('E', ['1N'], deal(r, rl(r, sp({}, [1, 7])), 6, 18), 'RHO opened 1NT (12-14).'),
-          r => { const x = ri(r, 0, 3); return oneCall('E', [B(3, x)], deal(r, rl(r, sp({ [x]: [0, 2] }, [1, 7])), 12, 18), `RHO pre-empted 3${SY[x]}.`); },
-          r => { const o = ri(r, 0, 3), v = pick(r, [0, 1, 2, 3].filter(t => t > o)); if (v === undefined) return null; return oneCall('N', [B(1, o), B(1, v)], deal(r, rl(r, sp({}, [0, 6])), 4, 15), `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`); },
-          r => { const o = ri(r, 0, 3); return oneCall('N', [B(1, o), 'X'], deal(r, rl(r, sp({}, [0, 6])), 4, 15), `Partner opened 1${SY[o]}; RHO doubled.`); },
-          r => { const x = ri(r, 0, 3); return oneCall('W', [B(1, x), 'X', 'P'], deal(r, rl(r, sp({ [x]: [0, 3] }, [0, 6])), 0, 14), `LHO opened 1${SY[x]}; partner doubled for takeout.`); },
-          r => { const x = ri(r, 0, 3), y = pick(r, [0, 1, 2, 3].filter(t => t !== x)), ov = B(y > x ? 1 : 2, y); return oneCall('W', [B(1, x), ov, 'P'], deal(r, rl(r, sp({}, [0, 6])), 4, 14), `LHO opened 1${SY[x]}; partner overcalled ${plain(ov)}.`); },
+          r => oneCall('E', ['1N'], deal(r, rl(r, sp({}, [1, 7])), 6, 18), 'RHO opened 1NT (12-14).', r, { lens: sp({}, [0, 6]), hcp: [0, 14] }),
+          r => { const x = ri(r, 0, 3); return oneCall('E', [B(3, x)], deal(r, rl(r, sp({ [x]: [0, 2] }, [1, 7])), 12, 18), `RHO pre-empted 3${SY[x]}.`, r, { lens: sp({ [x]: [0, 3] }, [0, 6]), hcp: [0, 16] }); },
+          r => { const o = ri(r, 0, 3), v = pick(r, [0, 1, 2, 3].filter(t => t > o)); if (v === undefined) return null; return oneCall('N', [B(1, o), B(1, v)], deal(r, rl(r, sp({}, [0, 6])), 4, 15), `Partner opened 1${SY[o]}; RHO overcalled 1${SY[v]}.`, r, { lens: sp({ [o]: [4, 6] }, [0, 5]), hcp: [11, 19] }); },
+          r => { const o = ri(r, 0, 3); return oneCall('N', [B(1, o), 'X'], deal(r, rl(r, sp({}, [0, 6])), 4, 15), `Partner opened 1${SY[o]}; RHO doubled.`, r, { lens: sp({ [o]: [4, 6] }, [0, 5]), hcp: [11, 19] }); },
+          r => { const x = ri(r, 0, 3); return oneCall('W', [B(1, x), 'X', 'P'], deal(r, rl(r, sp({ [x]: [0, 3] }, [0, 6])), 0, 14), `LHO opened 1${SY[x]}; partner doubled for takeout.`, r, { lens: sp({ [x]: [0, 2] }, [3, 5]), hcp: [12, 19] }); },
+          r => { const x = ri(r, 0, 3), y = pick(r, [0, 1, 2, 3].filter(t => t !== x)), ov = B(y > x ? 1 : 2, y); return oneCall('W', [B(1, x), ov, 'P'], deal(r, rl(r, sp({}, [0, 6])), 4, 14), `LHO opened 1${SY[x]}; partner overcalled ${plain(ov)}.`, r, { lens: sp({ [y]: [5, 6] }, [0, 5]), hcp: [8, 16] }); },
         ];
       })() },
   ];

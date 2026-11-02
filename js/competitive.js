@@ -422,3 +422,149 @@ function supAfterRaise(h, M, raise) {
   if (p >= 11) return R(B(3, M), `Opener's simple raise shows 11-14. With ${p} (11-12), invite with 3${SY[M]}.`, 'D.after-raise');
   return R('P', `Opener's simple raise shows 11-14. With ${p} (10 or less), pass.`, 'D.after-raise');
 }
+
+// ---------- After the first call over the opponents: bidding on to the end ----------
+// The chart covers only the first call in a contested auction. Drills bid every hand to the
+// end, so these trainer guides (labelled as such in the app) carry on: conventional answers
+// (Cappelletti, Michaels, Unusual 2NT, the advance cue bid), then a natural layer that
+// raises a fit to the level the losers say, and otherwise stops. Used only while CONT is on
+// (drills that bid on after the opponents' calls); the opponents pass after their given calls.
+let CONT = false;
+function contCall(st, h) {
+  const { tagged, seat, partner } = st, us = x => x.by === seat || x.by === partner;
+  const p = hcp(h), l = L(h), k = losers(h);
+  const ob = tagged.filter(x => us(x) && x.call !== 'P'), tb = tagged.filter(x => !us(x) && x.call !== 'P');
+  const mine = ob.filter(x => x.by === seat), his = ob.filter(x => x.by === partner);
+  const nat = c => /^[1-7][CDHS]$/.test(c), sOf = c => ST.indexOf(c[1]);
+  const theirSuits = tb.filter(x => nat(x.call)).map(x => sOf(x.call)), x0 = theirSuits[0];
+  const lastOurs = ob[ob.length - 1], lastBid = tagged.filter(x => x.call !== 'P').slice(-1)[0];
+  const G = (b, why, id) => R(b, why, id || 'GUIDE.comp-continue');
+  const pass = why => G('P', why);
+  if (!ob.length) return pass('Your side has not bid, and nothing has changed: pass.');
+  if (lastBid && !us(lastBid)) return pass('The opponents have the last bid, and you have nothing more to add: pass.');
+  const gameIn = s => s >= 2 ? B(4, s) : B(5, s), isGame = c => /^(3N|4[HS]|5[CD]|[67].)$/.test(c);
+  if (isGame(lastOurs.call) && lastOurs.by === partner) return pass(`Partner's ${plain(lastOurs.call)} is game: pass.`);
+  if (lastOurs.by === seat) return pass('Partner passed your bid: the auction is over for your side.');
+  const first = ob[0], firstIdx = tagged.indexOf(first), overTheir = tagged[firstIdx - 1];
+  const iFirst = first.by === seat;
+
+  // Cappelletti (strong NT system): our first bid directly over their 1NT.
+  if (!SYS.acol && tb[0] && tb[0].call === '1N' && overTheir === tb[0] && /^(2[CDHS]|2N|X)$/.test(first.call)) {
+    const c = first.call, after = ob.slice(1);
+    if (!iFirst && after.length === 0) {   // I am advancer, first answer
+      if (c === 'X') return G('P', `Partner's double shows 16+: leave it in, they're in trouble.`, 'GUIDE.comp-relay');
+      if (c === '2C') {
+        const own = [3, 2].find(s => l[s] >= 6);
+        if (own !== undefined) return G(B(2, own), `Partner's 2♣ shows a one-suiter. You have ${NUM[l[own]]} ${SN[own]} of your own: bid them, 2${SY[own]}.`, 'GUIDE.comp-relay');
+        return G('2D', `Partner's 2♣ shows one long suit. Relay with 2♦: partner bids the suit, or passes if it's diamonds.`, 'GUIDE.comp-relay');
+      }
+      if (c === '2D') {
+        const M = l[3] > l[2] ? 3 : 2, b = l[M] >= 4 && p >= 13 ? B(4, M) : l[M] >= 4 && p >= 11 ? B(3, M) : B(2, M);
+        return G(b, `Partner's 2♦ shows both majors. Choose your longer major (${NUM[l[M]]} ${SN[M]})${+b[0] > 2 ? `, and with ${p} HCP jump: ${+b[0] === 4 ? 'game' : 'invite'}` : ''}: ${plain(b)}.`, 'GUIDE.comp-relay');
+      }
+      if (c === '2H' || c === '2S') {
+        const M = sOf(c);
+        if (l[M] >= 2) { const b = l[M] >= 3 && p >= 13 ? B(4, M) : l[M] >= 3 && p >= 11 ? B(3, M) : 'P'; return G(b, `Partner's ${plain(c)} shows five ${SN[M]} and a minor. With ${cardsOf(l[M], M)}${b === 'P' ? ', play there: pass' : ` and ${p} HCP, raise: ${plain(b)}`}.`, 'GUIDE.comp-relay'); }
+        return G('2N', `Partner's ${plain(c)} shows ${SN[M]} and a minor. With only ${cardsOf(l[M], M)}, ask for the minor: 2NT.`, 'GUIDE.comp-relay');
+      }
+      if (c === '2N') { const m = l[1] > l[0] ? 1 : 0; return G(B(3, m), `Partner's 2NT shows both minors. Choose your longer: 3${SY[m]}.`, 'GUIDE.comp-relay'); }
+    }
+    if (iFirst && after.length === 1) {   // I made the Cappelletti call; partner answered
+      const a = after[0].call;
+      if (c === '2C' && a === '2D') {
+        const s = [3, 2, 1, 0].find(u => l[u] >= 6);
+        if (s === 1) return G('P', `Partner relayed 2♦, and your suit is diamonds: pass.`, 'GUIDE.comp-relay');
+        const b = s === 0 ? '3C' : B(2, s);
+        return G(b, `Partner relayed 2♦: now show your long suit, ${plain(b)}.`, 'GUIDE.comp-relay');
+      }
+      if ((c === '2H' || c === '2S') && a === '2N') { const m = l[1] > l[0] ? 1 : 0; return G(B(3, m), `Partner's 2NT asks for your minor: 3${SY[m]}.`, 'GUIDE.comp-relay'); }
+    }
+  }
+  // Michaels cue bid or Unusual 2NT (strong NT system): our first bid directly over their 1-suit opening.
+  if (!SYS.acol && x0 !== undefined && overTheir === tb[0] && /^1[CDHS]$/.test(tb[0].call) && (first.call === B(2, x0) || first.call === '2N')) {
+    const mich = first.call !== '2N', after = ob.slice(1);
+    const pair = mich ? (x0 <= 1 ? [2, 3] : [x0 === 2 ? 3 : 2]) : [0, 1, 2, 3].filter(s => s !== x0).slice(0, 2);
+    if (!iFirst && after.length === 0) {
+      if (mich && x0 >= 2) {
+        const om = pair[0];
+        if (l[om] >= 3) { const b = l[om] >= 4 && p >= 11 ? B(4, om) : B(cheapest(om, first.call), om); return G(b, `Partner's Michaels ${plain(first.call)} shows five ${SN[om]} and a five-card minor. With ${l[om]} ${SN[om]}: ${plain(b)}.`, 'GUIDE.comp-relay'); }
+        return G('2N', `Partner's Michaels shows ${SN[om]} and a minor. With only ${cardsOf(l[om], om)}, ask for the minor: 2NT.`, 'GUIDE.comp-relay');
+      }
+      const s = pair.slice().sort((a, b) => l[b] - l[a] || b - a)[0], g = l[s] >= 4 && p >= 11;
+      const b = g ? gameIn(s) : B(cheapest(s, first.call), s);
+      return G(b, `Partner's ${mich ? 'Michaels' : 'Unusual 2NT'} shows five ${SN[pair[0]]} and five ${SN[pair[1]]}. Choose your longer: ${plain(b)}${g ? ` (with ${l[s]} and ${p} HCP, game)` : ''}.`, 'GUIDE.comp-relay');
+    }
+    if (iFirst && after.length === 1 && after[0].call === '2N' && mich) { const m = l[1] >= 5 ? 1 : 0; return G(B(3, m), `Partner's 2NT asks for your minor: 3${SY[m]}.`, 'GUIDE.comp-relay'); }
+    if (iFirst && after.length === 1 && nat(after[0].call)) {
+      const s = sOf(after[0].call), t = 24 - k - 9;
+      if (+after[0].call[0] < (s >= 2 ? 4 : 5) && t >= (s >= 2 ? 10 : 11)) return G(gameIn(s), `Partner chose ${SN[s]}. Your ${k} losers and partner's about 9: 24 − ${k + 9} = ${t} tricks: game, ${plain(gameIn(s))}.`, 'GUIDE.comp-relay');
+      return pass(`Partner chose ${SN[s]}. That's where you play: pass.`);
+    }
+  }
+  // Our takeout double, then partner's cue bid in their suit (12+, game forcing): describe, then place it.
+  if (x0 !== undefined && his.length && his[his.length - 1].call[1] === ST[x0] && nat(his[his.length - 1].call) && mine.length && mine[0].call === 'X') {
+    return cueAnswer(h, x0, tagged.map(t => t.call));
+  }
+  if (x0 !== undefined && mine.length >= 1 && mine[mine.length - 1].call[1] === ST[x0] && nat(mine[mine.length - 1].call) && his.length && his[0].call === 'X') {
+    const ans = his[his.length - 1].call, r = cuePlace(h, x0, ans);
+    if (isCall(r)) return r;
+  }
+
+  // ---- The natural layer ----
+  // What partner has shown: minimum points, from his first action.
+  const pf = his[0], pfIdx = pf ? tagged.indexOf(pf) : -1;
+  const opened = pf && tagged.slice(0, pfIdx).every(t => t.call === 'P');
+  const iOpened = mine.length && tagged.slice(0, tagged.indexOf(mine[0])).every(t => t.call === 'P');
+  const jumped = c => { if (!nat(c.call)) return false; const before = tagged.slice(0, tagged.indexOf(c)).filter(t => /^\d/.test(t.call)).slice(-1)[0]; return !!before && +c.call[0] > cheapest(sOf(c.call), before.call); };
+  const mySuits = mine.filter(x => nat(x.call) && !theirSuits.includes(sOf(x.call))).map(x => sOf(x.call));
+  const iBefore = pf && mine.some(m => tagged.indexOf(m) < pfIdx);
+  let pMin = 6;
+  if (!pf) pMin = 0;
+  else if (opened) pMin = 12;
+  else if (iOpened) pMin = pf.call === '2N' || jumped(pf) ? 10 : /^2[CDHS]$/.test(pf.call) && sOf(pf.call) !== mySuits[0] ? 9 : 6;   // a response to my opening
+  else if (pf.call === 'X') pMin = iBefore ? 6 : 12;                       // negative double / takeout double
+  else if (pf.call === '1N') pMin = iBefore ? 6 : SYS.acol ? 16 : 15;      // advance / 1NT overcall
+  else if (nat(pf.call) && pf.call[1] === ST[x0]) pMin = 12;              // the advance cue bid
+  else if (nat(pf.call) && !iBefore) pMin = jumped(pf) ? (SYS.acol ? 13 : 6) : 8;   // overcall (Acol jump = strong)
+  else pMin = jumped(pf) ? 9 : 6;                                          // advancing my double or overcall
+  his.slice(1).forEach(x => { if (jumped(x) && /^[34]/.test(x.call)) pMin = Math.max(pMin, 9); });
+  const pl = pMin >= 12 ? 7 : pMin >= 9 ? 8 : 9;
+  const hisNat = his.filter(x => nat(x.call) && !theirSuits.includes(sOf(x.call)));
+  const hisSuits = hisNat.map(x => sOf(x.call)), lastHis = his[his.length - 1];
+  const cur = (tagged.filter(x => /^\d/.test(x.call)).slice(-1)[0] || {}).call || '1C';
+  const allStopped = theirSuits.every(s => stop(h, s));
+  // Raise a fit to the level the losers say (game at most).
+  const raise = (s, why) => {
+    const t = 24 - k - pl, need = s >= 2 ? 10 : 11;
+    if (s < 2 && t >= 9 && t < 11 && allStopped && p + pMin >= 25 && bv('3N') > bv(cur)) return G('3N', `${why} With ${p} HCP opposite partner's ${pMin}+ and the opponents' suit stopped, 3NT: nine tricks rather than eleven.`);
+    if (t >= need && bv(gameIn(s)) > bv(cur)) return G(gameIn(s), `${why} Your ${k} losers and partner's about ${pl}: 24 − ${k + pl} = ${t} tricks, enough for game: ${plain(gameIn(s))}.`);
+    const lv = Math.min(t - 6, s >= 2 ? 3 : 4), b = B(Math.max(lv, cheapest(s, cur)), s);
+    if (bv(b) > bv(cur) && +b[0] <= lv) return G(b, `${why} Your ${k} losers and partner's about ${pl}: 24 − ${k + pl} = ${t} tricks, so compete to ${plain(b)}.`);
+    return pass(`${why} Your ${k} losers and partner's about ${pl}: 24 − ${k + pl} = ${t} tricks, not enough to bid higher: pass.`);
+  };
+  // Partner doubled after my opening (negative double): rebid.
+  if (lastHis.call === 'X' && mine.length && tagged.indexOf(mine[0]) < tagged.indexOf(lastHis)) {
+    const o = mySuits[0], v = theirSuits[theirSuits.length - 1], um = [2, 3].filter(s => s !== o && s !== v && l[s] >= 4).sort((a, b) => l[b] - l[a] || a - b)[0];
+    if (um !== undefined) { const lv0 = cheapest(um, cur), lv = Math.min(4, lv0 + (p >= 17 ? 2 : p >= 15 ? 1 : 0)); return G(B(lv, um), `Partner's double shows the unbid major. You have four ${SN[um]}: ${plain(B(lv, um))}${lv > lv0 ? ` (a jump with ${p} HCP)` : ''}.`); }
+    if (o !== undefined && l[o] >= 6) return G(B(cheapest(o, cur), o), `Partner's double shows the unbid suits. With ${NUM[l[o]]} ${SN[o]}, rebid them: ${plain(B(cheapest(o, cur), o))}.`);
+    if (v !== undefined && stop(h, v)) { const nt = p >= 18 ? '3N' : bv('1N') > bv(cur) ? '1N' : '2N'; return G(nt, `Partner's double shows the unbid suits. With a ${SN[v].replace(/s$/, '')} stopper, ${plain(nt)}.`); }
+    const s = [0, 1, 2, 3].filter(u => u !== v && u !== o && l[u] >= 3).sort((a, b) => l[b] - l[a])[0];
+    if (s !== undefined) return G(B(cheapest(s, cur), s), `Partner's double shows the unbid suits: bid your best, ${plain(B(cheapest(s, cur), s))}.`);
+    return o !== undefined ? G(B(cheapest(o, cur), o), `Partner's double: with nothing better, rebid your suit.`) : pass(`Nothing more to show: pass.`);
+  }
+  // A fit: a suit we have both bid, or partner's suit where I hold three or more.
+  const both = mySuits.find(s => hisSuits.includes(s));
+  if (both !== undefined) return raise(both, `You and partner have both bid ${SN[both]}: a fit.`);
+  const ps = hisSuits[hisSuits.length - 1];
+  if (ps !== undefined && lastHis.call === hisNat[hisNat.length - 1].call) {
+    const need = hisNat.filter(x => sOf(x.call) === ps).length > 1 || (pMin === 8 && +lastHis.call[0] === 2 && x0 !== undefined && ps < x0) ? 2 : 3;
+    if (l[ps] >= need) return raise(ps, `Partner's ${plain(lastHis.call)}: with ${l[ps]} ${SN[ps]} you have a fit.`);
+  }
+  if (lastHis.call === '1N' || lastHis.call === '2N') {
+    const six = [3, 2].find(s => l[s] >= 6);
+    if (p + pMin >= 25) return G(six !== undefined ? B(4, six) : '3N', `Partner's ${plain(lastHis.call)} shows ${pMin}+. With ${p} that's game: ${six !== undefined ? plain(B(4, six)) : '3NT'}.`);
+    return pass(`Partner's ${plain(lastHis.call)} shows ${pMin}+. With ${p}, there's no game: pass.`);
+  }
+  if (p + pMin >= 25 && allStopped && bv('3N') > bv(cur) && l.every(n => n >= 2)) return G('3N', `No fit has turned up, but ${p} HCP opposite partner's ${pMin}+ is enough for game, and you have the opponents' suit stopped: 3NT.`);
+  return pass(`No fit has turned up and there's no game in sight: pass.`);
+}
