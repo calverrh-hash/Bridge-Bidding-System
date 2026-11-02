@@ -1,9 +1,9 @@
 # Changelog
 
-
 ## 2026-11-02
 
 - Control (cue) bids, traditional style, in both systems after Jacoby 2NT: when slam is possible (29+ between you, or the losers say 12 tricks) but a side suit has no ace, king or shortness in your hand, or you hold a void, bid your cheapest ace or void below 4M instead of RKCB (skipping a suit denies one). Partner shows his cheapest ace or void, or signs off in 4M. With every suit controlled the control bidder goes on with 4NT (RKCB); otherwise stops in 4M. Chart G (both charts) updated.
+
 ## 2026-11-01
 - 5CM, responses to 1♣/1♦: a 4-card major at the 1-level comes before a 4-card minor (1♦ – 1♥ with 3-4-2-4, not 2♣). Chart C updated. Opener's 15-19 rebid after 1♦ – 2♣ is now covered (raise to 3♣, jump rebid with six, or show a second suit, all forcing), then game.
 - Acol, over their 12-14 1NT: a seven-card suit, or six with 6 losers or fewer, overcalls at the 2-level with 8+ HCP (as well as a good six-card suit with 10+). 4-7-1-1 with ♥K10xxxxx and 9 HCP bids 2♥.
