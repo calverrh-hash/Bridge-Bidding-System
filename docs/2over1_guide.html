@@ -1,0 +1,195 @@
+<title>2/1 Bidding Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: one column, a "where are you?" question at the top, then one decision card at a time, like turning cards on a table. */
+:root {
+  --bg: #f3f5f1; --surface: #ffffff; --ink: #1c2420; --muted: #5d6a63; --line: #d6ddd7;
+  --felt: #1f5a44; --felt-ink: #ffffff; --soft: #e5efe9; --red: #c0262d; --chip: #eef2ef;
+  --display: "Zilla Slab", Georgia, serif; --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121815; --surface: #1b2420; --ink: #e6ece8; --muted: #9aa8a0; --line: #2f3b35;
+  --felt: #2f7a5d; --felt-ink: #ffffff; --soft: #1f3129; --red: #ff6b70; --chip: #24302a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #121815; --surface: #1b2420; --ink: #e6ece8; --muted: #9aa8a0; --line: #2f3b35;
+  --felt: #2f7a5d; --felt-ink: #ffffff; --soft: #1f3129; --red: #ff6b70; --chip: #24302a; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px }
+.wrap { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px }
+header h1 { font-family: var(--display); font-size: 2.1rem; line-height: 1.1; margin: 0 0 6px; text-wrap: balance }
+header p { margin: 0; color: var(--muted); max-width: 60ch }
+.r { color: var(--red) }
+.path { display: flex; flex-wrap: wrap; gap: 6px; min-height: 30px }
+.path button { font: inherit; font-size: .9rem; border: 1px solid var(--line); background: var(--chip); color: var(--ink); border-radius: 999px; padding: 3px 11px; cursor: pointer }
+.path button:hover { border-color: var(--felt) }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 14px }
+.step { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700 }
+.card h2 { font-family: var(--display); font-weight: 700; font-size: 1.45rem; line-height: 1.2; margin: 0; text-wrap: balance }
+.opts { display: grid; gap: 10px }
+.opt { font: inherit; text-align: left; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); padding: 13px 15px; cursor: pointer; display: flex; flex-direction: column; gap: 2px; transition: border-color .15s, background .15s }
+.opt:hover { border-color: var(--felt); background: var(--soft) }
+.opt b { font-weight: 700 }
+.opt span { color: var(--muted); font-size: .92rem }
+.opt:focus-visible, .path button:focus-visible, .act:focus-visible { outline: 3px solid var(--felt); outline-offset: 2px }
+.bid { align-self: flex-start; background: var(--felt); color: var(--felt-ink); font-family: var(--display); font-weight: 700; font-size: 2rem; line-height: 1; padding: 12px 18px; border-radius: 10px }
+.bid .r { color: #ffc2c5 }
+.why { margin: 0 }
+.next { border-top: 1px dashed var(--line); padding-top: 12px; color: var(--muted); font-size: .95rem; margin: 0 }
+.next b { color: var(--ink) }
+.acts { display: flex; gap: 10px; flex-wrap: wrap }
+.act { font: inherit; font-weight: 600; border-radius: 8px; padding: 9px 16px; cursor: pointer; border: 1px solid var(--felt); background: var(--felt); color: var(--felt-ink) }
+.act.ghost { background: transparent; color: var(--ink); border-color: var(--line) }
+.key { background: var(--soft); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 6px }
+.key h3 { margin: 0; font-family: var(--display); font-size: 1.1rem }
+.key ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px }
+@media (prefers-reduced-motion: no-preference) { .card { animation: deal .25s ease-out } @keyframes deal { from { transform: translateY(6px) } to { transform: none } } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>2/1 game forcing</h1>
+    <p>Answer one question at a time to find your bid. Everything not shown here (openings, 1NT, raises with four trumps, Jacoby, splinters, slam bidding) is played as on your strong NT chart.</p>
+  </header>
+  <nav class="path" id="path" aria-label="Your answers so far"></nav>
+  <main id="card" class="card" aria-live="polite"></main>
+  <section class="key">
+    <h3>The two rules to remember</h3>
+    <ul>
+      <li>Over 1♥/1♠, <b>1NT is forcing</b> for one round: 6-12 HCP, fewer than three trumps. Opener must bid again.</li>
+      <li>A <b>new suit at the 2-level</b> (1♥–2♣/2♦, 1♠–2♣/2♦/2♥, and 1♦–2♣) shows 13+ and <b>forces to game</b>. Nobody needs to jump after that.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+// Each node is a question {q, opts:[{t, s, go}]} or an answer {bid, why, next}.
+const N = {
+  start: { q: 'Where are you in the auction?', opts: [
+    { t: 'Partner opened 1♥ or 1♠', s: 'You are responder', go: 'r1' },
+    { t: 'I opened 1♥/1♠ and partner bid 1NT', s: 'Opener: 1NT is forcing, you must bid', go: 'o1' },
+    { t: 'I bid 1NT forcing and opener rebid', s: 'Responder’s second call', go: 'r2' },
+    { t: 'I opened 1♥/1♠ and partner bid a new suit at the 2-level', s: 'Game forcing', go: 'o2' },
+    { t: 'I bid a 2-over-1 and opener rebid', s: 'Placing the game', go: 'r3' },
+    { t: 'Partner opened 1♦', s: '2♣ is game forcing too', go: 'd1' },
+  ] },
+
+  // ---- Responding to 1♥/1♠ ----
+  r1: { q: 'How many cards do you hold in partner’s major?', opts: [
+    { t: '4 or more', go: 'r1_4' }, { t: 'Exactly 3', go: 'r1_3' }, { t: '0, 1 or 2', go: 'r1_s' } ] },
+  r1_4: { bid: 'As the chart', why: 'With four trumps nothing changes: 2M up to 6 HCP · 3♦ 7-9 · 3♣ 10-12 · a splinter with game values up to 15 and a singleton (not the A or K) or void · Jacoby 2NT with 13+ · 4M weak with five trumps.', next: 'Then follow the chart.' },
+  r1_3: { q: 'How many points?', opts: [
+    { t: '6-9', go: 'r1_3a' }, { t: '10-12', go: 'r1_3b' }, { t: '13-15 and balanced', go: 'r1_3c' }, { t: '13+ otherwise', go: 'r1_3d' } ] },
+  r1_3a: { bid: '2M', why: 'A simple raise, 6-9 with three trumps.' },
+  r1_3b: { bid: '3M', why: 'A limit raise, 10-12 with three trumps. Opener bids game with extras.' },
+  r1_3c: { bid: '3NT', why: 'Exactly three trumps, 13-15, balanced. Opener passes with a flat 5-3-3-2, otherwise bids 4M.' },
+  r1_3d: { bid: 'New suit at the 2-level', why: 'Bid your longest other suit at the 2-level first (equal length: the lower). It is a 2-over-1, game forcing. Support partner’s major on your next turn.', next: 'Game is already forced, so you can show support at the 2- or 3-level without jumping.' },
+  r1_s: { q: 'Did partner open 1♥, and do you hold four or more spades?', opts: [
+    { t: 'Yes', go: 'r1_sp' }, { t: 'No', go: 'r1_pts' } ] },
+  r1_sp: { bid: '1♠', why: 'Four or more spades, 6+ HCP: 1♠, forcing, exactly as in the chart. 2/1 doesn’t change this.' },
+  r1_pts: { q: 'How many points?', opts: [
+    { t: 'Fewer than 6', s: 'Or 4-5 without real shape', go: 'r1_p' }, { t: '6-12', go: 'r1_nt' }, { t: '13 or more', go: 'r1_gf' } ] },
+  r1_p: { bid: 'Pass', why: 'Too weak to respond.' },
+  r1_nt: { bid: '1NT', why: '1NT forcing: 6-12 HCP with fewer than three trumps. Opener must bid again. With a long suit of your own, bid 1NT first and show the suit next.', next: '<b>Why not 2 of your suit?</b> In 2/1 a new suit at the 2-level promises 13+ and forces to game.' },
+  r1_gf: { bid: 'New suit at the 2-level', why: 'A 2-over-1: 13+, game forcing. Bid your longest suit (equal length: the lower). Over 1♠ that can be 2♥ with five or more hearts.', next: 'Neither of you may now stop below game. Bid naturally and slowly.' },
+
+  // ---- Opener after 1M – 1NT forcing ----
+  o1: { q: 'Which describes your hand best?', opts: [
+    { t: 'Six or more cards in my major', go: 'o1_6' },
+    { t: 'A second suit of 4+ cards, ranking below my major', s: 'Clubs, diamonds, or hearts after 1♠', go: 'o1_2' },
+    { t: 'Four spades after opening 1♥', go: 'o1_rev' },
+    { t: 'Balanced, 18-19', go: 'o1_bal' },
+    { t: 'None of these', s: 'A minimum 5-3-3-2 and similar', go: 'o1_min' } ] },
+  o1_6: { q: 'How many points?', opts: [ { t: '11-15', go: 'o1_6a' }, { t: '16-18', go: 'o1_6b' } ] },
+  o1_6a: { bid: '2M', why: 'Rebid your six-card major: a minimum.' },
+  o1_6b: { bid: '3M', why: 'Jump to 3 of your major: six cards and 16-18. Partner bids game with 8+.' },
+  o1_2: { q: 'How many points?', opts: [ { t: '11-18', go: 'o1_2a' }, { t: '19 or more', go: 'o1_2b' } ] },
+  o1_2a: { bid: 'Your second suit at the 2-level', why: 'Show it: 2♣, 2♦, or 2♥ after 1♠. Partner passes, gives preference, or invites.' },
+  o1_2b: { bid: 'Jump in your second suit', why: 'A jump shift to the 3-level: 19+, game forcing.' },
+  o1_rev: { q: 'How many points?', opts: [ { t: '16 or more', go: 'o1_reva' }, { t: 'Fewer than 16', go: 'o1_min' } ] },
+  o1_reva: { bid: '2♠', why: 'A reverse: four spades and 16+. Forcing.' },
+  o1_bal: { bid: '2NT', why: 'Balanced 18-19. With 20+ balanced, bid 3NT.' },
+  o1_min: { bid: '2 of your longer minor', why: 'You can’t pass 1NT, and you have nothing else to show. Bid your longer minor, even with only three cards. With 3-3 in the minors, bid 2♣.', next: 'Partner knows this may be only three cards, so with two of your major he usually goes back to it.' },
+
+  // ---- Responder after 1M – 1NT – rebid ----
+  r2: { q: 'What did opener rebid?', opts: [
+    { t: '2 of his major', s: 'Six cards, a minimum', go: 'r2_2m' },
+    { t: '3 of his major', s: 'Six cards, 16-18', go: 'r2_3m' },
+    { t: '2NT', s: '18-19 balanced', go: 'r2_nt' },
+    { t: 'A new suit at the 2-level', s: 'May be a three-card minor', go: 'r2_new' },
+    { t: 'A jump in a new suit, or a reverse', go: 'r2_big' } ] },
+  r2_2m: { q: 'How many points?', opts: [ { t: '6-10', go: 'r2_2ma' }, { t: '11-12 with two of his major', go: 'r2_2mb' } ] },
+  r2_2ma: { bid: 'Pass', why: 'Opener has a minimum with six cards. Stop here.' },
+  r2_2mb: { bid: '3M', why: 'Invite game. Opener bids 4M with 14+.' },
+  r2_3m: { q: 'How many points?', opts: [ { t: '6-7', go: 'r2_3ma' }, { t: '8 or more', go: 'r2_3mb' } ] },
+  r2_3ma: { bid: 'Pass', why: 'Opener’s 3M invites; with 6-7 decline.' },
+  r2_3mb: { bid: '4M', why: 'Accept: 4M with two trumps, 3NT with fewer.' },
+  r2_nt: { q: 'How many points?', opts: [ { t: '6', go: 'r2_nta' }, { t: '7 or more', go: 'r2_ntb' } ] },
+  r2_nta: { bid: 'Pass', why: 'Not quite enough for game opposite 18-19.' },
+  r2_ntb: { bid: '3NT', why: '18 + 7 = 25: game.' },
+  r2_new: { q: 'How many points?', opts: [ { t: '6-9', go: 'r2_w' }, { t: '10-12', go: 'r2_inv' } ] },
+  r2_w: { q: 'Which describes your hand best?', opts: [
+    { t: 'I have a six-card suit of my own that I can bid at the 2-level', go: 'r2_w6' },
+    { t: 'Five or more of his minor (four or more of his 2♥)', go: 'r2_wp' },
+    { t: 'Two cards in his major', go: 'r2_wpref' },
+    { t: 'None of these', go: 'r2_wp' } ] },
+  r2_w6: { bid: 'Your suit at the 2-level', why: 'Six cards and a weak hand: to play. Opener passes.' },
+  r2_wp: { bid: 'Pass', why: 'Play in opener’s second suit.' },
+  r2_wpref: { bid: '2M', why: 'Preference to the known five-card major. Opener’s minor may be only three cards.' },
+  r2_inv: { q: 'Which describes your hand best?', opts: [
+    { t: 'Support for his new suit (five of a minor, four hearts)', go: 'r2_i1' },
+    { t: 'A six-card suit of my own', go: 'r2_i2' },
+    { t: 'Neither', go: 'r2_i3' } ] },
+  r2_i1: { bid: 'Raise to 3', why: 'Invitational, 10-12. Opener accepts with 14+.' },
+  r2_i2: { bid: '3 of your suit', why: 'Invitational, 10-12, six cards. Opener accepts with 14+.' },
+  r2_i3: { bid: '2NT', why: 'Invitational, 10-12. Opener bids 3NT with 14+.' },
+  r2_big: { bid: 'Game', why: 'Opener’s jump shift is game forcing: bid game. After a reverse, bid 3NT with 9+, otherwise give preference.' },
+
+  // ---- Opener after a 2-over-1 ----
+  o2: { q: 'How strong is your hand?', opts: [ { t: '11-14', go: 'o2_min' }, { t: '15-19, unbalanced', go: 'o2_ext' }, { t: '18-19, balanced', go: 'o2_bal' } ] },
+  o2_min: { bid: 'Describe naturally', why: 'Raise partner’s minor with four (his 2♥ with three) · rebid a six-card major · show a new suit below the barrier · 2NT if balanced.', next: 'Game is already forced: a minimum bid here doesn’t let partner stop short.' },
+  o2_ext: { bid: 'Show your shape', why: 'Show a second suit or raise partner. There is no need to jump: game is already forced, so keep the bidding low and leave room for slam.' },
+  o2_bal: { bid: '3NT', why: 'Balanced 18-19 after a 2-over-1.' },
+
+  // ---- Responder after the 2-over-1 ----
+  r3: { q: 'What has opener shown?', opts: [
+    { t: 'A raise of my suit, or I have three of his major', go: 'r3_fit' },
+    { t: 'He rebid a six-card major and I hold two', go: 'r3_fit' },
+    { t: 'No fit yet', go: 'r3_nofit' } ] },
+  r3_fit: { bid: 'Game in the fit', why: '4M with a major fit. With a minor fit, 3NT if the other suits are stopped, otherwise 5 of the minor.', next: '<b>Slam?</b> With 31+ between you, or if the losers say 12 tricks, make a control bid or ask with 4NT (RKCB).' },
+  r3_nofit: { bid: '3NT', why: 'With their suits stopped, 3NT. With a long suit of your own, show it first: the auction is still forcing.' },
+
+  // ---- Over 1♦ ----
+  d1: { q: 'Do you hold a four-card major?', opts: [ { t: 'Yes', go: 'd1_m' }, { t: 'No', go: 'd1_n' } ] },
+  d1_m: { bid: '1♥ or 1♠', why: 'Show the major at the 1-level, as in the chart (6+).' },
+  d1_n: { q: 'Which describes your hand?', opts: [ { t: 'Balanced', go: 'd1_b' }, { t: 'Unbalanced with long clubs', go: 'd1_c' } ] },
+  d1_b: { bid: '1NT · 2NT · 3NT', why: '1NT with 6-10, 2NT with 11-12, 3NT with 13-15, as in the chart.' },
+  d1_c: { q: 'How many points?', opts: [ { t: '6-12', go: 'd1_c1' }, { t: '13 or more', go: 'd1_c2' } ] },
+  d1_c1: { bid: '1NT', why: 'In 2/1, 2♣ would force to game, so bid 1NT (an unbalanced 11-12 too: it is the nearest bid).' },
+  d1_c2: { bid: '2♣', why: 'A 2-over-1 over a minor: 13+, five or more clubs, game forcing.' },
+};
+
+const red = s => s.replace(/[♥♦]/g, m => `<span class="r">${m}</span>`);
+let trail = [{ id: 'start', label: null }];
+const cardEl = document.getElementById('card'), pathEl = document.getElementById('path');
+
+function render() {
+  const cur = trail[trail.length - 1], n = N[cur.id];
+  pathEl.innerHTML = trail.slice(1).map((t, i) => `<button data-i="${i}" aria-label="Go back to before: ${t.label}">${red(t.label)}</button>`).join('');
+  pathEl.querySelectorAll('button').forEach(b => b.onclick = () => { trail = trail.slice(0, +b.dataset.i + 1); render(); });
+  const step = `<div class="step">${n.q ? `Question ${trail.length}` : 'Your bid'}</div>`;
+  const acts = trail.length > 1 ? `<div class="acts"><button class="act ghost" id="back">Back</button><button class="act ${n.q ? 'ghost' : ''}" id="again">Start again</button></div>` : '';
+  if (n.q) {
+    cardEl.innerHTML = `${step}<h2>${red(n.q)}</h2><div class="opts">${n.opts.map((o, i) => `<button class="opt" id="opt-${cur.id}-${i}" data-i="${i}"><b>${red(o.t)}</b>${o.s ? `<span>${red(o.s)}</span>` : ''}</button>`).join('')}</div>${acts}`;
+    cardEl.querySelectorAll('.opt').forEach(b => b.onclick = () => { const o = n.opts[+b.dataset.i]; trail.push({ id: o.go, label: o.t }); render(); });
+  } else {
+    cardEl.innerHTML = `${step}<div class="bid">${red(n.bid)}</div><p class="why">${red(n.why)}</p>${n.next ? `<p class="next">${red(n.next)}</p>` : ''}${acts}`;
+  }
+  const back = document.getElementById('back'), again = document.getElementById('again');
+  if (back) back.onclick = () => { trail.pop(); render(); };
+  if (again) again.onclick = () => { trail = [trail[0]]; render(); };
+}
+render();
+</script>
