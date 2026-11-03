@@ -34,18 +34,18 @@ B = f'''{box('obk','Partner opens <b>1♥</b> or <b>1♠</b>')}
 # ---------------- C: 1M – 1NT FORCING ----------------
 C = f'''{box('obk','1M – <b>1NT forcing</b> (6-12)')}
 {arrow}
-{box('reb','<b>Opener must not pass:</b><br>• 6-card major: <b>2M</b> (11-15) · <b>3M</b> (16-18)<br>• a second 4+ suit below your major: <b>bid it</b> (2♣, 2♦, or 2♥ after 1♠)<br>• a reverse (2♠ after 1♥): 16+<br>• 19+ with a second suit: jump shift (game forcing)<br>• balanced 18-19: <b>2NT</b> · 20+: <b>3NT</b><br>• nothing else: <b>your longer minor</b>, even with only three (3-3: 2♣)')}
+{box('reb','<b>Opener must not pass:</b><br>• 6-card major: <b>2M</b> (11-15) · <b>3M</b> (16-18)<br>• a second 4+ suit below your major: <b>bid it</b> (2♣, 2♦, or 2♥ after 1♠)<br>• reverse (2♠ after 1♥): 16+<br>• 19+: jump shift with a second suit, else 4M with six<br>• balanced 18-19: <b>2NT</b> · 20+: <b>3NT</b><br>• nothing else: <b>your longer minor</b>, even with only three (3-3: 2♣)')}
 {arrow}
-{box('rsp','<b>Responder, 6-9:</b> pass a minor with 5+ (4+ of 2♥) · <b>2M preference with two</b> (opener’s minor may be three cards) · a six-card suit of your own: bid it at the 2-level, to play.<br><b>Responder, 10-12:</b> raise opener’s new suit to 3 with support · 3 of your own six-card suit · else <b>2NT</b>. All invitational.<br><b>After 2M:</b> 11-12 with two trumps: 3M, else pass. <b>After 3M:</b> 8+ game. <b>After 2NT:</b> 7+ 3NT.')}
+{box('rsp','<b>Responder, 6-9:</b> pass a minor with 5+ (4+ of 2♥) · <b>2M with two</b> (his minor may be three) · own six-card suit at the 2-level, to play.<br><b>Responder, 10-12</b> (invitational): raise his new suit to 3 · 3 of your own six-card suit · else <b>2NT</b>.<br><b>After 2M:</b> 11-12 with two trumps: 3M, else pass. <b>After 3M:</b> 8+ game. <b>After 2NT:</b> 7+ 3NT.')}
 {arrow}
-{box('reb','<b>Opener after an invitation:</b> 14+ accept (4M with a major fit, else 3NT) · 12-13 pass.')}'''
+{box('reb','<b>Opener after an invitation:</b> 14+ accept (4M with a major fit, else 3NT) · or 4M with ≤6 losers · else pass.')}'''
 
 # ---------------- D: AFTER A 2-OVER-1 ----------------
 D = f'''{box('obk','1M – <b>2x</b> (13+, <b>game forcing</b>)')}
 {arrow}
 {box('reb','<b>Opener bids naturally</b> (nobody stops below game):<br>• 11-14: raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · a new suit below the barrier · 2NT balanced<br>• 15-19: show your shape (a second suit, or a raise) — <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
 {arrow}
-{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · 3NT only with the unbid suits stopped and no singleton · otherwise show a second 5+ suit at the 3-level, or with a minor fit show a stopper (3x): opener bids 3NT with the rest stopped, else 5m.<br><b>Slam:</b> 31+ between you, or the losers say 12 tricks → control bids / RKCB (chart G).')}'''
+{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · 3NT only with the unbid suits stopped and no singleton · otherwise show a second 5+ suit at the 3-level, or with a minor fit show a stopper (3x): opener bids 3NT with the rest stopped, else 5m.<br><b>Slam:</b> 31+, or a fit and the losers say 12 tricks → RKCB (no void) or control bids (chart G).')}'''
 
 E = f'''{box('obk','Partner opens <b>1♦</b>')}
 {arrow}

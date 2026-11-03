@@ -270,9 +270,23 @@ const gameBid = a => /^(3N|4[HS]|5[CD])$/.test(a);
 // Responder gave preference to opener's first suit at the 2-level after a minimum rebid.
 const preference = seq => seq[3] && seq[3][1] === seq[0][1] && +seq[3][0] === 2 && seq[2][1] !== seq[0][1];
 
+// The trump suit for 4NT: the last suit both partners have bid before it (else a raise, else fallback).
+function agreedSuit(seq, fb) {
+  const pre = seq.slice(0, seq.indexOf('4N') < 0 ? seq.length : seq.indexOf('4N'));
+  for (let i = pre.length - 1; i >= 0; i--) {
+    const c = pre[i];
+    if (!/^\d[CDHS]$/.test(c)) continue;
+    if (pre.some((d, j) => (j - i) % 2 !== 0 && /^\d[CDHS]$/.test(d) && d[1] === c[1])) return ST.indexOf(c[1]);
+  }
+  if (raisedSuit(seq) >= 0) return raisedSuit(seq);
+  // 4NT without a suit bid by both: it agrees the last suit bid by the asker's partner.
+  const i4 = seq.indexOf('4N');
+  if (i4 >= 0) for (let j = i4 - 1; j >= 0; j -= 2) if (/^\d[CDHS]$/.test(seq[j])) return ST.indexOf(seq[j][1]);
+  return fb;
+}
 function after1Major(seq, h) {
   const n = seq.length, p = hcp(h), M = ST.indexOf(seq[0][1]), r = seq[1];
-  if (seq.includes('4N')) return afterRKCB(seq, h, raisedSuit(seq) >= 0 ? raisedSuit(seq) : M);
+  if (seq.includes('4N')) return afterRKCB(seq, h, agreedSuit(seq, M));
   // After a splinter: opener's control bid, then the control bidder decides (G).
   if (isSplinter(r, M) && n === 3) return isCue(seq[2], M) ? cueReply(h, M, seq[2]) : AP('Opener signed off.');
   if (isSplinter(r, M) && n === 4 && isCue(seq[2], M)) return cueDecide(h, M, seq[2], seq[3], r);
@@ -367,7 +381,8 @@ function rebid1NTF(h, M) {
     if (p >= 20) return R('3N', why(`Balanced ${p}: 3NT.`), 'B.21-1nt-rebid');
     if (p >= 18) return R('2N', why(`Balanced ${p} (18-19): 2NT.`), 'B.21-1nt-rebid');
   }
-  if (p >= 19 && second !== undefined && l[M] < 6) return R(B(3, second), why(`${p} with ${SN[second]}: jump shift to 3${SY[second]}, game forcing.`), 'B.21-1nt-rebid');
+  if (p >= 19 && second !== undefined) return R(B(3, second), why(`${p} with ${SN[second]}: jump shift to 3${SY[second]}, game forcing.`), 'B.21-1nt-rebid');
+  if (p >= 19 && l[M] >= 6) return R(B(4, M), why(`${p} with ${NUM[l[M]]} ${SN[M]}: bid game, 4${SY[M]}.`), 'B.21-1nt-rebid');
   if (l[M] >= 6) return p >= 16 ? R(B(3, M), why(`${p} (16-18) with ${NUM[l[M]]} ${SN[M]}: jump to 3${SY[M]}.`), 'B.21-1nt-rebid') : R(B(2, M), why(`${p} with ${NUM[l[M]]} ${SN[M]}: rebid 2${SY[M]}.`), 'B.21-1nt-rebid');
   if (second !== undefined && (second < M || p >= 16)) return R(B(2, second), why(`Show your second suit: 2${SY[second]}${second > M ? ' (a reverse, 16+)' : ''}.`), 'B.21-1nt-rebid');
   const m = l[1] > l[0] ? 1 : 0;
@@ -401,7 +416,8 @@ function opener1NTF(h, M, x, a) {
   if (a === 'P' || gameBid(a)) return AP('Partner chose the contract.');
   if (a === '2N') return p >= 14 ? G('3N', `Partner's 2NT invites (10-12). With ${p}, accept: 3NT.`) : G('P', `Partner's 2NT invites. With ${p}, a minimum, pass.`);
   if (+a[0] === 3 && as >= 0) {
-    const g = as === M || as >= 2 && l[as] >= 2 ? B(4, as) : '3N';
+    const g = as === M || as >= 2 && l[as] >= 2 ? B(4, as) : '3N', k = losers(h);
+    if (p < 14 && as === M && k <= 6) return G(B(4, M), `Partner's ${plain(a)} invites (10-12, about 8 losers). You have ${p} HCP but ${k} losers: 24 − (${k} + 8) = ${16 - k} tricks, so accept: 4${SY[M]}.`);
     return p >= 14 ? G(g, `Partner's ${plain(a)} invites (10-12). With ${p}, accept: ${plain(g)}.`) : G('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`);
   }
   return AP('Partner signed off.');
@@ -438,7 +454,7 @@ function respOver1NTRebid(h, M, x) {
 
 function after1Minor(seq, h) {
   const n = seq.length, p = hcp(h), m = ST.indexOf(seq[0][1]), r = seq[1];
-  if (seq.includes('4N')) { const T = raisedSuit(seq); return T >= 0 ? afterRKCB(seq, h, T) : gap('The chart has no 4NT here.'); }
+  if (seq.includes('4N')) { const T = agreedSuit(seq, -1); return T >= 0 ? afterRKCB(seq, h, T) : gap('The chart has no 4NT here.'); }
   if (n === 1) return r1m(h, m);
   if (n === 2) {   // opener's rebid
     if (r === '1N') {   // 1NT = 6-10 balanced, no 4-card major
@@ -530,9 +546,9 @@ function partnerShows(seq) {
     if (i === 1 && o >= 2 && (c === '3C' || c === '3D')) { len[o] = 4; los = c === '3C' ? 8 : 9; continue; }   // Bergen
     const ours = seq.some((x, j) => (n - j) % 2 === 0 && NAT(x) && x[1] === c[1]);
     const mine = pIdx.some(j => j < i && NAT(seq[j]) && seq[j][1] === c[1]);
-    if (ours) { len[s] = Math.max(len[s], popener ? 4 : 3); }   // a raise of our suit
+    if (ours) { len[s] = Math.max(len[s], popener ? 4 : SYS.twoOne && seq[1] === '1N' && i === 3 && s === o && +c[0] === 2 ? 2 : 3); }   // a raise of our suit (2/1: preference after 1NT forcing shows two)
     else if (mine) { len[s] = SYS.acol ? Math.max(len[s] + 1, lv > (seq[i - 1] && /^\d/.test(seq[i - 1]) ? cheapest(s, seq[i - 1]) : 1) ? 6 : 5) : Math.max(len[s] + 1, s >= 2 ? 6 : 5); }   // rebid of their own suit
-    else len[s] = Math.max(len[s], 4);                             // a new suit
+    else len[s] = Math.max(len[s], SYS.twoOne && popener && i === 2 && seq[1] === '1N' && o >= 2 && s < 2 ? 3 : 4);   // a new suit (2/1: after 1NT forcing a minor may be three)
     // Strength: jumps and reverses show extras.
     const prev = seq[i - 1], cheapLv = prev && /^\d/.test(prev) ? cheapest(s, prev) : 1;   // after 1NT, 2♦ is not a jump
     if (popener && i === 2) { if (lv > cheapLv) los = lv >= cheapLv + 1 && !ours && !mine ? 5 : 6; else if (!ours && !mine && bv(c) > bv(B(2, o))) los = 6; }
@@ -554,10 +570,10 @@ function fitGame(seq, h, c) {
     const game = s >= 2 ? 4 : 5, t = 24 - k - los;
     if (t < game + 6) continue;
     if (s <= 1 && b === '3N') continue;
-    if (SYS.acol && s <= 1 && seq.length === 2) continue;   // Acol opener's first rebid: show the hand first (partner may still have a major fit)
+    if (s <= 1 && seq.length === 2 && (SYS.acol || /^2[CDH]$/.test(seq[1]))) continue;   // opener's first rebid (Acol, or after a 2-level response): show the hand first, partner may still have a major fit
     const g = B(game, s);
     if (bv(g) <= bv(lastBid)) continue;
-    if (SYS.acol && t >= 12 && bv('4N') > bv(lastBid)) return R('4N', `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks: enough for slam if you're not missing two aces. Ask with 4NT (Blackwood).`, 'G.acol-blackwood');
+    if (SYS.acol && t >= 12 && bv('4N') > bv(lastBid)) return R('4N', `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks: enough for slam if you're not missing two key cards. Ask with 4NT (RKCB).`, 'G.acol-blackwood');
     return R(g, `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks, enough for ${plain(g)}. With a fit, shape counts more than points.`, 'LTC.fit-game');
   }
   return c;

@@ -470,13 +470,20 @@ function supportAfterNewSuit(h, M, r, x) {
   if (p >= 17) return slamTry(h, M, 11, "Opener's minimum rebid (11-14)") || R(B(4, M), `Opener's rebid shows a minimum. With ${p} and ${NUM[L(h)[M]]}-card support, bid game: 4${SY[M]}.`, 'B.support-after-new-suit');
   return R(B(4, M), `You bid a new suit first, holding ${NUM[L(h)[M]]}-card support for ${SN[M]} and game values. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
 }
+// With a fit, the losers can show slam where the points don't: ask with 4NT when they say 12 tricks,
+// you hold 2+ key cards and no void (a void makes RKCB unreliable). Returns null otherwise.
+function ltcSlam(h, T, pl, desc) {
+  const k = losers(h), t = 24 - k - pl;
+  if (t < 12 || kcList(h, T).length < 2 || L(h).some(n => n === 0)) return null;
+  return R('4N', `${desc}: a ${SN[T].replace(/s$/, '')} fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${pl}. 24 − (${k} + ${pl}) = ${t} tricks, enough for slam if you're not missing two key cards: ask with 4NT (RKCB).`, 'G.rkcb-ask');
+}
 // Responder with game values chooses between 3NT and a suit game. 3NT needs every suit your side
 // hasn't bid stopped in your hand, and no singleton or void; otherwise show a second five-card
 // suit, show a stopper on the way (with a minor fit), or bid five of the minor.
 // used: suits your side has bid; fitM: an agreed minor (or -1). Returns null when 3NT is fine.
 function gameChoice(h, x, used, fitM, why, id) {
   const l = L(h), unbid = [0, 1, 2, 3].filter(u => !used.includes(u));
-  const open = unbid.filter(u => !stop(h, u)), short = l.some(n => n <= 1);
+  const open = unbid.filter(u => !stop(h, u)), short = l.some((n, u) => n === 0 || (n === 1 && !has(h, u, 14)));   // a singleton ace still stops the suit
   if (!open.length && !short) return null;
   const nm = a => a.map(u => SN[u]).join(' and ');
   const sec = unbid.filter(u => l[u] >= 5 && bv(B(cheapest(u, x), u)) < bv('4C')).sort((a, b) => l[b] - l[a] || b - a)[0];
@@ -519,6 +526,8 @@ function respAfterChoice(h, seq) {
   if (z === 'P' || gameBid(z) || /^[567]/.test(z)) return AP('Partner chose the game.');
   const rs = ST.indexOf(r[1]), as = ST.indexOf(a[1]), zs = /^\d[CDHS]$/.test(z) ? ST.indexOf(z[1]) : -1;
   if (zs < 0) return undefined;
+  const own6 = [0, 1, 2, 3].filter(u => u !== o && l[u] >= 6).sort((u, v) => l[v] - l[u] || v - u)[0];
+  if (zs === o && o >= 2 && l[o] === 1 && own6 !== undefined) { const g = own6 >= 2 ? B(4, own6) : B(5, own6); return R(g, `Partner rebids his ${SN[o]}, but you have only one, and ${NUM[l[own6]]} ${SN[own6]} of your own: play there, ${plain(g)}.`, 'D.game-choice'); }
   if (zs === o && o >= 2 && l[o] >= 1) return R(B(4, o), `Partner rebids his ${SN[o]}: six of them${l[o] ? ` opposite your ${l[o]}` : ''}. The major game: 4${SY[o]}.`, 'D.game-choice');
   if (zs === rs || zs === as) { const g = zs >= 2 ? B(4, zs) : B(5, zs); return R(g, `Partner supports your ${SN[zs]}: game, ${plain(g)}.`, 'D.game-choice'); }
   const best = [rs, as].sort((u, v) => l[v] - l[u] || v - u)[0], g = best >= 2 ? B(4, best) : B(5, best);
@@ -534,7 +543,7 @@ function respAfterRebid(h, seq) {
       const o0 = ST.indexOf(seq[0][1]), mj = o0 >= 2 && l[o0] >= 3;
       if (xl >= rl + 2) return p >= 10 ? R(mj ? B(4, o0) : '3N', `Opener's jump raise shows 15-19. With ${p} (10+) bid game: ${mj ? `4${SY[o0]}, with ${l[o0]} of opener's ${SN[o0]}` : '3NT, nine tricks instead of eleven'}.`, 'D.after-double-raise') : R('P', `Opener's jump raise shows 15-19. With ${p} (6-9), pass.`, 'D.after-double-raise');
       const gc = why => gameChoice(h, x, [rs, o0], rs, why, 'D.after-raise');
-      if (!mj && ((xl >= rl + 2 && p >= 10) || (xl === 2 && p >= 13) || (xl !== 2 && xl < rl + 2 && p >= 12))) { const c = gc(`Opener raised your ${SN[rs]}: a fit, and game values`); if (c) return c; }
+      if (!mj && ((xl >= rl + 2 && p >= 10) || (xl === 2 && p >= 13) || (xl !== 2 && xl < rl + 2 && p >= 12))) { const sl = ltcSlam(h, rs, xl >= rl + 2 ? 6 : 7, `Opener raised your ${SN[rs]}`); if (sl) return sl; const c = gc(`Opener raised your ${SN[rs]}: a fit, and game values`); if (c) return c; }
       if (xl === 2) return p >= 13 ? R('3N', `Opener's raise shows 11-14. With ${p} (13+), bid 3NT.`, 'D.after-raise') : p >= 11 ? R('2N', `Opener's raise shows 11-14. With ${p} (11-12), invite with 2NT.`, 'D.after-raise') : R('P', `Opener's raise shows 11-14. With ${p} (10 or less), pass.`, 'D.after-raise');
       return p >= 12 ? R(mj ? B(4, o0) : '3N', `Opener's ${plain(x)} shows 11-14. With ${p} (12+) bid game: ${mj ? `4${SY[o0]}, with ${l[o0]} of opener's ${SN[o0]}` : '3NT'}.`, 'D.after-raise') : R('P', `Opener's ${plain(x)} shows 11-14. With ${p}, pass.`, 'D.after-raise');
     }
@@ -589,7 +598,7 @@ function respAfterRebid(h, seq) {
       // A rebid major promises six, so three cards or a doubleton honour (Ax, Kx, Qx) is a fit.
       const hx = l[o] === 2 && h[o].some(c => c >= 12), fit = o >= 2 && (l[o] >= 3 || hx);
       const fw = hx ? `${SN[o].replace(/s$/, '')} doubleton honour (${h[o].map(c => RANK[c] || c).join('')}): opposite six, that's a fit` : `${l[o]} ${SN[o]}: a fit`;
-      if (fit && p >= 13) return R(B(4, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}, and with ${p} (13+) bid game: 4${SY[o]}.`, 'D.after-major-rebid');
+      if (fit && p >= 13) return ltcSlam(h, o, 7, `Opener's ${plain(x)} shows six ${SN[o]}`) || R(B(4, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}, and with ${p} (13+) bid game: 4${SY[o]}.`, 'D.after-major-rebid');
       if (fit && p >= 10 && xl === 2) return R(B(3, o), `Opener's ${plain(x)} shows 11-14 with six ${SN[o]}. ${fw[0].toUpperCase() + fw.slice(1)}. With ${p} (10-12), invite with 3${SY[o]}.`, 'D.after-major-rebid');
       if (p <= 10) return R('P', `Opener's ${plain(x)} is a minimum rebid (11-14). With ${p} (10 or less), pass.`, 'D.after-minimum');
       const own6 = l[rs] >= 6 && rs !== o;
@@ -603,6 +612,9 @@ function respAfterRebid(h, seq) {
       return gameChoice(h, x, [o, rs], -1, `Opener's ${plain(x)} is a minimum (11-14) and you have game values (${p})`, 'D.after-minimum') || R('3N', `Opener's ${plain(x)} is a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
     }
     if (xl === 3 && o < 2 && x === B(cheapest(o, r) + 1, o)) {   // jump rebid of a minor: 15-19, 6+ cards
+      const unsafe = [0, 1, 2, 3].filter(u => u !== o && u !== rs).some(u => !stop(h, u)) || l.some((n, u) => n === 0 || (n === 1 && !has(h, u, 14)));
+      if (p >= 10 && unsafe && l[o] >= 2) return R(B(5, o), `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}, and you have ${l[o]}: a fit. 3NT isn't safe (a suit unstopped or a short suit), so play in the minor: 5${SY[o]}.`, 'D.after-jump-rebid');
+      if (p >= 10 && unsafe) { const c = gameChoice(h, x, [o, rs], -1, `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}`); if (c) return c; }
       return p >= 10 ? R('3N', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (10+), bid 3NT: nine tricks instead of eleven.`, 'D.after-jump-rebid')
         : R('P', `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[o]}. With ${p} (6-9), pass.`, 'D.after-jump-rebid');
     }
@@ -643,8 +655,8 @@ function respAfterRebid(h, seq) {
         if (xs >= 2 && l[xs] >= 4) return R(B(3, xs), `Opener's ${plain(x)} shows a minimum with ${SN[xs]}. With ${p} (11-12) and ${l[xs]} of them, invite with 3${SY[xs]}.`, 'D.after-minimum');
         return R('2N', `Opener's ${plain(x)} shows a minimum (11-14). With ${p} (11-12), invite with 2NT.`, 'D.after-minimum');
       }
-      if (o >= 2 && l[o] >= 3) return R(B(4, o), `Opener's ${plain(x)} shows a minimum. With ${p} (13+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-minimum');
-      if (xs >= 2 && l[xs] >= 4) return R(B(4, xs), `Opener's ${plain(x)} shows ${SN[xs]}. With ${p} (13+) and ${l[xs]} of them, bid 4${SY[xs]}.`, 'D.after-minimum');
+      if (o >= 2 && l[o] >= 3) return ltcSlam(h, o, 7, `Opener's ${plain(x)}`) || R(B(4, o), `Opener's ${plain(x)} shows a minimum. With ${p} (13+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-minimum');
+      if (xs >= 2 && l[xs] >= 4) return ltcSlam(h, xs, 7, `Opener's ${plain(x)} shows four ${SN[xs]}`) || R(B(4, xs), `Opener's ${plain(x)} shows ${SN[xs]}. With ${p} (13+) and ${l[xs]} of them, bid 4${SY[xs]}.`, 'D.after-minimum');
       return gameChoice(h, x, [o, rs, xs], -1, `Opener's ${plain(x)} shows a minimum (11-14) and you have game values (${p})`, 'D.after-minimum') || R('3N', `Opener's ${plain(x)} shows a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
     }
     if (l[o] >= l[xs] && l[o] >= 2) {

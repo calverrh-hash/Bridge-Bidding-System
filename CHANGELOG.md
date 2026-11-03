@@ -2,6 +2,15 @@
 
 ## 2026-11-03
 
+- 2/1 review, every drill hand checked:
+  - After 1M – 1NT forcing – 2♣/2♦, the trainer no longer counts opener's minor as four cards (it may be three), so responder doesn't jump to 5m on a 4-4 "fit". Responder's 2M preference shows only two, so opener doesn't jump to 4M on a 5-2.
+  - Opener with 19+ and a second suit jump shifts even with six in his major (no more "20 (16-18)"); 19+ with six and no second suit bids 4M.
+  - Opener accepts responder's 3M invitation with 6 losers or fewer as well as 14+.
+  - Opener no longer jumps to 5 of responder's minor on his first rebid after a 2-level response (he may hold a major fit); he raises to 3.
+  - With a fit and game values, responder checks the losers for slam (12 tricks, 2+ key cards, no void: 4NT), e.g. 1♠ – 2♦ – 2♥ with four hearts and 4 losers.
+  - RKCB after 1♠ – 2♦ – 2♥ – 4NT uses hearts (the suit 4NT agrees), not spades.
+  - After opener's jump rebid in a minor, responder bids 3NT only with the other suits stopped; with a fit and a weakness, 5 of the minor.
+  - Responder with a singleton in opener's rebid suit and a six-card suit of his own plays game in his suit, not a 6-1 fit.
 - Strong NT system (with or without 2/1): responder with game values bids 3NT only with the unbid suits stopped and no singleton or void. Otherwise he shows a second 5+ suit at the 3-level (forcing), or, with a minor fit, shows a stopper (1♦ – 2♣ – 3♣ – 3♦): opener bids 3NT with the rest stopped, else 5 of the minor. Charts D (5CM) and panel 4 (2/1) updated.
 - New option on the strong NT system: **2/1 game forcing** (home-screen switch, off by default; separate progress). Over 1♥/1♠, 1NT is forcing for one round (6-12): opener never passes, and a minimum with no second suit bids his longer minor, even with three. Responder then passes or gives preference (6-9), bids a six-card suit to play, or invites (10-12). A new suit at the 2-level, and 1♦ – 2♣, is game forcing (13+). Raises with 4+ trumps, Jacoby, splinters and slam bidding are unchanged. A new "2/1 game forcing" drill appears when the switch is on. Chart: docs/2over1_Flowchart_A3.pdf.
 - Fixes: opener's 4M after a minimum rebid was read as an invitation; 1m – 2NT – 3m (opener's sign-off) now passes.
