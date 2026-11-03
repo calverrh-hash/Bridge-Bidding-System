@@ -367,6 +367,7 @@ function after1Major(seq, h) {
     return gap('The chart has no further calls in this auction.');
   }
   if (n === 5 && gameBid(seq[4])) return AP('Partner accepted the invitation.');
+  if (n >= 5 && (gameBid(seq[n - 1]) || /^[67]/.test(seq[n - 1]))) return AP('Partner chose the contract.');
   return gap('The chart has no further calls in this auction.');
 }
 

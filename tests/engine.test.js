@@ -797,3 +797,15 @@ test('game choice: 3NT only with the unbid suits stopped and no shortness; other
   same(callFor('1S 2D 2S', '-.AQ8652.AKJ984.Q'), '3H', 'void in his suit, 6-6: show hearts');
   same(callFor('1D 2C 3C', 'KT.Q4.AJ9.AJ8752'), '3D', 'hearts thin: stopper first');
 });
+
+test('review fixes: invite in an unbid six-card suit, 2/1 slow 3M slam try, 6-5 shows the second suit, singleton in partner\'s suit allows 3NT', () => {
+  const was = { ...SYS };
+  try {
+    SYS.twoOne = true;
+    same(callFor('1H 1S 2D', 'KT43.-.Q98.KQJ976'), '3C', '11-12 with six clubs: invite in clubs');
+    same(callFor('1S 2H 2S', '-.AQJT87.AQ5.AT96'), '3H', '2/1, extras: slow 3♥');
+    same(callFor('1S 2H 2S 3H 4D', '-.AQJT87.AQ5.AT96'), '6H', 'control shown, 12 tricks: 6♥');
+    same(callFor('1H 1S', '6.QJ9865.4.AKJ73'), '2C', '6-5: show the clubs');
+    same(callFor('1S 2D 3D', 'K.K76.JT983.AQJ2'), '3N', 'singleton in partner\'s suit is fine for 3NT');
+  } finally { Object.assign(SYS, was); }
+});

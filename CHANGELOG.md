@@ -2,6 +2,11 @@
 
 ## 2026-11-03
 
+- From four queried hands:
+  - Opener with 6-5 shows the five-card second suit first (below the barrier) and rebids the long suit later, instead of a shape jump rebid (1♥ – 1♠ – 2♣ with ♥QJ9865 ♣AKJ73).
+  - After a 1-level response and opener's minimum new suit, responder with 11-12 and a six-card suit of his own invites in it at the 3-level (1♥ – 1♠ – 2♦ – 3♣), rather than 2NT; opener accepts with 14+.
+  - 2/1: with extras (16+ or 5 losers) responder rebids his six-card major slowly (1♠ – 2♥ – 2♠ – 3♥, slam interest); opener makes a control bid with a fit and an ace or void, else 4M; responder bids the slam when every suit is covered and the losers say 12 tricks.
+  - A singleton in partner's suit no longer rules out 3NT: only an unstopped unbid suit or a void does (1♠ – 2♦ – 3♦ – 3NT with ♠K).
 - 2/1 review, every drill hand checked:
   - After 1M – 1NT forcing – 2♣/2♦, the trainer no longer counts opener's minor as four cards (it may be three), so responder doesn't jump to 5m on a 4-4 "fit". Responder's 2M preference shows only two, so opener doesn't jump to 4M on a 5-2.
   - Opener with 19+ and a second suit jump shifts even with six in his major (no more "20 (16-18)"); 19+ with six and no second suit bids 4M.

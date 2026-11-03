@@ -43,9 +43,9 @@ C = f'''{box('obk','1M – <b>1NT forcing</b> (6-12)')}
 # ---------------- D: AFTER A 2-OVER-1 ----------------
 D = f'''{box('obk','1M – <b>2x</b> (13+, <b>game forcing</b>)')}
 {arrow}
-{box('reb','<b>Opener bids naturally</b> (nobody stops below game):<br>• 11-14: raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · a new suit below the barrier · 2NT balanced<br>• 15-19: show your shape (a second suit, or a raise) — <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
+{box('reb','<b>Opener bids naturally</b> (game is forced):<br>• 11-14: raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · a new suit below the barrier · 2NT balanced<br>• 15-19: show your shape (a second suit, or a raise) — <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
 {arrow}
-{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · 3NT only with the unbid suits stopped and no singleton · otherwise show a second 5+ suit at the 3-level, or with a minor fit show a stopper (3x): opener bids 3NT with the rest stopped, else 5m.<br><b>Slam:</b> 31+, or a fit and the losers say 12 tricks → RKCB (no void) or control bids (chart G).')}'''
+{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · <b>with extras, go slow</b>: 3 of your six-card major (16+ or ≤5 losers) = slam interest, 4M = minimum · 3NT only with the unbid suits stopped and no void · else a second 5+ suit at the 3-level, or with a minor fit a stopper bid (opener: 3NT or 5m).<br><b>Slam:</b> 31+, or a fit and the losers say 12 tricks → RKCB (no void) or control bids (chart G).')}'''
 
 E = f'''{box('obk','Partner opens <b>1♦</b>')}
 {arrow}
@@ -79,7 +79,7 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 .panel{{position:absolute;border:1.2pt solid var(--c);border-radius:5pt;background:#fff;overflow:hidden}}
 .ph{{white-space:nowrap;background:var(--c);color:#fff;font-weight:700;font-size:11pt;height:21pt;padding:2.5pt 6pt;display:flex;align-items:center;gap:5pt}}
 .let{{flex-shrink:0;display:inline-flex;width:13pt;height:13pt;border-radius:50%;background:#fff;color:var(--c);align-items:center;justify-content:center;font-size:8.5pt}}
-.pb{{display:flex;flex-direction:column;gap:6pt}}
+.pb{{display:flex;flex-direction:column;gap:5pt}}
 .pA{{--c:#1F3B5E}} .pB{{--c:#2E5E9E}} .pC{{--c:#408A54}} .pD{{--c:#B07A0F}} .pE{{--c:#2E5E9E}} .pF{{--c:#6B4A99}}
 .b{{border:0.8pt solid;border-radius:3pt;padding:5pt 6pt}}
 .rsp{{background:#E6F0FA;border-color:#4A7BC0}} .reb{{background:#E6F5EB;border-color:#4FA066}} .cnv{{background:#FFF2D6;border-color:#D19A2A}}
@@ -97,8 +97,8 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 {panel(16,62,390,326,'pA','1','WHAT 2/1 CHANGES',A)}
 {panel(16,334,390,590,'pB','2','RESPONDING TO 1♥/1♠',B)}
 {panel(16,598,390,800,'pE','5','OVER 1♦: 2♣ IS GAME FORCING',E)}
-{panel(398,62,782,478,'pC','3','1M – 1NT FORCING',C)}
-{panel(398,486,782,800,'pD','4','AFTER A 2-OVER-1 (GAME FORCING)',D)}
+{panel(398,62,782,474,'pC','3','1M – 1NT FORCING',C)}
+{panel(398,480,782,800,'pD','4','AFTER A 2-OVER-1 (GAME FORCING)',D)}
 {panel(790,62,1175,800,'pF','6','EXAMPLES',F)}
 <div class="legend">{''.join(f'<span class="lg"><i class="sw {c}"></i>{t}</span>' for c, t in [('obk','Auction so far'),('rsp','Responder'),('reb','Opener'),('cnv','Convention'),('note','Note')])}</div>
 <div class="foot">Print on A3, or scale to fit A4. Arrows show the order of the auction.</div>
