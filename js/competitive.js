@@ -561,7 +561,7 @@ function contCall(st, h) {
     if (l[ps] >= need) return raise(ps, `Partner's ${plain(lastHis.call)}: with ${l[ps]} ${SN[ps]} you have a fit.`);
   }
   if (lastHis.call === '1N' || lastHis.call === '2N') {
-    const six = [3, 2].find(s => l[s] >= 6);
+    const six = [3, 2].find(s => l[s] >= 6 && !theirSuits.includes(s));   // never their suit
     if (p + pMin >= 25) return G(six !== undefined ? B(4, six) : '3N', `Partner's ${plain(lastHis.call)} shows ${pMin}+. With ${p} that's game: ${six !== undefined ? plain(B(4, six)) : '3NT'}.`);
     return pass(`Partner's ${plain(lastHis.call)} shows ${pMin}+. With ${p}, there's no game: pass.`);
   }

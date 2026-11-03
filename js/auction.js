@@ -562,6 +562,8 @@ function fitGame(seq, h, c) {
   if (/^(G\.|B\.jacoby|B\.bergen|B\.new-suit-then-support|LTC\.|D\.game-choice)/.test(c.id || '') || c.bid === '4N') return c;
   const last = seq[seq.length - 1];
   if (last === 'P' || /^(3N|4[HS]|5[CD])$/.test(last) || /^[67]/.test(last)) return c;
+  // 2/1: once a 2-over-1 has forced game, bid slowly; don't jump to game on the losers.
+  if (SYS.twoOne && ((/^1[HS]$/.test(seq[0]) && /^2[CDH]$/.test(seq[1]) && seq[1][1] !== seq[0][1]) || (seq[0] === '1D' && seq[1] === '2C'))) return c;
   const b = c.bid;
   if (/^([45][CDHS]|[3-7]N|[67][CDHS])$/.test(b) && !/^4[CD]$/.test(b)) return c;   // already game or higher
   const { len, los } = partnerShows(seq), l = L(h), k = losers(h);

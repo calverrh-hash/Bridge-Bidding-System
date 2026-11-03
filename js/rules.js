@@ -237,6 +237,8 @@ function r1M(h, M) {
   const sw = p <= 5 ? shapeWhy(h) : '';
   if (M === 2 && l[3] >= 4) return R('1S', `${sw}Fewer than 3 hearts and ${l[3]} spades: 1♠ (4+ spades, 6+, forcing).`, 'B.one-spade');
   if (SYS.twoOne) {   // 2/1 game forcing: 1NT is forcing (6-12); a new suit at the 2-level is game forcing (13+)
+    const k = losers(h), shapeGF = p >= 10 && p <= 12 && k <= 5;   // shape counts: 5 losers plays like 13+
+    if (shapeGF) { const n = newSuitM(h, M); return R(n, `Fewer than 3 ${SN[M]} and ${p} HCP, but only ${k} losers (${loserBreak(h)}): the shape plays like 13+. Make the 2-over-1, ${plain(n)}: game is forced, and you can show the rest of your hand slowly.`, 'B.21-gf'); }
     if (p <= 12) return R('1N', `${sw}Fewer than 3 ${SN[M]} and ${p} HCP: 1NT, forcing for one round (6-12). In 2/1 a new suit at the 2-level would be game forcing, so with ${p} you start with 1NT and show a long suit next.`, 'B.21-1nt-forcing');
     const n = newSuitM(h, M);
     return R(n, `Fewer than 3 ${SN[M]} and ${p} HCP (13+): ${plain(n)}, a 2-over-1. It forces to game, so neither of you can stop below game; now you can both bid naturally and slowly.`, 'B.21-gf');
@@ -367,6 +369,7 @@ function r1m(h, m) {
   }
   const lv = b > m ? 1 : 2;
   if (SYS.twoOne && lv === 2) {
+    if (p >= 10 && losers(h) <= 5) return R(B(2, b), `${pre}${p} HCP but only ${losers(h)} losers: the shape plays like 13+. 2${SY[b]}, a 2-over-1, game forcing.`, 'B.21-gf');
     if (p >= 13) return R(B(2, b), `${pre}${p} HCP with ${NUM[l[b]]} ${SN[b]}: 2${SY[b]}, a 2-over-1, game forcing (13+).`, 'B.21-gf');
     return R('1N', `${pre}${p} HCP: in 2/1, 2${SY[b]} would be game forcing (13+), so bid 1NT (6-10; with an unbalanced 11-12 it's the nearest bid).`, 'B.21-1nt-forcing');
   }

@@ -27,9 +27,9 @@ B = f'''{box('obk','Partner opens <b>1♥</b> or <b>1♠</b>')}
 <div class="g3">
 <div>{lab('4+ trumps')}{box('rsp','<b>As the chart:</b> 2M up to 6 · 3♦ 7-9 · 3♣ 10-12 · 2NT Jacoby 13+ · splinter · 4M weak.')}</div>
 <div>{lab('3 trumps')}{box('rsp','2M 6-9 · 3M 10-12 · 3NT 13-15 balanced · 13+: <b>2-over-1 first</b>, then support.')}</div>
-<div>{lab('0-2 trumps')}{box('rsp','1♠ over 1♥ with 4+ ♠ (6+) · <b>6-12: 1NT forcing</b> · <b>13+: new suit at the 2-level (GF)</b>.')}</div>
+<div>{lab('0-2 trumps')}{box('rsp','1♠ over 1♥ with 4+ ♠ (6+) · <b>6-12: 1NT forcing</b> · <b>13+ (or 10-12 with ≤5 losers): new suit at the 2-level (GF)</b>.')}</div>
 </div>
-{box('note','With 6-12 and a long suit of your own, bid <b>1NT first</b> and show the suit next (to play with 6-9, a jump with 10-12). A 2-level new suit would promise game.')}'''
+{box('note','With 6-12 (6 losers or more) and a long suit, bid <b>1NT first</b> and show the suit next (to play with 6-9, a jump with 10-12). A 2-level new suit would promise game.')}'''
 
 # ---------------- C: 1M – 1NT FORCING ----------------
 C = f'''{box('obk','1M – <b>1NT forcing</b> (6-12)')}
@@ -61,7 +61,7 @@ F = f'''{lab('① 1NT forcing, then opener’s three-card minor')}
 {auction([['1♠','1NT'],['2♣','2♦'],['Pass','']], 'With 8 HCP responder can’t bid 2♦ at once: that would force to game. 1NT first, then 2♦ shows six diamonds and a weak hand, to play.')}
 {lab('③ The 2-over-1: game is already forced')}
 {box('note','Responder ♠K3 ♥A84 ♦AQ1075 ♣Q92 (15). Opener ♠AJ9752 ♥K6 ♦K4 ♣J83 (12).')}
-{auction([['1♠','2♦'],['2♠','4♠']], 'Opener’s 2♠ just shows six spades: no need to jump, game is already forced. Responder has two spades and 15: 4♠. With more, either of you could now look for slam slowly.')}
+{auction([['1♠','2♦'],['2♠','4♠']], 'Opener’s 2♠ just shows six spades: no need to jump, game is already forced, and nobody jumps to game on the losers. Responder has two spades and 15: 4♠. With more, either of you could now look for slam slowly.')}
 {lab('④ 1♦ – 2♣: game forcing over a minor too')}
 {box('note','Responder ♠K10 ♥Q4 ♦AJ9 ♣AJ8752 (15). Opener ♠4 ♥KJ8 ♦Q8652 ♣KQ96 (11).')}
 {auction([['1♦','2♣'],['3♣','3NT']], 'Responder’s 2♣ promises game, so opener simply raises clubs with four. No major fit, and responder has something in both majors: 3NT, nine tricks rather than eleven.')}'''
@@ -94,9 +94,9 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 </style></head><body>
 <div class="top"><h1>2/1 GAME FORCING · AN OPTION ON THE 5-CARD MAJOR, STRONG NT SYSTEM</h1>
 <p>Over 1♥/1♠: 1NT is forcing (6-12) and a new suit at the 2-level forces to game (13+). Over 1♦, 2♣ is game forcing too. Everything not shown here is as on the strong NT chart. Points are HCP.</p><span class="ver">Option · {sys.argv[2] if len(sys.argv) > 2 else ''}</span></div>
-{panel(16,62,390,326,'pA','1','WHAT 2/1 CHANGES',A)}
-{panel(16,334,390,590,'pB','2','RESPONDING TO 1♥/1♠',B)}
-{panel(16,598,390,800,'pE','5','OVER 1♦: 2♣ IS GAME FORCING',E)}
+{panel(16,62,390,324,'pA','1','WHAT 2/1 CHANGES',A)}
+{panel(16,330,390,598,'pB','2','RESPONDING TO 1♥/1♠',B)}
+{panel(16,604,390,800,'pE','5','OVER 1♦: 2♣ IS GAME FORCING',E)}
 {panel(398,62,782,474,'pC','3','1M – 1NT FORCING',C)}
 {panel(398,480,782,800,'pD','4','AFTER A 2-OVER-1 (GAME FORCING)',D)}
 {panel(790,62,1175,800,'pF','6','EXAMPLES',F)}

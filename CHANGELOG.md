@@ -2,6 +2,8 @@
 
 ## 2026-11-03
 
+- Competitive drills: the opponents are now dealt real hands that make their calls (an opening by the system's rules, an overcall with five cards, a double with 11+, a pass with 9 or less). Before, only partner was dealt, so after RHO's 1♥ partner could hold six hearts opposite your ♥AKQ and bid 4♥ in their suit. The natural continuation never bids the opponents' suit as a trump suit.
+- 2/1: a shapely 10-12 (5 losers or fewer) makes the 2-over-1 instead of 1NT forcing (1♥ – 2♣ with ♦AK432 ♣KQ10542), then bids slowly. Once a 2-over-1 has forced game, the trainer no longer jumps to game on the loser count.
 - From four queried hands:
   - Opener with 6-5 shows the five-card second suit first (below the barrier) and rebids the long suit later, instead of a shape jump rebid (1♥ – 1♠ – 2♣ with ♥QJ9865 ♣AKJ73).
   - After a 1-level response and opener's minimum new suit, responder with 11-12 and a six-card suit of his own invites in it at the 3-level (1♥ – 1♠ – 2♦ – 3♣), rather than 2NT; opener accepts with 14+.

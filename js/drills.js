@@ -40,11 +40,30 @@ const Q = (dealer, calls, hand, ans, note) => ({ dealer, calls, hand, ans, note:
 function oneCall(dealer, calls, h, note, rng, nspec) {
   if (!h || !rng) return null;
   if (!isCall(chartCall(auctionState(dealer, calls), h))) return null;
-  const fits = n => calls.every((c, i) => seatAfter(dealer, i) !== 'N' || (chartCall(auctionState(dealer, calls.slice(0, i)), n) || {}).bid === c);
-  const partnerBid = calls.some((c, i) => seatAfter(dealer, i) === 'N');
-  for (let t = 0; t < (partnerBid ? 3 : 6); t++) {
+  const callsBy = seat => calls.map((c, i) => [c, i]).filter(([, i]) => seatAfter(dealer, i) === seat);
+  const fits = n => callsBy('N').every(([c, i]) => (chartCall(auctionState(dealer, calls.slice(0, i)), n) || {}).bid === c);
+  const partnerBid = callsBy('N').length > 0;
+  // The opponents' hands must make their calls: an opening by our own system's rules, an overcall
+  // with five cards (8-16), a double with 11+, a pass with 9 or less.
+  const firstBid = calls.findIndex(c => c !== 'P');
+  const oppOk = seat => o => callsBy(seat).every(([c, i]) => {
+    if (i === firstBid) return (chartCall(auctionState(dealer, calls.slice(0, i)), o) || {}).bid === c;
+    const p = hcp(o);
+    if (c === 'P') return p <= 9;
+    if (c === 'X') return p >= 11;
+    if (/^\d[CDHS]$/.test(c)) return o[ST.indexOf(c[1])].length >= 5 && p >= 8 && p <= 16;
+    return true;
+  });
+  const merge = (...hs) => [0, 1, 2, 3].map(s => [].concat(...hs.map(x => x[s])));
+  const rest = used => [0, 1, 2, 3].map(s => [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2].filter(r => !used[s].includes(r)));
+  const opps = ['E', 'W'].sort((a, b) => callsBy(b).filter(([c]) => c !== 'P').length - callsBy(a).filter(([c]) => c !== 'P').length);
+  for (let t = 0; t < 12; t++) {
     const n = dealOther(rng, h, nspec ? nspec.lens : sp({}, [0, 7]), nspec ? nspec.hcp[0] : 0, nspec ? nspec.hcp[1] : 24, partnerBid ? fits : undefined);
     if (!n) return null;
+    const o1 = dealOther(rng, merge(h, n), sp({}, [0, 9]), 0, 30, oppOk(opps[0]));
+    if (!o1) continue;
+    const o2 = rest(merge(h, n, o1));
+    if (!oppOk(opps[1])(o2)) continue;
     CONT = true;
     let sim;
     try { sim = simulate(h, n, dealer, note, undefined, calls); } finally { CONT = false; }
@@ -202,6 +221,7 @@ const SETS = [
         PM([0, 2], 13, 17), PM([0, 2], 13, 17),                     // 2-over-1, game forcing
         SM([0, 2], 6, 12), SM([0, 2], 6, 12),                       // you opened: rebid after 1NT forcing
         SM([0, 2], 13, 17),                                         // you opened: partner's 2-over-1
+        want(PO({ setup: r => ({ south: { lens: rl(r, sp({ 3: [0, 1], 2: [6, 6] }, [1, 4])), hcp: [16, 18] }, north: { lens: sp({ 3: [6, 6], 2: [0, 2] }, [1, 4]), hcp: [11, 13], opens: '1S' }, note: 'Partner opened 1♠.' }) }), 'D.21-slow', 60),   // extras: rebid your major slowly
         PO({ setup: r => ({ south: { lens: rl(r, sp({ 0: [5, 6], 2: [0, 3], 3: [0, 3] }, [0, 4])), hcp: [13, 16] }, north: { lens: sp({ 1: [4, 6] }, [0, 4]), hcp: [11, 18], opens: '1D' }, note: 'Partner opened 1♦.' }) }),   // 1♦ – 2♣ game forcing
       ];
     })(),
