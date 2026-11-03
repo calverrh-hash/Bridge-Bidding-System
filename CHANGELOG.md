@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-03
+
+- New option on the strong NT system: **2/1 game forcing** (home-screen switch, off by default; separate progress). Over 1♥/1♠, 1NT is forcing for one round (6-12): opener never passes, and a minimum with no second suit bids his longer minor, even with three. Responder then passes or gives preference (6-9), bids a six-card suit to play, or invites (10-12). A new suit at the 2-level, and 1♦ – 2♣, is game forcing (13+). Raises with 4+ trumps, Jacoby, splinters and slam bidding are unchanged. A new "2/1 game forcing" drill appears when the switch is on. Chart: docs/2over1_Flowchart_A3.pdf.
+- Fixes: opener's 4M after a minimum rebid was read as an invitation; 1m – 2NT – 3m (opener's sign-off) now passes.
+
 ## 2026-11-02
 
 - Competitive drills (both systems) now bid every hand to the end (three passes), instead of asking only your first call. Partner is dealt a hand that fits his calls; the opponents pass after their given calls. After the first call over the opponents, the chart is silent, so the trainer guides carry on (marked "Trainer guide"): Cappelletti answers (2♦ relay, choosing a major, 2NT asking for the minor), Michaels and Unusual 2NT answers, the advance cue bid sequence, opener's rebid after a negative double, and otherwise raising a fit to the level the losing trick count gives, or 3NT with game values and their suit stopped.

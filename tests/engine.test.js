@@ -380,13 +380,14 @@ for (const d of SETS.concat(ACOL_SETS)) for (const helvic of d.helvic ? [false, 
   VARIANTS.push({ d, helvic, ogust: false });
   if (['open-unbal', 'big', 'mixed', 'a-big', 'a-mixed'].includes(d.id) && !helvic) VARIANTS.push({ d, helvic, ogust: true });
   if (['a-nt-resp', 'a-nt-open', 'a-open', 'a-resp', 'a-rebid', 'a-slam', 'a-comp', 'a-mixed'].includes(d.id) && !helvic) VARIANTS.push({ d, helvic, ogust: false, transfers: false, jacoby: false });
+  if (['major-resp', 'open-unbal', 'open-bal', 'minor-resp', 'slam', 'mixed', '21'].includes(d.id) && !helvic) VARIANTS.push({ d, helvic, ogust: false, twoOne: true });
 }
-for (const { d, helvic, ogust, transfers, jacoby } of VARIANTS) {
-  const name = d.id + (helvic ? ' (Helvic)' : '') + (ogust ? ' (Ogust)' : '') + (transfers === false ? ' (natural)' : '');
+for (const { d, helvic, ogust, transfers, jacoby, twoOne } of VARIANTS) {
+  const name = d.id + (helvic ? ' (Helvic)' : '') + (ogust ? ' (Ogust)' : '') + (transfers === false ? ' (natural)' : '') + (twoOne ? ' (2/1)' : '');
   test(`set "${name}": ${setSize(d)} good hands for seeds 1-${SEEDS}, built quickly`, () => {
     for (let seed = 1; seed <= SEEDS; seed++) {
-      const t0 = performance.now(), qs = buildSet(d, seed, { helvic, ogust, transfers, jacoby }), ms = performance.now() - t0;
-      const was = { ...SYS }; SYS.acol = !!d.acol; SYS.ogust = ogust; SYS.transfers = !!d.acol && transfers !== false; SYS.jacoby = !!d.acol && jacoby !== false;
+      const t0 = performance.now(), qs = buildSet(d, seed, { helvic, ogust, transfers, jacoby, twoOne }), ms = performance.now() - t0;
+      const was = { ...SYS }; SYS.acol = !!d.acol; SYS.ogust = ogust; SYS.transfers = !!d.acol && transfers !== false; SYS.jacoby = !!d.acol && jacoby !== false; SYS.twoOne = !d.acol && !!twoOne;
       try {
       same(qs.length, setSize(d), `seed ${seed} size`);
       check(ms < 1000, `seed ${seed} took ${ms.toFixed(0)} ms`);
@@ -410,7 +411,7 @@ test('rule coverage: every chart rule is asked of you in some drill (seeds 1-8)'
 });
 test('no drill auction stops early: every hand reaches a contract (seeds 1-4)', () => {
   const stops = [];
-  for (const { d, helvic, ogust, transfers, jacoby } of VARIANTS) for (let s = 1; s <= 4; s++) buildSet(d, s, { helvic, ogust, transfers, jacoby }).forEach(q => { if (q.stop) stops.push(`${d.id}${helvic ? '~helvic' : ''}${ogust ? '~ogust' : ''}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
+  for (const { d, helvic, ogust, transfers, jacoby, twoOne } of VARIANTS) for (let s = 1; s <= 4; s++) buildSet(d, s, { helvic, ogust, transfers, jacoby, twoOne }).forEach(q => { if (q.stop) stops.push(`${d.id}${helvic ? '~helvic' : ''}${ogust ? '~ogust' : ''}#${s}: ${q.calls.join(' ')}: ${q.stop.why}`); });
   same(stops, [], 'auctions that stop');
 });
 test('Acol options: Helvic opposite a weak NT needs 9+ to pass for values; Ogust and features both work', () => {

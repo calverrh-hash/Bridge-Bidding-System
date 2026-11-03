@@ -20,13 +20,13 @@ const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 function loadDB() {
   const d = store.get(), o = (k) => isObj(d[k]) ? d[k] : {};
   return { seed: o('seed'), best: o('best'), prog: o('prog'), opts: { helvic: o('opts').helvic === true, acol: o('opts').acol === true, ogust: o('opts').ogust === true,
-    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false, acolTransfers: o('opts').acolTransfers !== false, acolJacoby: o('opts').acolJacoby !== false } };
+    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false, acolTransfers: o('opts').acolTransfers !== false, acolJacoby: o('opts').acolJacoby !== false, twoOne: o('opts').twoOne === true } };
 }
 let DB = loadDB();
 const save = () => store.set(DB);
 // The drills for the system being practised: 5-card majors / strong NT, or Acol / weak NT.
 const ALL_SETS = () => SETS.concat(ACOL_SETS);
-const sets = () => DB.opts.acol ? ACOL_SETS : SETS;
+const sets = () => DB.opts.acol ? ACOL_SETS : SETS.filter(d => !d.twoOne || DB.opts.twoOne);
 const setDef = id => ALL_SETS().find(x => x.id === id);
 // Each system keeps its own Helvic and Ogust switches. Acol starts on Ogust (its chart), 5CM on features.
 const optKey = (ac, k) => ac ? 'acol' + k[0].toUpperCase() + k.slice(1) : k;
@@ -35,7 +35,8 @@ const ogustOn = d => optOn(d, 'ogust');
 const helvicOn = d => !!(d && d.helvic) && optOn(d, 'helvic');
 const transfersOn = d => !!(d && d.acol) && DB.opts.acolTransfers !== false;
 const jacobyOn = d => !!(d && d.acol) && DB.opts.acolJacoby !== false;
-const keyOf = id => { const d = setDef(id); return id + (helvicOn(d) ? '~helvic' : '') + (ogustOn(d) ? '~ogust' : '') + (d && d.acol && !transfersOn(d) ? '~natural' : '') + (d && d.acol && !jacobyOn(d) ? '~nojacoby' : ''); };
+const twoOneOn = d => !!d && !d.acol && DB.opts.twoOne === true;
+const keyOf = id => { const d = setDef(id); return id + (helvicOn(d) ? '~helvic' : '') + (ogustOn(d) ? '~ogust' : '') + (d && d.acol && !transfersOn(d) ? '~natural' : '') + (d && d.acol && !jacobyOn(d) ? '~nojacoby' : '') + (twoOneOn(d) ? '~21' : ''); };
 const seedOf = key => Number.isInteger(DB.seed[key]) && DB.seed[key] > 0 ? DB.seed[key] : 1;
 const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 
@@ -43,7 +44,7 @@ const bestOf = key => Number.isInteger(DB.best[key]) ? DB.best[key] : null;
 const cache = {};
 function getSet(id) {
   const key = keyOf(id), seed = seedOf(key), k = key + '#' + seed;
-  if (!cache[k]) cache[k] = buildSet(setDef(id), seed, { helvic: helvicOn(setDef(id)), ogust: ogustOn(setDef(id)), transfers: transfersOn(setDef(id)), jacoby: jacobyOn(setDef(id)) });
+  if (!cache[k]) cache[k] = buildSet(setDef(id), seed, { helvic: helvicOn(setDef(id)), ogust: ogustOn(setDef(id)), transfers: transfersOn(setDef(id)), jacoby: jacobyOn(setDef(id)), twoOne: twoOneOn(setDef(id)) });
   return cache[k];
 }
 // A fingerprint of the dealt hands and answers. If the drills change, so does this,
@@ -167,9 +168,12 @@ function home() {
   const jc = DB.opts.acolJacoby !== false;
   const jacBox = !ac ? '' : `<div class="sys"><div><span class="eyebrow">2NT over 1♥/1♠</span><p>${jc ? 'Jacoby: 4+ trumps, 13+ (or 10+ with 6 losers or fewer), game forcing. Opener shows a short suit, else 4M (13-14), 3NT (15-17) or 3M (18+). Balanced 10-12 bids a new suit, then 2NT.' : 'Natural (the old Acol chart): 10-12 balanced. Game raises: 4M with 13-15, a new suit then support with 16+.'}</p></div>
     ${seg('m-2nt-nat', 'Natural', 'm-jacoby', 'Jacoby', jc, '2NT response to a major')}</div>`;
+  const t21 = DB.opts.twoOne === true;
+  const twoOneBox = ac ? '' : `<div class="sys"><div><span class="eyebrow">Responses to 1♥/1♠</span><p>${t21 ? '2/1 game forcing: 1NT is forcing (6-12; opener must bid, a minimum with no second suit bids his longer minor). A new suit at the 2-level, and 1♦ – 2♣, forces to game (13+). See the 2/1 chart.' : 'Chart: 1NT 6-10, not forcing. A new suit at the 2-level shows 9+, forcing for one round.'}</p></div>
+    ${seg('m-std', 'Chart', 'm-21', '2/1 GF', t21, 'Responses to 1♥/1♠')}</div>`;
   app.innerHTML = `<div class="intro"><span class="eyebrow">${ac ? 'Acol · weak NT' : '5-card majors · strong NT'}</span><h1>Bidding drills</h1><p class="muted">You sit South and bid the whole auction. After each call, partner bids on from a real hand by the same chart, and you make your next call. A hand counts as correct only when every call matches the chart. ${ac ? 'In the overcalls drill the opponents have opened or come in.' : 'In the doubling and cue-bid drills all four hands are dealt and the opponents bid too.'}</p>
     <div class="actions" style="margin-top:4px"><button class="ghost" id="newall">New hands for every drill</button></div></div>
-    ${sysBox}${xferBox}${jacBox}${helvicBox}${ogustBox}
+    ${sysBox}${twoOneBox}${xferBox}${jacBox}${helvicBox}${ogustBox}
     <div class="sets">${cards}</div>`;
   app.querySelectorAll('.set').forEach(b => b.onclick = () => start(b.dataset.set));
   const opt = (k, v) => () => { DB.opts[k] = v; save(); render(); };
@@ -180,12 +184,13 @@ function home() {
   on('m-feature', opt(ok, false)); on('m-ogust', opt(ok, true));
   on('m-natural', opt('acolTransfers', false)); on('m-transfers', opt('acolTransfers', true));
   on('m-2nt-nat', opt('acolJacoby', false)); on('m-jacoby', opt('acolJacoby', true));
+  on('m-std', opt('twoOne', false)); on('m-21', opt('twoOne', true));
   document.getElementById('newall').onclick = newHandsEverywhere;
 }
 // Move every drill (chart and Helvic versions) to its next seed and clear unfinished progress.
 // Best scores are kept.
 function newHandsEverywhere() {
-  const vs = ['', '~helvic', '~ogust', '~helvic~ogust'].flatMap(v => [v, v + '~natural']).flatMap(v => [v, v + '~nojacoby']);
+  const vs = ['', '~helvic', '~ogust', '~helvic~ogust'].flatMap(v => [v, v + '~natural']).flatMap(v => [v, v + '~nojacoby']).flatMap(v => [v, v + '~21']);
   ALL_SETS().forEach(d => vs.forEach(v => { const k = d.id + v; DB.seed[k] = seedOf(k) + 1; }));
   DB.prog = {};
   save();
@@ -347,7 +352,7 @@ function crashed(e) {
     <div class="actions"><button class="primary" id="home">Back to the drills</button><button class="ghost" id="reset">Reset saved progress</button></div>
     <p class="muted"><small>${String(e && e.message || e).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</small></p>`;
   document.getElementById('home').onclick = goHome;
-  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true } }; save(); goHome(); };
+  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true, twoOne: DB.opts.twoOne === true } }; save(); goHome(); };
 }
 
 function render() {

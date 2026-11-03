@@ -83,7 +83,8 @@ const PO = ({ setup, calls = 2 }) => rng => {
 // want: keep only deals where South is asked chart rule `id` (tries a few deals per call), so
 // every rule on the chart gets practised, however rare its hand.
 const want = (recipe, id, tries = 40) => (rng, opts) => {
-  const ids = [].concat(id);
+  const W21 = { 'B.1nt': 'B.21-1nt-forcing', 'B.new-suit': 'B.21-gf', 'C.new-suit': 'B.21-gf' };
+  const ids = [].concat(id).flatMap(i => SYS.twoOne && W21[i] ? [i, W21[i]] : [i]);
   for (let t = 0; t < tries; t++) {
     const q = recipe(rng, opts);
     if (q && q.steps.some(s => ids.includes(s.ans.id))) return q;
@@ -187,6 +188,21 @@ const SETS = [
         SO({ south: { lens: balL, hcp: [17, 17] }, north: { lens: () => sp({ 2: [2, 3], 3: [2, 3] }, [2, 5]), hcp: [8, 8] } }),   // range-ask with a maximum
         SO({ south: { lens: balL, hcp: [17, 17] }, north: { lens: weakMinorSpec, hcp: [0, 7] } }),  // weak minor opposite a maximum
         nt2, nt2,
+      ];
+    })(),
+  },
+  {
+    id: '21', name: '2/1 game forcing', refs: 'B · 2/1', twoOne: true,
+    blurb: 'Playing 2/1: over 1♥/1♠, 1NT is forcing (6-12) and a new suit at the 2-level forces to game (13+). Respond, rebid after 1NT forcing, and bid on to game.',
+    recipes: (() => {
+      const PM = (t, lo, hi) => PO({ setup: r => { const M = anyMajor(r); return { south: { lens: rl(r, sp({ [M]: t }, [0, 6])), hcp: [lo, hi] }, north: { lens: sp({ [M]: [5, 6] }, [0, 5]), hcp: [11, 18], opens: B(1, M) }, note: `Partner opened 1${SY[M]}.` }; } });
+      const SM = (t, lo, hi) => SO({ south: { lens: r => { const M = anyMajor(r); return rl(r, sp({ [M]: [5, 6] }, [0, 5])); }, hcp: [11, 18], ok: opensAs(/^1[HS]$/) }, north: { lens: (r, h) => { const M = ST.indexOf(openingBid(h).bid[1]); return sp({ [M]: t }, [0, 6]); }, hcp: [lo, hi] } });
+      return [
+        PM([0, 2], 6, 12), PM([0, 2], 6, 12), PM([0, 2], 9, 12),   // 1NT forcing, then your next call
+        PM([0, 2], 13, 17), PM([0, 2], 13, 17),                     // 2-over-1, game forcing
+        SM([0, 2], 6, 12), SM([0, 2], 6, 12),                       // you opened: rebid after 1NT forcing
+        SM([0, 2], 13, 17),                                         // you opened: partner's 2-over-1
+        PO({ setup: r => ({ south: { lens: rl(r, sp({ 0: [5, 6], 2: [0, 3], 3: [0, 3] }, [0, 4])), hcp: [13, 16] }, north: { lens: sp({ 1: [4, 6] }, [0, 4]), hcp: [11, 18], opens: '1D' }, note: 'Partner opened 1♦.' }) }),   // 1♦ – 2♣ game forcing
       ];
     })(),
   },
@@ -455,7 +471,7 @@ SETS.push({
 const MIXED = {
   id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true, mixed: true,
   blurb: 'Ten hands, each from a different drill, shuffled together. Each new deal moves on to the drills the last one left out.',
-  get sources() { return SETS.filter(d => d !== MIXED && d.id !== 'ltc'); },
+  get sources() { return SETS.filter(d => d !== MIXED && d.id !== 'ltc' && (!d.twoOne || SYS.twoOne)); },
   get recipes() { return this.sources.map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts)); },
 };
 SETS.push(MIXED);
@@ -499,7 +515,7 @@ const weight = k => k.startsWith('rec:') ? 4 : /^(call|pcall|res):/.test(k) ? 3 
 function buildSet(def, seed, opts) {
   opts = opts || {};
   const was = { ...SYS };
-  SYS.acol = !!def.acol; SYS.ogust = !!opts.ogust; SYS.helvic = !!(opts.helvic && def.helvic); SYS.transfers = !!def.acol && opts.transfers !== false; SYS.jacoby = !!def.acol && opts.jacoby !== false;
+  SYS.acol = !!def.acol; SYS.ogust = !!opts.ogust; SYS.helvic = !!(opts.helvic && def.helvic); SYS.transfers = !!def.acol && opts.transfers !== false; SYS.jacoby = !!def.acol && opts.jacoby !== false; SYS.twoOne = !def.acol && (!!opts.twoOne || !!def.twoOne);
   try { return def.mixed ? buildMixed(def, seed, opts) : buildPlain(def, seed, opts); }
   finally { Object.assign(SYS, was); }
 }

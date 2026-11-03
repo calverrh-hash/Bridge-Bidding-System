@@ -250,7 +250,7 @@ function openerAfterInvite(h, seq) {
   if (x === '1N' && rsuit >= 2 && a === B(3, rsuit)) return p >= 13 && l[rsuit] >= 2 ? R(B(4, rsuit), `Partner's 3${SY[rsuit]} invites with six. With ${p} (13-14) and ${l[rsuit]} ${SN[rsuit]}, accept: 4${SY[rsuit]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[rsuit]} invites. With ${p}${l[rsuit] < 2 ? ` and ${cardsOf(l[rsuit], rsuit)}` : ', a minimum'}, pass.`, 'GUIDE.invite-answer');
   // After a minimum rebid or a raise: 2NT or 3 of a suit invites (11-12). Accept with 13-14.
   const minRebid = x === '1N' || (xs >= 0 && bv(x) <= bv(B(2, o)) && !(+x[0] === 3));
-  if (minRebid && (a === '2N' || (as >= 0 && +a[0] === 3 && as !== o || (as === o && x !== B(3, o))))) {
+  if (minRebid && (a === '2N' || (as >= 0 && +a[0] === 3 && (as !== o || x !== B(3, o))))) {
     if (a === '2N' && x === '1N') { /* handled below */ }
     else if (a === '2N') return p >= 13 ? R('3N', `Partner's 2NT invites (11-12). With ${p} (13-14), accept: 3NT.`, 'GUIDE.invite-answer') : R('P', `Partner's 2NT invites. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
     else if (as >= 0 && as !== rs) {
@@ -304,7 +304,7 @@ function after1Major(seq, h) {
     }
     if (isSplinter(r, M)) return splinterAns(h, M, r);
     if (r === B(4, M)) return AP('Partner\'s weak 4-level raise is to play.');
-    if (r === '1N') return rebidOver1NT(h, M);
+    if (r === '1N') return SYS.twoOne ? rebid1NTF(h, M) : rebidOver1NT(h, M);
     if (r === '3N') {   // three-card support, 13-15 balanced: choose the game
       const s = slamTry(h, M, 13, "Partner's 3NT (three-card support, 13-15)");
       if (s) return s;
@@ -314,7 +314,8 @@ function after1Major(seq, h) {
     }
     return rebid(h, M, ST.indexOf(r[1]), +r[0]);
   }
-  if (n === 3 && r === '1N') return respOver1NTRebid(h, M, seq[2]);
+  if (n === 3 && r === '1N') return SYS.twoOne ? respAfter1NTF(h, M, seq[2]) : respOver1NTRebid(h, M, seq[2]);
+  if (n === 4 && r === '1N' && SYS.twoOne) return opener1NTF(h, M, seq[2], seq[3]);
   if (n === 4 && r === '1N') {
     const a = seq[3];
     if (a === '2N' || a === B(3, M)) return p >= 17 ? R(a === '2N' ? '3N' : B(4, M), `Partner's ${plain(a)} shows 6-7. With ${p} (17+), bid game.`, 'B.1nt-rebid') : R('P', `Partner's ${plain(a)} shows 6-7. With ${p}, pass.`, 'B.1nt-rebid');
@@ -354,6 +355,55 @@ function after1Major(seq, h) {
 }
 
 // 1♥/1♠ – 1NT (6-10, fewer than three trumps): opener's rebid.
+// ---------- 2/1 game forcing (option): 1M – 1NT forcing ----------
+// Opener never passes 1NT: balanced minimum bids his longer minor, even with three.
+function rebid1NTF(h, M) {
+  const p = hcp(h), l = L(h);
+  const why = t => `Partner's 1NT is forcing (6-12, fewer than three ${SN[M]}). ${t}`;
+  const second = [0, 1, 2, 3].filter(s => s !== M && l[s] >= 4).sort((a, b) => l[b] - l[a] || a - b)[0];
+  if (isBal(h)) {
+    if (p >= 20) return R('3N', why(`Balanced ${p}: 3NT.`), 'B.21-1nt-rebid');
+    if (p >= 18) return R('2N', why(`Balanced ${p} (18-19): 2NT.`), 'B.21-1nt-rebid');
+  }
+  if (p >= 19 && second !== undefined && l[M] < 6) return R(B(3, second), why(`${p} with ${SN[second]}: jump shift to 3${SY[second]}, game forcing.`), 'B.21-1nt-rebid');
+  if (l[M] >= 6) return p >= 16 ? R(B(3, M), why(`${p} (16-18) with ${NUM[l[M]]} ${SN[M]}: jump to 3${SY[M]}.`), 'B.21-1nt-rebid') : R(B(2, M), why(`${p} with ${NUM[l[M]]} ${SN[M]}: rebid 2${SY[M]}.`), 'B.21-1nt-rebid');
+  if (second !== undefined && (second < M || p >= 16)) return R(B(2, second), why(`Show your second suit: 2${SY[second]}${second > M ? ' (a reverse, 16+)' : ''}.`), 'B.21-1nt-rebid');
+  const m = l[1] > l[0] ? 1 : 0;
+  return R(B(2, m), why(`You can't pass, and you have no second suit to show: bid your longer minor, 2${SY[m]}${l[m] === 3 ? ', even with only three' : ''}.`), 'B.21-1nt-rebid');
+}
+function respAfter1NTF(h, M, x) {
+  const p = hcp(h), l = L(h), xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1;
+  const G = (b, t) => R(b, t, 'B.21-1nt-after');
+  if (x === '3N' || gameBid(x)) return AP('Opener bid game.');
+  const six = [0, 1, 2, 3].find(s => s !== M && s !== xs && l[s] >= 6);
+  if (x === B(2, M)) return p >= 11 && l[M] >= 2 ? G(B(3, M), `Opener's 2${SY[M]} shows six. With ${p} (11-12) and ${l[M]} ${SN[M]}, invite: 3${SY[M]}.`) : G('P', `Opener's 2${SY[M]} shows six and a minimum. With ${p}, pass.`);
+  if (x === B(3, M)) return p >= 8 ? G(l[M] >= 2 ? B(4, M) : '3N', `Opener's 3${SY[M]} shows 16-18 with six. With ${p}, bid game.`) : G('P', `Opener's 3${SY[M]} invites. With ${p} (6-7), pass.`);
+  if (x === '2N') return p >= 7 ? G('3N', `Opener's 2NT shows 18-19 balanced. With ${p}, 3NT.`) : G('P', `Opener's 2NT shows 18-19. With ${p}, pass.`);
+  if (xs >= 0 && +x[0] === 3) return G(l[M] >= 2 ? B(4, M) : '3N', `Opener's jump shift is game forcing: bid game.`);
+  if (xs > M) return p >= 9 ? G('3N', `Opener's 2${SY[xs]} is a reverse (16+). With ${p}, 3NT.`) : G(l[M] >= 2 ? B(3, M) : '2N', `Opener's reverse is forcing. With ${p}, ${l[M] >= 2 ? `preference: 3${SY[M]}` : '2NT'}.`);
+  // Opener's new suit (a minor may be only three cards; 2♥ after 1♠ shows four).
+  const real = xs >= 2 ? 4 : 5;
+  if (p >= 10) {
+    if (l[xs] >= real) return G(B(3, xs), `Opener's 2${SY[xs]}: with ${l[xs]} of them and ${p} (10-12), invite: 3${SY[xs]}.`);
+    if (six !== undefined) return G(B(3, six), `With ${NUM[l[six]]} ${SN[six]} and ${p} (10-12), invite: 3${SY[six]}.`);
+    return G('2N', `${p} (10-12): invite with 2NT.`);
+  }
+  if (six !== undefined && bv(B(2, six)) > bv(x)) return G(B(2, six), `With ${NUM[l[six]]} ${SN[six]} and ${p}, bid them, to play: 2${SY[six]}.`);
+  if (l[xs] >= real || (l[xs] >= 4 && l[M] < 2)) return G('P', `Opener's 2${SY[xs]}: with ${l[xs]} of them, pass.`);
+  if (l[M] >= 2) return G(B(2, M), `Opener's 2${SY[xs]} may be only three cards. With two ${SN[M]}, give preference to the known five-card suit: 2${SY[M]}.`);
+  return G('P', `Opener's 2${SY[xs]}: with ${p} and nothing better, pass.`);
+}
+function opener1NTF(h, M, x, a) {
+  const p = hcp(h), l = L(h), as = /^\d[CDHS]$/.test(a) ? ST.indexOf(a[1]) : -1;
+  const G = (b, t) => R(b, t, 'B.21-1nt-after');
+  if (a === 'P' || gameBid(a)) return AP('Partner chose the contract.');
+  if (a === '2N') return p >= 14 ? G('3N', `Partner's 2NT invites (10-12). With ${p}, accept: 3NT.`) : G('P', `Partner's 2NT invites. With ${p}, a minimum, pass.`);
+  if (+a[0] === 3 && as >= 0) {
+    const g = as === M || as >= 2 && l[as] >= 2 ? B(4, as) : '3N';
+    return p >= 14 ? G(g, `Partner's ${plain(a)} invites (10-12). With ${p}, accept: ${plain(g)}.`) : G('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`);
+  }
+  return AP('Partner signed off.');
+}
 function rebidOver1NT(h, M) {
   const p = hcp(h), l = L(h);
   const why = t => `Partner's 1NT shows 6-10 with fewer than three ${SN[M]}. ${t}`;
@@ -413,6 +463,7 @@ function after1Minor(seq, h) {
     // Same threshold as after 1m – 1M – 2NT: 18 + 7 = 25, enough for game.
     if (r === '1N' && x === '2N') return p >= 7 ? R('3N', `Opener's 2NT shows 18-19 balanced. With ${p} (7+), bid 3NT.`, 'C.after-1nt-2nt') : R('P', `Opener's 2NT shows 18-19. With only ${p}, pass.`, 'C.after-1nt-2nt');
     if (r === '2N' && x === '3N') return AP('Opener bid game.');
+    if (r === '2N' && x === B(3, m)) return R('P', `Opener's 3${SY[m]} after your 2NT is a sign-off (a minimum with a long ${SN[m].replace(/s$/, '')} suit): pass.`, 'C.after-2nt');
     return respAfterRebid(h, seq);
   }
   if (n === 4) {

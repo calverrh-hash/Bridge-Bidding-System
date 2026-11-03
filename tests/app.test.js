@@ -38,7 +38,7 @@ function playOut(missHands = []) {
 
 test('app: home lists every drill set', () => {
   resetApp();
-  same(document.querySelectorAll('#app .set').length, SETS.length);
+  same(document.querySelectorAll('#app .set').length, SETS.filter(d => !d.twoOne).length);
 });
 test('app: a level button greys out strains below the last bid', () => {
   resetApp();
@@ -154,13 +154,13 @@ test('app: retry replays only the missed hands, then a fresh deal resets', () =>
 });
 test('app: damaged saved data is ignored, not fatal', () => {
   localStorage.setItem(KEY, '{not json');
-  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: false, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true } });
+  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: false, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true, twoOne: false } });
   localStorage.setItem(KEY, JSON.stringify({ seed: 'x', best: [1], prog: { comp: { seed: 1, res: 'oops' } }, opts: 'bad' }));
   DB = loadDB();
   same(seedOf('comp'), 1);
   same(progressFor('comp'), null);
   goHome();
-  same(document.querySelectorAll('#app .set').length, SETS.length);
+  same(document.querySelectorAll('#app .set').length, SETS.filter(d => !d.twoOne).length);
   resetApp();
 });
 test('app: progress saved for different hands is discarded', () => {
@@ -176,10 +176,10 @@ test('app: an error shows a recovery screen instead of a blank page', () => {
   check(/Something went wrong/.test($('h1').textContent));
   check(!$('b'), 'error message is escaped');
   click('#home');
-  same(document.querySelectorAll('#app .set').length, SETS.length);
+  same(document.querySelectorAll('#app .set').length, SETS.filter(d => !d.twoOne).length);
 });
 test('app: every set opens and renders its first hand', () => {
-  for (const d of SETS) {
+  for (const d of SETS.filter(d => !d.twoOne)) {
     resetApp();
     click(`[data-set="${d.id}"]`);
     same(S.view, 'play', d.id);
