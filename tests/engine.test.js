@@ -789,3 +789,11 @@ test('after opener\'s jump rebid in his major, a fit and 31+ asks with RKCB', ()
   const was = { ...SYS };
   try { SYS.acol = true; same(acolSysCall(['1S', '2H', '3S'], parseHand('AQT74.AKQ54.A.J5')).bid, '4N', 'Acol: the same'); } finally { Object.assign(SYS, was); }
 });
+
+test('game choice: 3NT only with the unbid suits stopped and no shortness; otherwise a stopper, a second suit, or 5m', () => {
+  same(callFor('1D 2C 3C', 'T.54.AKJ9.AJ8752'), '3D', 'minor fit, majors open: show the diamond stopper first');
+  same(callFor('1D 2C 3C 3D', '4.KJ8.Q8652.KQ96'), '5C', 'no spade stopper: 5♣');
+  same(callFor('1D 2C 3C 3D', 'K4.KJ8.Q865.KQ96'), '3N', 'majors stopped: 3NT');
+  same(callFor('1S 2D 2S', '-.AQ8652.AKJ984.Q'), '3H', 'void in his suit, 6-6: show hearts');
+  same(callFor('1D 2C 3C', 'KT.Q4.AJ9.AJ8752'), '3D', 'hearts thin: stopper first');
+});

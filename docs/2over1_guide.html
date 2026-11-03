@@ -158,8 +158,8 @@ const N = {
     { t: 'A raise of my suit, or I have three of his major', go: 'r3_fit' },
     { t: 'He rebid a six-card major and I hold two', go: 'r3_fit' },
     { t: 'No fit yet', go: 'r3_nofit' } ] },
-  r3_fit: { bid: 'Game in the fit', why: '4M with a major fit. With a minor fit, 3NT if the other suits are stopped, otherwise 5 of the minor.', next: '<b>Slam?</b> With 31+ between you, or if the losers say 12 tricks, make a control bid or ask with 4NT (RKCB).' },
-  r3_nofit: { bid: '3NT', why: 'With their suits stopped, 3NT. With a long suit of your own, show it first: the auction is still forcing.' },
+  r3_fit: { bid: 'Game in the fit', why: '4M with a major fit. With a minor fit, 3NT only if you have the unbid suits stopped and no singleton. Otherwise show a stopper first (bid the suit you have stopped at the 3-level): partner bids 3NT with the rest covered, else 5 of the minor.', next: '<b>Slam?</b> With 31+ between you, or if the losers say 12 tricks, make a control bid or ask with 4NT (RKCB).' },
+  r3_nofit: { bid: '3NT, or show your shape', why: '3NT only with the unbid suits stopped and no singleton or void. With a second five-card suit, or a void in partner’s suit, show the suit at the 3-level first: the auction is still forcing, and partner raises with three or picks the game.' },
 
   // ---- Over 1♦ ----
   d1: { q: 'Do you hold a four-card major?', opts: [ { t: 'Yes', go: 'd1_m' }, { t: 'No', go: 'd1_n' } ] },

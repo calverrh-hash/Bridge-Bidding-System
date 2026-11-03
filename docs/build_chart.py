@@ -110,7 +110,7 @@ D = ''.join([
  box('reb','<b>Unbalanced 11-14 "weak":</b> simple raise (4+) 1♣-1♥-2♥ · new suit below the barrier 1♣-1♥-1♠ (<b>6-4: major first</b>) · simple rebid of a 5+ suit 1♠-2♥-2♠.'),
  box('reb','<b>Unbalanced 15-19 "strong"</b> (or 7-card suit / ≤5 losers)<b>:</b> double raise 1♣-1♥-3♥ · reverse (above the barrier) 1♦-1♠-2♥ · jump rebid of a 6+ suit 1♠-2♥-3♠ · 6-5 (minor opened): show the major.'),
  box('reb','<b>Unbalanced 20-22:</b> jump shift 1♣-1♥-2♠, game forcing.'),
- box('rsp','<b>Responder then:</b> after weak: ≤10 pass or correct · <b>11-12 invite</b>: 3 of opener\'s suit with 3+ (over 2M, Hx = support), else own 6-card suit at the 3-level, else 2NT · <b>13+ game</b>: 4M with a fit, else 3NT. Opener accepts an invite with 13-14.'),
+ box('rsp','<b>Responder then:</b> after weak: ≤10 pass or correct · <b>11-12 invite</b>: 3 of opener\'s suit with 3+ (over 2M, Hx = support), else own 6-card suit at the 3-level, else 2NT · <b>13+ game</b>: 4M with a fit, else 3NT only with the unbid suits stopped, no singleton (else a 5+ 2nd suit at the 3-level, or with a minor fit a stopper bid: opener 3NT or 5m). Opener accepts an invite with 13-14.'),
  box('rsp','<b>After 1NT (12-14):</b> ≤10 pass (6-card major: 2M) · 11-12 2NT (6-card major: 3M) · 13+ 3NT (6-card major: 4M). <b>After 2NT (18-19):</b> 7+ game; 5-card major: 3M forcing (opener 4M with 3, else 3NT). <b>After 2NT (12-14, 2-level reply):</b> 11+ game.'),
  box('rsp','<b>After a reverse:</b> 10+ game (4M with a fit, else 3NT) · 6-9: raise the 2nd major with 4, give preference, rebid a 5-card suit, or 2NT; opener goes on with 17+. <b>After a jump shift:</b> never pass: 4M with a fit, else 3NT. <b>After a jump rebid:</b> 10+ (9+ after a 2-level reply) game, else pass; 31+ with a fit: 4NT (G).'),
  box('reb','<b>1M-1NT:</b> balanced pass (17-18 2NT, 19+ 3NT) · 6-card M: 2M (15-19 3M) · 4+ second suit: 2 of it (higher = reverse, 15+) · 20-22 jump shift. Responder: pass or preference; 8-10 accepts.'),
@@ -167,7 +167,7 @@ body{{width:1190.55pt;height:841.89pt;position:relative;font-family:"DejaVu Sans
 .panel{{position:absolute;border:1.2pt solid var(--c);border-radius:5pt;background:#fff;overflow:hidden}}
 .ph{{white-space:nowrap;background:var(--c);color:#fff;font-weight:700;font-size:8.4pt;height:17pt;padding:2.5pt 6pt;display:flex;align-items:center;gap:5pt}}
 .let{{flex-shrink:0;display:inline-flex;width:12pt;height:12pt;border-radius:50%;background:#fff;color:var(--c);align-items:center;justify-content:center;font-size:8pt}}
-.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.85pt;line-height:1.2}} .pB .b{{font-size:6.85pt;line-height:1.2}} .pB .pb{{gap:3pt}} .pG .b{{font-size:6.95pt}} .pD .pb{{gap:3pt}}
+.pb{{display:flex;flex-direction:column;gap:4pt}} .pF .pb{{gap:2.6pt}} .pF .b{{font-size:6.8pt;line-height:1.2}} .pK .fix,.pK .upd{{font-size:6.95pt}} .pH .b{{font-size:6.95pt}} .pD .b{{font-size:6.75pt;line-height:1.18}} .pB .b{{font-size:6.85pt;line-height:1.2}} .pB .pb{{gap:3pt}} .pG .b{{font-size:6.95pt}} .pD .pb{{gap:3pt}}
 .pA,.pB,.pC{{--c:#2E5E9E}} .pD{{--c:#408A54}} .pE{{--c:#B07A0F}} .pF{{--c:#A33A3A}} .pG{{--c:#6B4A99}} .pH{{--c:#7A3550}} .pK{{--c:#7A6B1A}} .pO{{--c:#1F3B5E}}
 .b{{border:0.8pt solid;border-radius:3pt;padding:3pt 4pt}}
 .rsp{{background:#E6F0FA;border-color:#4A7BC0}} .reb{{background:#E6F5EB;border-color:#4FA066}} .cnv{{background:#FFF2D6;border-color:#D19A2A}}

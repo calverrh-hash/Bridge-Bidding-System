@@ -45,7 +45,7 @@ D = f'''{box('obk','1M – <b>2x</b> (13+, <b>game forcing</b>)')}
 {arrow}
 {box('reb','<b>Opener bids naturally</b> (nobody stops below game):<br>• 11-14: raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · a new suit below the barrier · 2NT balanced<br>• 15-19: show your shape (a second suit, or a raise) — <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
 {arrow}
-{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · 3NT with their suits stopped · 5m with a minor fit and a short suit.<br><b>Slam:</b> 31+ between you, or the losers say 12 tricks → control bids / RKCB (chart G).')}'''
+{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · 3NT only with the unbid suits stopped and no singleton · otherwise show a second 5+ suit at the 3-level, or with a minor fit show a stopper (3x): opener bids 3NT with the rest stopped, else 5m.<br><b>Slam:</b> 31+ between you, or the losers say 12 tricks → control bids / RKCB (chart G).')}'''
 
 E = f'''{box('obk','Partner opens <b>1♦</b>')}
 {arrow}

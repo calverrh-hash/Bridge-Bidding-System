@@ -2,6 +2,7 @@
 
 ## 2026-11-03
 
+- Strong NT system (with or without 2/1): responder with game values bids 3NT only with the unbid suits stopped and no singleton or void. Otherwise he shows a second 5+ suit at the 3-level (forcing), or, with a minor fit, shows a stopper (1♦ – 2♣ – 3♣ – 3♦): opener bids 3NT with the rest stopped, else 5 of the minor. Charts D (5CM) and panel 4 (2/1) updated.
 - New option on the strong NT system: **2/1 game forcing** (home-screen switch, off by default; separate progress). Over 1♥/1♠, 1NT is forcing for one round (6-12): opener never passes, and a minimum with no second suit bids his longer minor, even with three. Responder then passes or gives preference (6-9), bids a six-card suit to play, or invites (10-12). A new suit at the 2-level, and 1♦ – 2♣, is game forcing (13+). Raises with 4+ trumps, Jacoby, splinters and slam bidding are unchanged. A new "2/1 game forcing" drill appears when the switch is on. Chart: docs/2over1_Flowchart_A3.pdf.
 - Fixes: opener's 4M after a minimum rebid was read as an invitation; 1m – 2NT – 3m (opener's sign-off) now passes.
 

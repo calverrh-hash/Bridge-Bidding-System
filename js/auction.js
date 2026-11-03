@@ -337,6 +337,8 @@ function after1Major(seq, h) {
   if (r === '2N' && n === 4 && isCue(seq[3], M)) return cueReply(h, M, seq[3]);
   if (r === '2N' && n === 5 && isCue(seq[3], M)) return cueDecide(h, M, seq[3], seq[4], seq[2]);
   if (r === '2N' && n === 6 && isCue(seq[3], M)) return AP('Partner signed off.');
+  if (n === 4 && openerAfterChoice(h, seq)) return openerAfterChoice(h, seq);
+  if (n === 5 && respAfterChoice(h, seq)) return respAfterChoice(h, seq);
   if (n === 4) {
     const a = seq[3], inv = openerAfterInvite(h, seq);
     if (/^2[CDHS]$/.test(a) && a[1] === seq[1][1] && seq[2][1] !== seq[1][1]) {   // responder rebid their own suit at the 2-level
@@ -466,6 +468,8 @@ function after1Minor(seq, h) {
     if (r === '2N' && x === B(3, m)) return R('P', `Opener's 3${SY[m]} after your 2NT is a sign-off (a minimum with a long ${SN[m].replace(/s$/, '')} suit): pass.`, 'C.after-2nt');
     return respAfterRebid(h, seq);
   }
+  if (n === 4 && openerAfterChoice(h, seq)) return openerAfterChoice(h, seq);
+  if (n === 5 && respAfterChoice(h, seq)) return respAfterChoice(h, seq);
   if (n === 4) {
     const a = seq[3], inv = openerAfterInvite(h, seq);
     if (/^2[CDHS]$/.test(a) && a[1] === seq[1][1] && seq[2][1] !== seq[1][1]) {   // responder rebid their own suit at the 2-level
@@ -538,7 +542,7 @@ function partnerShows(seq) {
 }
 function fitGame(seq, h, c) {
   if (!isCall(c) || !c.bid || seq.length < 2 || !/^1[CDHS]$/.test(seq[0]) || seq.includes('4N')) return c;
-  if (/^(G\.|B\.jacoby|B\.bergen|B\.new-suit-then-support|LTC\.)/.test(c.id || '') || c.bid === '4N') return c;
+  if (/^(G\.|B\.jacoby|B\.bergen|B\.new-suit-then-support|LTC\.|D\.game-choice)/.test(c.id || '') || c.bid === '4N') return c;
   const last = seq[seq.length - 1];
   if (last === 'P' || /^(3N|4[HS]|5[CD])$/.test(last) || /^[67]/.test(last)) return c;
   const b = c.bid;
