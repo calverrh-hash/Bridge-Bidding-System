@@ -110,7 +110,7 @@ D = ''.join([
  box('reb','<b>Unbalanced 11-14 "weak":</b> simple raise (4+) 1♣-1♥-2♥ · new suit below the barrier 1♣-1♥-1♠ (<b>6-4: major first · 6-5: 2nd suit first</b>) · simple rebid of a 5+ suit 1♠-2♥-2♠.'),
  box('reb','<b>Unbalanced 15-19 "strong"</b> (or a 7-card suit; losers count only once a fit is found)<b>:</b> double raise 1♣-1♥-3♥ · reverse (above the barrier) 1♦-1♠-2♥ · jump rebid of a 6+ suit 1♠-2♥-3♠ · 6-5 (minor opened): show the major.'),
  box('reb','<b>Unbalanced 20-22:</b> jump shift 1♣-1♥-2♠, game forcing.'),
- box('rsp','<b>Responder then:</b> after weak: ≤10 pass or correct · <b>11-12 invite</b>: 3 of opener\'s suit with 3+ (over 2M, Hx = support), else a 6-card suit at the 3-level (also an unbid one, after a 1-level reply), else 2NT · <b>13+ game</b>: 4M with a fit, no fit yet: a 5+ 2nd suit first · 3NT with the unbid suits stopped, no void · minor fit: stopper bid in an <b>unbid</b> suit, cheapest (opener 3NT, or back to the minor → 5m). Opener accepts an invite with 13-14.'),
+ box('rsp','<b>Responder then:</b> after weak: ≤10 pass or correct · <b>11-12 invite</b>: 3 of opener\'s suit with 3+ (over 2M, Hx = support), else a 6-card suit at the 3-level (also an unbid one, after a 1-level reply), else 2NT · <b>13+ game</b>: 4M with a fit, no fit: a 5+ 2nd suit first · 3NT with unbid suits stopped, no void · minor fit: stopper in an <b>unbid</b> suit (opener 3NT, or back to the minor → 5m). Opener accepts an invite with 13-14.'),
  box('rsp','<b>After 1NT (12-14):</b> ≤10 pass (6-card major: 2M) · 11-12 2NT (6-card major: 3M) · 13+ 3NT (6-card major: 4M). <b>After 2NT (18-19):</b> 7+ game; 5-card major: 3M forcing (opener 4M with 3, else 3NT). <b>After 2NT (12-14, 2-level reply):</b> 11+ game.'),
  box('rsp','<b>After a reverse:</b> 10+ game (4M with a fit, else 3NT) · 6-9: raise the 2nd major with 4, give preference, rebid a 5-card suit, or 2NT; opener goes on with 17+. <b>After a jump shift:</b> never pass: 4M with a fit, else 3NT. <b>After a jump rebid:</b> 10+ (9+ after a 2-level reply) game, else pass; 31+ with a fit: 4NT (G).'),
  box('reb','<b>1M-1NT:</b> balanced pass (17-18 2NT, 19+ 3NT) · 6-card M: 2M (15-19 3M) · 4+ second suit: 2 of it (higher = reverse, 15+) · 20-22 jump shift. Responder: pass or preference; 8-10 accepts.'),
@@ -193,7 +193,7 @@ table.lt th{{background:#f3d98b;border:.6pt solid #b08c2f;padding:1pt 6pt}} tabl
 .foot{{position:absolute;right:16pt;top:819pt;font-size:7.4pt;color:#333}}
 </style></head><body>
 <div class="top"><h1>5-CARD MAJORS · STRONG NT  -  CORRECTED BIDDING FLOWCHART</h1>
-<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, Smolen, McKendrick, Jacoby, 3♣/3♦ raises, weak twos, 2♣, negative and support doubles, unassuming cue bid, Helvic.</p><span class="ver">Updated 27 Oct 2026</span></div>
+<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, Smolen, McKendrick, Jacoby, 3♣/3♦ raises, weak twos, 2♣, negative and support doubles, unassuming cue bid, Helvic.</p><span class="ver">Updated 4 Nov 2026</span></div>
 {panel(16,60,204,338,'pO','','OPENING BIDS','<div class="pb" style="gap:5pt;padding:0">'+op+'</div>')}
 {panel(212,60,689,375,'pA','A','RESPONSES TO 1NT (15-17)',A)}
 {panel(697,60,932,375,'pB','B','RESPONSES TO 1♥/♠',B)}

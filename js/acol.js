@@ -346,7 +346,7 @@ function acolResp2(h, seq) {
   if (majAfter2 && xs !== o && xs !== rs) {
     if (l[xs] >= 4) return p >= 12 ? R(B(4, xs), `Opener's ${plain(x)} shows four ${SN[xs]} (12-18, forcing). With four of them and ${p} (12+), bid game.`, 'D.acol-after') : R(B(3, xs), `Opener's ${plain(x)} shows four ${SN[xs]} and is forcing (12-18). With four of them and ${p} (9-11), raise: 3${SY[xs]}. Opener bids game with extras.`, 'D.acol-after');
     if (o >= 2 && l[o] >= 3) { const c = cheapest(o, x), b = p >= 12 ? B(4, o) : p >= 11 && c === 2 ? B(3, o) : B(c, o); return R(b, `Opener's ${plain(x)} is forcing (12-18). With three ${SN[o]} and ${p}, ${p >= 12 ? 'bid game' : p >= 11 && c === 2 ? 'jump preference, inviting game' : 'give preference; opener bids game with extras'}: ${plain(b)}.`, 'D.acol-after'); }
-    if (p >= 12) return R('3N', `Opener's ${plain(x)} shows four ${SN[xs]} (12-18). No fit, ${p} (12+): 3NT.`, 'D.acol-after');
+    if (p >= 12) { const c = acolNoFitNT(h, x, [o, rs, xs], p, `Opener's ${plain(x)} shows four ${SN[xs]} (12-18). No fit`); return /N$/.test(c.bid) ? R('3N', `Opener's ${plain(x)} shows four ${SN[xs]} (12-18). No fit, ${p} (12+): 3NT.`, 'D.acol-after') : c; }
     if (l[rs] >= 6) return R(B(3, rs), `Opener's ${plain(x)} shows four ${SN[xs]}. No fit; with ${NUM[l[rs]]} ${SN[rs]} and ${p}, rebid them: 3${SY[rs]}.`, 'D.acol-after');
     return R('2N', `Opener's ${plain(x)} shows four ${SN[xs]} and is forcing. No fit; with ${p} (9-11), 2NT.`, 'D.acol-after');
   }
@@ -396,7 +396,8 @@ function acolResp2(h, seq) {
   if (xs >= 0 && xs !== rs) {   // new suit below the barrier: 13-14
     const f2 = rl === 2 && rs >= 0;   // after our 2-level response opener's new suit is forcing
     const nw = f2 ? `Opener's ${plain(x)} is a new suit after your 2-level response: forcing (12-18)` : `Opener's ${plain(x)} is a new suit, not a reverse (13-18, usually a minimum)`;
-    if (l[xs] >= 4) return p >= 13 ? R(game(xs), `${nw}. With four ${SN[xs]} and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 || f2 ? R(B(xl + 1, xs), `${nw}. With four ${SN[xs]} and ${p}, raise: ${plain(B(xl + 1, xs))}.`, 'D.acol-after') : R('P', `${nw}. With four ${SN[xs]} and ${p}, pass.`, 'D.acol-after');
+    if (l[xs] >= 4 && xs < 2 && p >= 13 && l.some(n => n <= 1)) { const sl = minorSlamTry(h, xs, 7, `${nw}, and you have ${l[xs]} ${SN[xs]}`); if (sl) return sl; return R(B(5, xs), `${nw}. With ${l[xs]} ${SN[xs]} you have a fit, and with a short suit no-trumps is risky: 5${SY[xs]}.`, 'D.acol-after'); }
+    if (l[xs] >= 4) return p >= 13 ? R(game(xs), `${nw}. With ${NUM[l[xs]] || l[xs]} ${SN[xs]} and ${p} (13+), bid game.`, 'D.acol-after') : p >= 11 || f2 ? R(B(xl + 1, xs), `${nw}. With four ${SN[xs]} and ${p}, raise: ${plain(B(xl + 1, xs))}.`, 'D.acol-after') : R('P', `${nw}. With four ${SN[xs]} and ${p}, pass.`, 'D.acol-after');
     if (p >= 11) return acolNoFitNT(h, x, [o, rs, xs], p, nw);
     if (l[o] >= l[xs] && l[o] >= 2) return R(B(cheapest(o, x), o), `${nw}. With ${p}, give preference: ${plain(B(cheapest(o, x), o))}.`, 'D.acol-after');
     if (f2) { const b = l[rs] >= 5 ? B(cheapest(rs, x), rs) : bv('2N') > bv(x) ? '2N' : '3N'; return R(b, `${nw}: don't pass. With ${p} and no fit, ${plain(b)}.`, 'D.acol-after'); }
@@ -422,7 +423,7 @@ function acolOpener3(h, seq) {
   // Partner's own major after our jump rebid: forcing, raise with two.
   if (xs === o && +x[0] === 3 && as === rs && as >= 2 && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows six ${SN[as]} and is forcing. With ${l[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows six ${SN[as]}. With a singleton, 3NT.`, 'D.acol-opener-3');
   // After our jump shift (game forcing), partner shows a long major: raise with two.
-  if (xs >= 0 && xs !== o && +x[0] === cheapest(xs, r) + 1 && as >= 2 && as !== xs && as !== o && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows a long suit. With ${l[as]} ${SN[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows a long suit. With a singleton, 3NT.`, 'D.acol-opener-3');
+  if (xs >= 0 && xs !== o && +x[0] === cheapest(xs, r) + 1 && as >= 2 && as !== xs && as !== o && +a[0] === 3) return l[as] >= 2 ? R(B(4, as), `Partner's ${plain(a)} shows a long suit. With ${l[as]} ${SN[as]}, 4${SY[as]}.`, 'D.acol-opener-3') : (o >= 2 && l[o] >= 6 ? R(B(4, o), `Partner's ${plain(a)} shows a long suit, but you have a singleton. Rebid your ${NUM[l[o]]} ${SN[o]} instead: 4${SY[o]}.`, 'D.acol-opener-3') : R('3N', `Partner's ${plain(a)} shows a long suit. With a singleton, 3NT.`, 'D.acol-opener-3'));
   // Partner's new suit after our minimum rebid (no fit for us yet): forcing. 3NT with the
   // unbid suit(s) stopped · six of our own suit: rebid it · support partner · else 3NT.
   if (as >= 0 && as !== o && as !== xs && as !== rs && +a[0] === 3 && (xs === o || bv(x) < bv(B(2, o)) || +x[0] <= 2)) {
@@ -450,6 +451,8 @@ function acolOpener3(h, seq) {
   // After our reverse, partner's simple preference (6-9): game with 17+ (or 5 losers), otherwise stop.
   if (xs >= 0 && xs !== o && xs !== rs && bv(x) > bv(B(2, o)) && +x[0] === cheapest(xs, r) && (as === o || as === xs) && +a[0] === cheapest(as, x)) {
     const g = as >= 2 ? B(4, as) : '3N';
+    // A minor preference is a fit: with a void or a suit nobody has stopped, the minor game (losers decide once there's a fit).
+    if (as < 2 && (p >= 17 || ls <= 5) && (L(h).some(n => n <= 1) || [0, 1, 2, 3].some(u => u !== o && u !== xs && u !== rs && !stop(h, u)))) return R(B(5, as), `Partner's ${plain(a)} is preference after your reverse (6-9): a ${SN[as].replace(/s$/, '')} fit. With a short suit, no-trumps is risky; your ${ls} losers opposite about 9 make the minor game: 5${SY[as]}.`, 'D.acol-opener-3');
     return p >= 17 || ls <= 5 ? R(g, `Partner's ${plain(a)} is preference after your reverse (6-9). With ${p >= 17 ? `${p} (17+)` : `${ls} losers`}, bid game: ${plain(g)}.`, 'D.acol-opener-3') : R('P', `Partner's ${plain(a)} is preference after your reverse (6-9). With ${p}, stop here: pass.`, 'D.acol-opener-3');
   }
   if (a === '2N') { const need = x === '1N' ? 16 : 14; return p >= need ? R('3N', `Partner invites with 2NT. With ${p}, accept: 3NT.`, 'D.acol-opener-3') : R('P', `Partner invites with 2NT. With ${p}, pass.`, 'D.acol-opener-3'); }
@@ -476,6 +479,7 @@ function acolResp3(h, seq) {
   if (ys < 0 || rs < 0 || gameBid(z) || z === 'P') return AP('The contract is set.');
   if (z === B(3, ys)) return p >= 12 ? R(B(4, ys), `Opener raised your ${SN[ys]} (13-14). With ${p} (12+), 4${SY[ys]}.`, 'D.acol-after') : R('P', `Opener raised your ${SN[ys]} with a minimum. With ${p}, pass.`, 'D.acol-after');
   if (z[1] === r[1]) return p >= 12 ? R(l[rs] >= 5 ? B(4, rs) : '3N', `Opener shows three ${SN[rs]}. With ${p} (12+), ${l[rs] >= 5 ? `4${SY[rs]}` : '3NT'}.`, 'D.acol-after') : R('P', `Opener shows three ${SN[rs]}. With ${p}, pass.`, 'D.acol-after');
+  if (z === '2N' && p >= 12 && ((l[rs] >= 6 && (l[ys] >= 5 || l.some(n => n === 0))) || (l[rs] >= 5 && l[ys] >= 5))) { const t = l[ys] >= 5 && l[rs] < 6 ? ys : rs, b = B(3, t); return R(b, `Opener's 2NT shows no fit and a minimum, but your hand is very shapely. Show your length before settling for no-trumps: ${plain(b)}, ${l[t] >= 6 ? `six ${SN[t]}` : `a fifth ${SN[t].replace(/s$/, '')}`}, forcing. Opener raises with support, or bids 3NT.`, 'D.acol-after'); }
   if (z === '2N') return p >= 12 ? R('3N', `Opener has no fit and a minimum. With ${p} (12+), 3NT.`, 'D.acol-after') : R('P', `Opener has no fit and a minimum. With ${p}, pass.`, 'D.acol-after');
   return AP('The contract is set.');
 }
@@ -540,6 +544,13 @@ function acolAfter1Suit(seq, h) {
   }
   if (n === 4) return acolOpener3(h, seq);
   if (n === 5) return acolResp3(h, seq);
+  // Opener after 2NT and partner's shapely 3-level rebid of his first suit.
+  if (n === 6 && seq[4] === '2N' && /^3[CDHS]$/.test(seq[5]) && (seq[5][1] === r[1] || seq[5][1] === seq[3][1])) {
+    const rs = ST.indexOf(seq[5][1]), l = L(h), fifth = seq[5][1] === seq[3][1];
+    const ok = fifth ? l[rs] >= 3 : (l[rs] >= 3 || (rs >= 2 && l[rs] >= 2));
+    if (ok) return R(rs >= 2 ? B(4, rs) : B(5, rs), `Partner's ${plain(seq[5])} shows ${fifth ? 'five' : 'six'} ${SN[rs]} and a shapely hand. With ${l[rs]}, support him: ${rs >= 2 ? '4' : '5'}${SY[rs]}.`, 'D.acol-opener-3');
+    return R('3N', `Partner's ${plain(seq[5])} shows ${fifth ? 'five' : 'six'} ${SN[rs]}, but with ${l[rs]} you have no fit: 3NT.`, 'D.acol-opener-3');
+  }
   return AP('The contract is set.');
 }
 

@@ -43,9 +43,9 @@ C = f'''{box('obk','1M – <b>1NT forcing</b> (6-12)')}
 # ---------------- D: AFTER A 2-OVER-1 ----------------
 D = f'''{box('obk','1M – <b>2x</b> (13+, <b>game forcing</b>)')}
 {arrow}
-{box('reb','<b>Opener bids naturally</b> (game is forced):<br>• 11-14 (no jumps: losers count once a fit is found): raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · else a 4-card side suit at the cheapest level (<b>no barrier</b> once game is forced) · else raise his minor with 3 · 2NT balanced<br>• 15-19: show your shape, <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
+{box('reb','<b>Opener bids naturally, no jumps:</b><br>• 11-14: raise his minor with 4 (2♥ with 3) · rebid a 6-card major · else a 4-card side suit (<b>no barrier</b> once game is forced) · else raise his minor with 3 · 2NT balanced<br>• 15-19: show your shape · 18-19 balanced: 3NT')}
 {arrow}
-{box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · <b>go slow</b>: with extras raise his major to 3 (or rebid your own six), and raise his new minor (4+) to 3; jumping to game = minimum · <b>no fit yet: show a second 5+ suit before 3NT</b> · 3NT with the unbid suits stopped and no void · minor fit: a stopper bid in an <b>unbid</b> suit, cheapest level (opener: 3NT, or back to the minor → 5m). Either hand with the last unbid suit well stopped bids 3NT rather than bypass it.<br><b>Slam:</b> 31+, or a fit and the losers say 12 tricks → RKCB (no void) or control bids (chart G).')}'''
+{box('rsp','<b>Responder:</b> 4M with 3-card support (2 opposite six) · <b>go slow</b> with extras (3M, or raise his minor to 3); a jump to game = minimum · <b>no fit yet: show a 2nd 5+ suit before 3NT</b> · 3NT with the unbid suit stopped, no void · minor fit: a stopper in an <b>unbid</b> suit (opener 3NT, or back to the minor → 5m).<br><b>Slam:</b> a fit and 12 tricks on losers → RKCB or control bids.')}'''
 
 E = f'''{box('obk','Partner opens <b>1♦</b>')}
 {arrow}

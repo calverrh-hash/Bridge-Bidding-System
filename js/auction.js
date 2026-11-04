@@ -153,7 +153,7 @@ function after2C(seq, h) {
     return R('3N', `Partner's ${plain(x)} shows 5+ ${SN[s]} and 2♣ forced to game. ${s >= 2 ? `With only ${cardsOf(l[s], s)}, bid 3NT.` : 'A minor-suit game needs eleven tricks, so bid 3NT.'}`, 'GUIDE.2c-rebid-answer');
   }
   if (n === 4 && gameBid(seq[3])) return AP('Partner chose the game.');
-  if (n === 4 && /^[34][CDHS]$/.test(seq[3])) {   // opener after the weak hand's raise or suit
+  if (n === 4 && /^[234][CDHS]$/.test(seq[3]) && bv(seq[3]) > bv(x)) {   // opener after the weak hand's raise or suit
     const a = seq[3], as = ST.indexOf(a[1]), s = ST.indexOf(x[1]), k = losers(h);
     if (as === s) { const t = 24 - k - 10; return t >= 12 ? R(B(6, s), `Partner raised your ${SN[s]}. Your ${k} losers opposite a weak hand (about 10): 24 − ${k + 10} = ${t} tricks: 6${SY[s]}.`, 'GUIDE.2c-rebid-answer') : R(B(5, s), `Partner raised your ${SN[s]}. Your ${k} losers opposite a weak hand (about 10): ${24 - k - 10} tricks: 5${SY[s]}.`, 'GUIDE.2c-rebid-answer'); }
     if (as >= 2) return l[as] >= 2 ? R(B(4, as), `Partner shows five or more ${SN[as]}. With ${l[as]} of them: 4${SY[as]}.`, 'GUIDE.2c-rebid-answer') : R(s >= 2 ? B(4, s) : '3N', `Partner shows ${SN[as]}, but you have ${cardsOf(l[as], as)}: ${s >= 2 ? plain(B(4, s)) : '3NT'}.`, 'GUIDE.2c-rebid-answer');
@@ -251,6 +251,12 @@ function openerAfterInvite(h, seq) {
   const strongX = xs >= 0 && xs !== o && xs !== rsuit && bv(x) > bv(B(2, o));          // reverse or jump shift
   // After a reverse: responder's 6-9 sign-offs. Opener goes on with 17+.
   if (strongX && +x[0] === cheapest(xs, r)) {
+    // Partner's preference for our minor is a fit: with a void (or a suit nobody has stopped) play the minor game, by the losers.
+    if (as >= 0 && as < 2 && +a[0] === 3 && as !== rsuit && p >= 17 && (l.some(n => n === 0) || [0, 1, 2, 3].some(u => u !== o && u !== xs && u !== rsuit && !stop(h, u)))) {
+      const k = losers(h), t = 24 - k - 9;
+      return t >= 11 ? R(B(5, as), `Partner's ${plain(a)} shows 6-9 and a ${SN[as].replace(/s$/, '')} fit. Now the losers count: yours ${k}, partner's about 9, so 24 − ${k + 9} = ${t} tricks. With ${l.some(n => n === 0) ? 'a void' : 'a suit unstopped'}, no-trumps is risky: 5${SY[as]}.`, 'D.reverse-continue')
+        : R('3N', `Partner's ${plain(a)} shows 6-9 and a fit, but ${k} losers opposite about 9 give only ${t} tricks: try 3NT.`, 'D.reverse-continue');
+    }
     if (a === '2N' || (as >= 0 && +a[0] === 3 && as !== rsuit)) return p >= 17 ? R(as >= 2 ? B(4, as) : '3N', `Partner's ${plain(a)} shows 6-9. With ${p} (17+), bid game: ${as >= 2 ? plain(B(4, as)) : '3NT'}.`, 'D.reverse-continue') : R('P', `Partner's ${plain(a)} shows 6-9. With ${p} (15-16), pass.`, 'D.reverse-continue');
   }
   // 1m – 1M – 2NT (18-19) – 3M: five cards, forcing.

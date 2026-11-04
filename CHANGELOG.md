@@ -2,6 +2,15 @@
 
 ## 2026-11-04
 
+- Bidding on once game is in view (checked across all drill hands, both systems):
+  - **Stoppers only in suits nobody has bid**, at the cheapest level after a 2-level response: 1♦ – 2♣ – 2♦ – 2♥ (not 3♣, which only shows six clubs). Opener bids 3NT with the last suit stopped, or goes back to the minor and responder bids 5m.
+  - **No fit yet: show length before 3NT.** After opener's 2NT, responder with 6-5 or a second five-card suit shows it (1♥ – 2♦ – 2NT – 3♣). After a jump shift, a five-card major with a singleton in opener's suit is rebid. Acol: a 6-5 or 5-5 responder shows the length again over opener's 2NT; opener raises with support or bids 3NT.
+  - **2/1 opener describes after a 2-over-1:** no barrier once game is forced, so a four-card side suit (or a 6-5 second suit) is shown at the cheapest level, else a three-card raise of partner's minor, before rebidding a five-card major. 1♠ – 2♦ – 3♣ with ♠QJ965 ♥8 ♦A43 ♣AQ109. 15-19 with six of your major rebids 2M, no jump.
+  - **3NT with the unbid suit held:** when partner's new suit leaves one unbid suit and you hold it well stopped (and no void), bid 3NT rather than go past it for a minor (1♠ – 2♦ – 2♠ – 3♥ – 3NT).
+  - **No jump after the cue bid:** advancer shows a five-card major at the cheapest level (1♣ X – 2♣ – 2♥ – 2♠); the doubler raises with three, else 3NT / 4M.
+  - Minor fits with a short suit: after a reverse, partner's minor preference and your void lead to 5m by the losers; Acol responder with four of opener's new minor and a short suit plays the minor (or slam) rather than 3NT.
+  - Opener 5-5 with no fit for partner's two suits rebids the major; with six in his own major after a jump shift and no fit, bids 4M. After a 2♣ opening, the weak hand's 2♠ is now answered (no more early stop).
+  - Charts: 5CM D and F, Acol D, 2/1 panel 4 and the click-through guide updated.
 - Losers only count once a fit is found: opener no longer jump rebids on the loser count alone (a seven-card suit still jumps), and in 2/1 opener never jumps after a 2-over-1 (game is forced). The 2/1 shape upgrade (10-12 with 5 losers makes a 2-over-1) is removed: those hands bid 1NT forcing. Charts D (5CM) and panel 2 (2/1) updated.
 - Minor-suit fits no longer get skipped for 3NT (both systems; checked across all drill hands):
   - After opener's new minor (1♠ – 2♣ – 2♦) with four or more, responder raises. In 2/1, or after any 2-level response, he raises slowly to 3: opener shows his cheapest ace or void (or 3NT / 4m), and responder bids 6m when he controls every side suit and the losers say 12 tricks, else 5m or 3NT.
