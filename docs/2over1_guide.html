@@ -90,7 +90,7 @@ const N = {
     { t: 'Yes', go: 'r1_sp' }, { t: 'No', go: 'r1_pts' } ] },
   r1_sp: { bid: '1♠', why: 'Four or more spades, 6+ HCP: 1♠, forcing, exactly as in the chart. 2/1 doesn’t change this.' },
   r1_pts: { q: 'How many points?', opts: [
-    { t: 'Fewer than 6', s: 'Or 4-5 without real shape', go: 'r1_p' }, { t: '6-12', s: 'With 6 losers or more', go: 'r1_nt' }, { t: '13 or more', s: 'Or 10-12 with 5 losers or fewer', go: 'r1_gf' } ] },
+    { t: 'Fewer than 6', s: 'Or 4-5 without real shape', go: 'r1_p' }, { t: '6-12', go: 'r1_nt' }, { t: '13 or more', go: 'r1_gf' } ] },
   r1_p: { bid: 'Pass', why: 'Too weak to respond.' },
   r1_nt: { bid: '1NT', why: '1NT forcing: 6-12 HCP with fewer than three trumps. Opener must bid again. With a long suit of your own, bid 1NT first and show the suit next.', next: '<b>Why not 2 of your suit?</b> In 2/1 a new suit at the 2-level promises 13+ and forces to game.' },
   r1_gf: { bid: 'New suit at the 2-level', why: 'A 2-over-1: 13+, game forcing. Bid your longest suit (equal length: the lower). Over 1♠ that can be 2♥ with five or more hearts.', next: 'Neither of you may now stop below game. Bid naturally and slowly.' },
@@ -150,7 +150,7 @@ const N = {
 
   // ---- Opener after a 2-over-1 ----
   o2: { q: 'How strong is your hand?', opts: [ { t: '11-14', go: 'o2_min' }, { t: '15-19, unbalanced', go: 'o2_ext' }, { t: '18-19, balanced', go: 'o2_bal' } ] },
-  o2_min: { bid: 'Describe naturally', why: 'Raise partner’s minor with four (his 2♥ with three) · rebid a six-card major · show a new suit below the barrier · 2NT if balanced.', next: 'Game is already forced: a minimum bid here doesn’t let partner stop short.' },
+  o2_min: { bid: 'Describe naturally', why: 'Raise partner’s minor with four (his 2♥ with three) · rebid a six-card major · show a new suit below the barrier · 2NT if balanced. Don’t jump because you have few losers: losers only count once a fit is found.', next: 'Game is already forced: a minimum bid here doesn’t let partner stop short.' },
   o2_ext: { bid: 'Show your shape', why: 'Show a second suit or raise partner. There is no need to jump: game is already forced, so keep the bidding low and leave room for slam.' },
   o2_bal: { bid: '3NT', why: 'Balanced 18-19 after a 2-over-1.' },
 

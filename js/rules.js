@@ -237,8 +237,6 @@ function r1M(h, M) {
   const sw = p <= 5 ? shapeWhy(h) : '';
   if (M === 2 && l[3] >= 4) return R('1S', `${sw}Fewer than 3 hearts and ${l[3]} spades: 1♠ (4+ spades, 6+, forcing).`, 'B.one-spade');
   if (SYS.twoOne) {   // 2/1 game forcing: 1NT is forcing (6-12); a new suit at the 2-level is game forcing (13+)
-    const k = losers(h), shapeGF = p >= 10 && p <= 12 && k <= 5;   // shape counts: 5 losers plays like 13+
-    if (shapeGF) { const n = newSuitM(h, M); return R(n, `Fewer than 3 ${SN[M]} and ${p} HCP, but only ${k} losers (${loserBreak(h)}): the shape plays like 13+. Make the 2-over-1, ${plain(n)}: game is forced, and you can show the rest of your hand slowly.`, 'B.21-gf'); }
     if (p <= 12) return R('1N', `${sw}Fewer than 3 ${SN[M]} and ${p} HCP: 1NT, forcing for one round (6-12). In 2/1 a new suit at the 2-level would be game forcing, so with ${p} you start with 1NT and show a long suit next.`, 'B.21-1nt-forcing');
     const n = newSuitM(h, M);
     return R(n, `Fewer than 3 ${SN[M]} and ${p} HCP (13+): ${plain(n)}, a 2-over-1. It forces to game, so neither of you can stop below game; now you can both bid naturally and slowly.`, 'B.21-gf');
@@ -369,7 +367,6 @@ function r1m(h, m) {
   }
   const lv = b > m ? 1 : 2;
   if (SYS.twoOne && lv === 2) {
-    if (p >= 10 && losers(h) <= 5) return R(B(2, b), `${pre}${p} HCP but only ${losers(h)} losers: the shape plays like 13+. 2${SY[b]}, a 2-over-1, game forcing.`, 'B.21-gf');
     if (p >= 13) return R(B(2, b), `${pre}${p} HCP with ${NUM[l[b]]} ${SN[b]}: 2${SY[b]}, a 2-over-1, game forcing (13+).`, 'B.21-gf');
     return R('1N', `${pre}${p} HCP: in 2/1, 2${SY[b]} would be game forcing (13+), so bid 1NT (6-10; with an unbalanced 11-12 it's the nearest bid).`, 'B.21-1nt-forcing');
   }
@@ -392,11 +389,13 @@ function rebid(h, o, r, lvl) {
   }
   if (p <= 14) {
     if (l[r] >= 4) return R(B(lvl + 1, r), `Unbalanced 11-14 with ${l[r]} ${SN[r]}: simple raise to ${plain(B(lvl + 1, r))}.`, 'D.raise');
-    // Shape upgrade: a 7-card suit, or 5 losers or fewer, plays like 15-19, so jump rebid.
-    // (Six losers is common with a six-card suit, so that alone doesn't upgrade.)
-    const jumpByShape = l[o] >= 7 || (l[o] >= 6 && losers(h) <= 5);
-    const shapeJump = () => R(B(3, o), `${p} HCP, but ${l[o] >= 7 ? `a ${NUM[l[o]]}-card suit` : `only ${losers(h)} losers (${loserBreak(h)})`} plays like the strong band (15-19): jump rebid to 3${SY[o]}.`, 'D.jump-rebid-shape');
-    if (l[o] >= 7) return shapeJump();
+    // Shape upgrade: a 7-card suit plays like 15-19, so jump rebid.
+    // Losers only count once a fit is known, so no jump on the loser count here; a seven-card suit is length, not losers.
+    // In 2/1, after a 2-over-1 game is forced: no jump rebids at all.
+    const gf21 = SYS.twoOne && lvl === 2;
+    const jumpByShape = l[o] >= 7 && !gf21;
+    const shapeJump = () => R(B(3, o), `${p} HCP, but a ${NUM[l[o]]}-card suit plays like the strong band (15-19): jump rebid to 3${SY[o]}.`, 'D.jump-rebid-shape');
+    if (jumpByShape) return shapeJump();
     // 6-4 with a 4-card major you can show below the barrier: show the major first. A major
     // fit is worth more than repeating the long suit, and you can rebid that suit later.
     const mj = others.filter(s => s >= 2 && l[s] >= 4 && bv(B(cheapest(s, resp), s)) < bv(bar));

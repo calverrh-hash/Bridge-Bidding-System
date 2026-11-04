@@ -27,9 +27,9 @@ B = f'''{box('obk','Partner opens <b>1♥</b> or <b>1♠</b>')}
 <div class="g3">
 <div>{lab('4+ trumps')}{box('rsp','<b>As the chart:</b> 2M up to 6 · 3♦ 7-9 · 3♣ 10-12 · 2NT Jacoby 13+ · splinter · 4M weak.')}</div>
 <div>{lab('3 trumps')}{box('rsp','2M 6-9 · 3M 10-12 · 3NT 13-15 balanced · 13+: <b>2-over-1 first</b>, then support.')}</div>
-<div>{lab('0-2 trumps')}{box('rsp','1♠ over 1♥ with 4+ ♠ (6+) · <b>6-12: 1NT forcing</b> · <b>13+ (or 10-12 with ≤5 losers): new suit at the 2-level (GF)</b>.')}</div>
+<div>{lab('0-2 trumps')}{box('rsp','1♠ over 1♥ with 4+ ♠ (6+) · <b>6-12: 1NT forcing</b> · <b>13+: new suit at the 2-level (GF)</b>.')}</div>
 </div>
-{box('note','With 6-12 (6 losers or more) and a long suit, bid <b>1NT first</b> and show the suit next (to play with 6-9, a jump with 10-12). A 2-level new suit would promise game.')}'''
+{box('note','With 6-12 and a long suit of your own, bid <b>1NT first</b> and show the suit next (to play with 6-9, a jump with 10-12). A 2-level new suit would promise game.')}'''
 
 # ---------------- C: 1M – 1NT FORCING ----------------
 C = f'''{box('obk','1M – <b>1NT forcing</b> (6-12)')}
@@ -43,7 +43,7 @@ C = f'''{box('obk','1M – <b>1NT forcing</b> (6-12)')}
 # ---------------- D: AFTER A 2-OVER-1 ----------------
 D = f'''{box('obk','1M – <b>2x</b> (13+, <b>game forcing</b>)')}
 {arrow}
-{box('reb','<b>Opener bids naturally</b> (game is forced):<br>• 11-14: raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · a new suit below the barrier · 2NT balanced<br>• 15-19: show your shape, <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
+{box('reb','<b>Opener bids naturally</b> (game is forced):<br>• 11-14 (no jumps: losers count once a fit is found): raise responder’s minor with 4 (2♥ with 3) · rebid a 6-card major · a new suit below the barrier · 2NT balanced<br>• 15-19: show your shape, <b>no need to jump</b><br>• 18-19 balanced: 3NT')}
 {arrow}
 {box('rsp','<b>Responder places the game:</b> 4M with 3-card support (2 opposite a rebid six-card major) · <b>go slow</b>: with extras raise his major to 3 (or rebid your own six), and raise his new minor (4+) to 3; jumping to game = minimum · 3NT only with the unbid suits stopped and no void · else a second 5+ suit at the 3-level, or with a minor fit a stopper bid (opener: 3NT or 5m).<br><b>Slam:</b> 31+, or a fit and the losers say 12 tricks → RKCB (no void) or control bids (chart G).')}'''
 

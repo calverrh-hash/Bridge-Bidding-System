@@ -476,7 +476,7 @@ test('opener 11-14 with 6-4: show a 4-card major below the barrier, otherwise re
   const a = [[13, 4], [14, 12, 10, 7, 6, 3], [5], [13, 11, 8, 4]];          // 4-1-6-2, 13 HCP
   same(rebid(a, 1, 2, 1).bid, '1S', '1D-1H: 1S');
   const b = [[13, 4], [14, 12, 10, 7, 6, 3], [13, 11, 8, 4], [5]];          // 1-4-6-2
-  same(rebid(b, 1, 3, 1).bid, '3D', '1D-1S: 2H would be a reverse; with 5 losers the six diamonds jump to 3D');
+  same(rebid(b, 1, 3, 1).bid, '2D', '1D-1S: 2H would be a reverse; no fit yet, so the losers don\'t count: rebid 2D');
   const b6 = [[13, 4], [12, 10, 9, 7, 6, 3], [13, 11, 8, 4], [5]];           // 1-4-6-2, 6 losers
   same(rebid(b6, 1, 3, 1).bid, '2D', '1D-1S with 6 losers: 2D');
   const b7 = [[12, 11], [12, 10, 9, 7, 6, 3], [11, 9, 8, 4], [14]];         // 1-4-6-2, 11 HCP, 7 losers
@@ -497,7 +497,7 @@ test('transfer then 2NT: opener with 3+ in the major bids 3M with 15, 4M with 16
   same(sysCall(['1N', '2H', '2S', '2N'], min2).bid, 'P', '15 with two spades: pass');
   same(sysCall(['1N', '2D', '2H', '2N'], [[13, 9, 4], [14, 10, 6, 2], [13, 8, 3], [12, 11, 5]]).bid, '3H', 'hearts too');
 });
-test('opener 11-14: a 7-card suit or 5 losers jump rebids like 15-19', () => {
+test('opener 11-14: a 7-card suit jump rebids like 15-19; losers alone do not (no fit yet)', () => {
   // Hands are [clubs, diamonds, hearts, spades].
   const seven = [[9, 4], [8], [10, 6, 3], [14, 13, 10, 9, 7, 5, 2]];      // 7 spades, 7 HCP + ... = AK = 7
   seven[0] = [14, 4];                                                    // add the club ace: 11 HCP
@@ -505,7 +505,7 @@ test('opener 11-14: a 7-card suit or 5 losers jump rebids like 15-19', () => {
   const sixLosers = [[14, 4], [5], [13, 8, 3, 2], [14, 12, 10, 9, 7, 5]].map(x => x);  // 6-4-1-2
   sixLosers[3] = [14, 13, 11, 9, 7, 5]; sixLosers[2] = []; sixLosers[1] = [13, 8, 3, 2]; sixLosers[0] = [12, 4, 2];   // 6-0-4-3, 13 HCP, 5 losers
   check(losers(sixLosers) <= 5, 'test hand has 5 losers or fewer');
-  same(rebid(sixLosers, 3, 0, 2).bid, '3S', '1S-2C: six spades and 5 losers jump to 3S');
+  same(rebid(sixLosers, 3, 0, 2).bid, '2S', '1S-2C: six spades and 5 losers, but no fit yet: 2S');
   const plain6 = [[13, 4, 2], [12, 5], [8, 3], [14, 12, 10, 9, 7, 5]];    // 6-2-2-3, 11 HCP, 8 losers
   same(rebid(plain6, 3, 0, 2).bid, '2S', 'ordinary six-card minimum: 2S');
 });
