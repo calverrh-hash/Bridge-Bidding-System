@@ -809,3 +809,13 @@ test('review fixes: invite in an unbid six-card suit, 2/1 slow 3M slam try, 6-5 
     same(callFor('1S 2D 3D', 'K.K76.JT983.AQJ2'), '3N', 'singleton in partner\'s suit is fine for 3NT');
   } finally { Object.assign(SYS, was); }
 });
+
+test('minor fits are not skipped for 3NT: raise slowly in 2/1, then slam with the controls', () => {
+  const was = { ...SYS };
+  try {
+    SYS.twoOne = true;
+    same(callFor('1S 2C 2D', '-.A.KT7432.AQT985'), '3D', '2/1: raise the new minor');
+    same(callFor('1S 2C 2D 3D 3S', '-.A.KT7432.AQT985'), '6D', 'every side suit controlled, 3 losers: 6♦');
+    same(callFor('1S 1N 3D', '-.5.J98432.AK9765'), '6D', 'jump shift opposite a big diamond fit');
+  } finally { Object.assign(SYS, was); }
+});

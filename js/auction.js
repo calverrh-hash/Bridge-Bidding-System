@@ -147,9 +147,18 @@ function after2C(seq, h) {
   if (n === 3 && /^(2[HS]|3[CD])$/.test(x)) {
     const s = ST.indexOf(x[1]);
     if (s >= 2 && l[s] >= 3) return R(B(4, s), `Partner's ${plain(x)} shows 5+ ${SN[s]} and 2♣ forced to game. With ${l[s]} ${SN[s]} and a weak hand, raise to game: 4${SY[s]}.`, 'GUIDE.2c-rebid-answer');
+    const om = [3, 2].find(u => u !== s && l[u] >= 5 && bv(B(cheapest(u, x), u)) < bv('4C'));
+    if (om !== undefined) { const b = B(cheapest(om, x), om); return R(b, `Partner's ${plain(x)} shows 5+ ${SN[s]}. With ${cardsOf(l[s], s)} and ${NUM[l[om]]} ${SN[om]} of your own, show them: ${plain(b)}. Partner raises with support.`, 'GUIDE.2c-rebid-answer'); }
+    if (s < 2 && l[s] >= 3) return R(B(4, s), `Partner's ${plain(x)} shows 5+ ${SN[s]}, and you have ${l[s]}: a fit. Raise to 4${SY[s]} (still forcing): partner chooses between 5${SY[s]}, slam and 3NT.`, 'GUIDE.2c-rebid-answer');
     return R('3N', `Partner's ${plain(x)} shows 5+ ${SN[s]} and 2♣ forced to game. ${s >= 2 ? `With only ${cardsOf(l[s], s)}, bid 3NT.` : 'A minor-suit game needs eleven tricks, so bid 3NT.'}`, 'GUIDE.2c-rebid-answer');
   }
   if (n === 4 && gameBid(seq[3])) return AP('Partner chose the game.');
+  if (n === 4 && /^[34][CDHS]$/.test(seq[3])) {   // opener after the weak hand's raise or suit
+    const a = seq[3], as = ST.indexOf(a[1]), s = ST.indexOf(x[1]), k = losers(h);
+    if (as === s) { const t = 24 - k - 10; return t >= 12 ? R(B(6, s), `Partner raised your ${SN[s]}. Your ${k} losers opposite a weak hand (about 10): 24 − ${k + 10} = ${t} tricks: 6${SY[s]}.`, 'GUIDE.2c-rebid-answer') : R(B(5, s), `Partner raised your ${SN[s]}. Your ${k} losers opposite a weak hand (about 10): ${24 - k - 10} tricks: 5${SY[s]}.`, 'GUIDE.2c-rebid-answer'); }
+    if (as >= 2) return l[as] >= 2 ? R(B(4, as), `Partner shows five or more ${SN[as]}. With ${l[as]} of them: 4${SY[as]}.`, 'GUIDE.2c-rebid-answer') : R(s >= 2 ? B(4, s) : '3N', `Partner shows ${SN[as]}, but you have ${cardsOf(l[as], as)}: ${s >= 2 ? plain(B(4, s)) : '3NT'}.`, 'GUIDE.2c-rebid-answer');
+  }
+  if (n >= 5 && (gameBid(seq[n - 1]) || /^[67]/.test(seq[n - 1]))) return AP('Partner chose the game.');
   return gap('The chart has no continuation after this 2♣ rebid.');
 }
 
@@ -254,7 +263,8 @@ function openerAfterInvite(h, seq) {
     if (a === '2N' && x === '1N') { /* handled below */ }
     else if (a === '2N') return p >= 13 ? R('3N', `Partner's 2NT invites (11-12). With ${p} (13-14), accept: 3NT.`, 'GUIDE.invite-answer') : R('P', `Partner's 2NT invites. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
     else if (as >= 0 && as !== rs) {
-      const game = as >= 2 ? B(4, as) : '3N';
+      const unsafeNT = [0, 1, 2, 3].filter(u => u !== as && u !== o && u !== rs).some(u => !stop(h, u)) || L(h).some(n => n === 0);
+      const game = as >= 2 ? B(4, as) : unsafeNT && L(h)[as] >= 3 ? B(5, as) : '3N';
       return p >= 13 ? R(game, `Partner's ${plain(a)} invites (11-12). With ${p} (13-14), accept: ${plain(game)}.`, 'GUIDE.invite-answer') : R('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
     }
   }
@@ -351,6 +361,7 @@ function after1Major(seq, h) {
   if (r === '2N' && n === 4 && isCue(seq[3], M)) return cueReply(h, M, seq[3]);
   if (r === '2N' && n === 5 && isCue(seq[3], M)) return cueDecide(h, M, seq[3], seq[4], seq[2]);
   if (r === '2N' && n === 6 && isCue(seq[3], M)) return AP('Partner signed off.');
+  if (n >= 4 && /^[67][CDHSN]$/.test(seq[n - 1]) && !seq.includes('4N')) return AP('Partner bid the slam.');
   if (n === 4 && openerAfterChoice(h, seq)) return openerAfterChoice(h, seq);
   if (n === 5 && respAfterChoice(h, seq)) return respAfterChoice(h, seq);
   if (n === 4) {
@@ -397,7 +408,11 @@ function respAfter1NTF(h, M, x) {
   if (x === B(2, M)) return p >= 11 && l[M] >= 2 ? G(B(3, M), `Opener's 2${SY[M]} shows six. With ${p} (11-12) and ${l[M]} ${SN[M]}, invite: 3${SY[M]}.`) : G('P', `Opener's 2${SY[M]} shows six and a minimum. With ${p}, pass.`);
   if (x === B(3, M)) return p >= 8 ? G(l[M] >= 2 ? B(4, M) : '3N', `Opener's 3${SY[M]} shows 16-18 with six. With ${p}, bid game.`) : G('P', `Opener's 3${SY[M]} invites. With ${p} (6-7), pass.`);
   if (x === '2N') return p >= 7 ? G('3N', `Opener's 2NT shows 18-19 balanced. With ${p}, 3NT.`) : G('P', `Opener's 2NT shows 18-19. With ${p}, pass.`);
-  if (xs >= 0 && +x[0] === 3) return G(l[M] >= 2 ? B(4, M) : '3N', `Opener's jump shift is game forcing: bid game.`);
+  if (xs >= 0 && +x[0] === 3) {
+    if (l[xs] >= 4 && xs >= 2) return G(B(4, xs), `Opener's jump shift is game forcing (19+). With ${l[xs]} ${SN[xs]}: 4${SY[xs]}.`);
+    if (l[xs] >= 4) return minorSlamTry(h, xs, 5, `Opener's jump shift (19+) and your ${l[xs]} ${SN[xs]}`) || G(B(5, xs), `Opener's jump shift is game forcing (19+). With ${l[xs]} ${SN[xs]} and no clear route to 3NT, 5${SY[xs]}.`);
+    return G(l[M] >= 2 ? B(4, M) : '3N', `Opener's jump shift is game forcing: bid game.`);
+  }
   if (xs > M) return p >= 9 ? G('3N', `Opener's 2${SY[xs]} is a reverse (16+). With ${p}, 3NT.`) : G(l[M] >= 2 ? B(3, M) : '2N', `Opener's reverse is forcing. With ${p}, ${l[M] >= 2 ? `preference: 3${SY[M]}` : '2NT'}.`);
   // Opener's new suit (a minor may be only three cards; 2♥ after 1♠ shows four).
   const real = xs >= 2 ? 4 : 5;
@@ -485,6 +500,7 @@ function after1Minor(seq, h) {
     if (r === '2N' && x === B(3, m)) return R('P', `Opener's 3${SY[m]} after your 2NT is a sign-off (a minimum with a long ${SN[m].replace(/s$/, '')} suit): pass.`, 'C.after-2nt');
     return respAfterRebid(h, seq);
   }
+  if (n >= 4 && /^[67][CDHSN]$/.test(seq[n - 1]) && !seq.includes('4N')) return AP('Partner bid the slam.');
   if (n === 4 && openerAfterChoice(h, seq)) return openerAfterChoice(h, seq);
   if (n === 5 && respAfterChoice(h, seq)) return respAfterChoice(h, seq);
   if (n === 4) {

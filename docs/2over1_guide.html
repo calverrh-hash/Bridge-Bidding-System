@@ -156,12 +156,14 @@ const N = {
 
   // ---- Responder after the 2-over-1 ----
   r3: { q: 'What has opener shown?', opts: [
-    { t: 'A raise of my suit, or I have three of his major', go: 'r3_fit' },
+    { t: 'A raise of my suit, or I have three of his major', s: 'With extras (15+ or 6 losers), raise his major only to 3: slow shows slam interest', go: 'r3_fit' },
     { t: 'He rebid a six-card major and I hold two', go: 'r3_fit' },
     { t: 'He made a minimum rebid, and I have a good six-card major of my own and extras (16+ or 5 losers)', go: 'r3_slow' },
+    { t: 'He bid a new minor and I have four or more of it', go: 'r3_minor' },
     { t: 'No fit yet', go: 'r3_nofit' } ] },
   r3_fit: { bid: 'Game in the fit', why: '4M with a major fit. With a minor fit, 3NT only if you have the unbid suits stopped and no singleton. Otherwise show a stopper first (bid the suit you have stopped at the 3-level): partner bids 3NT with the rest covered, else 5 of the minor.', next: '<b>Slam?</b> With 31+ between you, or if the losers say 12 tricks (count opener as about 7 losers), ask with 4NT (RKCB). With a void, make a control bid instead.' },
   r3_slow: { bid: '3 of your major', why: 'Bid slowly: game is already forced, so 3 of your six-card major shows a good suit and slam interest. Jumping to 4 would show a minimum. Opener makes a control bid with a fit and an ace or void, or signs off in 4.', next: 'If opener shows a control and every suit is covered, bid the slam.' },
+  r3_minor: { bid: 'Raise to 3 of his minor', why: 'Game is already forced, so the quiet raise sets the trumps and leaves room. Opener shows his cheapest ace or void, or bids 3NT with the other suits stopped. Then bid the slam if you control every side suit and the losers say 12 tricks; otherwise 3NT or 5 of the minor.', next: 'Don’t jump to 3NT just because you have the points: with a big fit and few losers the minor slam is often there.' },
   r3_nofit: { bid: '3NT, or show your shape', why: '3NT only with the unbid suits stopped and no void (a singleton in partner’s suit is fine). With a second five-card suit, or a void in partner’s suit, show the suit at the 3-level first: the auction is still forcing, and partner raises with three or picks the game.' },
 
   // ---- Over 1♦ ----

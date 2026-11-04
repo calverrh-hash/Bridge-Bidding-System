@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-11-04
+
+- Minor-suit fits no longer get skipped for 3NT (both systems; checked across all drill hands):
+  - After opener's new minor (1♠ – 2♣ – 2♦) with four or more, responder raises. In 2/1, or after any 2-level response, he raises slowly to 3: opener shows his cheapest ace or void (or 3NT / 4m), and responder bids 6m when he controls every side suit and the losers say 12 tricks, else 5m or 3NT.
+  - Opener rebidding his own minor, and opener's reverse or jump shift, are treated the same way when responder holds a fit.
+  - With a void, a slam-going minor fit (12+ tricks on the losers) bids the slam directly when every side suit is controlled in your hand, instead of RKCB.
+  - After 1M – 1NT forcing and opener's jump shift, responder supports the new suit (6♦ with J98432 AK9765 and a void).
+  - After opener's 1NT rebid, responder with game values bids 3NT only when safe (otherwise his second suit, forcing).
+  - Opener accepting a minor-suit invitation bids 5m, not 3NT, with a void or an unstopped suit.
+  - 2♣ – 2♦ – 3♣/3♦: the weak hand raises the minor with three, or shows a five-card major, instead of 3NT; opener then picks 5m, 6m or the major game.
+  - 2/1: responder with three of opener's major and extras (15+ or 6 losers) raises slowly to 3M; opener makes a control bid or signs off.
+
 ## 2026-11-03
 
 - Competitive drills: the opponents are now dealt real hands that make their calls (an opening by the system's rules, an overcall with five cards, a double with 11+, a pass with 9 or less). Before, only partner was dealt, so after RHO's 1♥ partner could hold six hearts opposite your ♥AKQ and bid 4♥ in their suit. The natural continuation never bids the opponents' suit as a trump suit.
