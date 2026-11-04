@@ -791,11 +791,28 @@ test('after opener\'s jump rebid in his major, a fit and 31+ asks with RKCB', ()
 });
 
 test('game choice: 3NT only with the unbid suits stopped and no shortness; otherwise a stopper, a second suit, or 5m', () => {
-  same(callFor('1D 2C 3C', 'T.54.AKJ9.AJ8752'), '3D', 'minor fit, majors open: show the diamond stopper first');
+  same(callFor('1D 2C 3C', 'T.54.AKJ9.AJ8752'), '5C', 'minor fit, majors open, no stopper in an unbid suit: 5♣');
   same(callFor('1D 2C 3C 3D', '4.KJ8.Q8652.KQ96'), '5C', 'no spade stopper: 5♣');
   same(callFor('1D 2C 3C 3D', 'K4.KJ8.Q865.KQ96'), '3N', 'majors stopped: 3NT');
   same(callFor('1S 2D 2S', '-.AQ8652.AKJ984.Q'), '3H', 'void in his suit, 6-6: show hearts');
-  same(callFor('1D 2C 3C', 'KT.Q4.AJ9.AJ8752'), '3D', 'hearts thin: stopper first');
+  same(callFor('1D 2C 3C', 'KT.Q4.AJ9.AJ8752'), '3S', 'hearts thin: show the spade stopper (an unbid suit) first');
+});
+
+test('evening fixes: stoppers only in unbid suits, length before 3NT, 2/1 opener describes, 3NT with the unbid suit held', () => {
+  const was = { ...SYS };
+  try {
+    SYS.twoOne = false;
+    same(callFor('1D 2C 2D', '6.KJ4.Q943.AKJT2'), '2H', 'diamond fit, spades open: show the heart stopper (not 3♣, own suit)');
+    same(callFor('1D 2C 2D 2H', 'AJ4.Q2.AK8652.43'), '3N', 'spades stopped: 3NT');
+    same(callFor('1D 2C 2D 2H', '42.Q2.AK8652.Q43'), '3D', 'no spade stopper: back to diamonds');
+    same(callFor('1D 2C 2D 2H 3D', '6.KJ4.Q943.AKJT2'), '5D', 'then 5♦');
+    SYS.twoOne = true;
+    same(callFor('1H 2D 2N', '8.T.KT9864.AKQJ4'), '3C', '6-5, no fit yet: show the clubs before 3NT');
+    same(callFor('1S 2D', 'QJ965.8.A43.AQT9'), '3C', '2/1: show the four clubs, no barrier');
+    same(callFor('1S 2D 2S 3H', 'QJ965.8.A43.AQT9'), '3N', 'clubs well stopped: 3NT, not 4♦');
+  } finally { Object.assign(SYS, was); }
+  same(cuePlace(parseHand('QJ542.A9.Q863.KT'), 0, '2H').bid, '2S', 'after the cue bid, five spades over 2♥: 2♠, no jump (already forcing)');
+  same(cueRaise(parseHand('K93.KJ84.AJ72.65'), 0, '2S').bid, '4S', 'doubler raises the 2♠ with three');
 });
 
 test('review fixes: invite in an unbid six-card suit, 2/1 slow 3M slam try, 6-5 shows the second suit, singleton in partner\'s suit allows 3NT', () => {

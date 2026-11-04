@@ -213,7 +213,7 @@ function cueDeal(role) {
       if (n === 3) return advance(h, x);
       if (n === 5) return cueAnswer(h, x, c);
       if (n === 7) return cuePlace(h, x, c[5]);
-      if (n === 9 && /^3[HS]$/.test(c[7]) && c[7][1] !== c[5][1]) return cueRaise(h, x, c[7]);
+      if (n === 9 && /^[23][HS]$/.test(c[7]) && c[7][1] !== c[5][1]) return cueRaise(h, x, c[7]);
       return AP('');
     };
     return sim4(H, role === 'adv' ? 'W' : 'E', F, role === 'adv' ? `LHO opened ${plain(ob.bid)}; partner made a takeout double.` : `RHO opened ${plain(ob.bid)}.`);

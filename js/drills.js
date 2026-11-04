@@ -352,8 +352,8 @@ const SETS = [
           const h = deal(rng, rl(rng, sp({ [y]: [ri(rng, 1, 4), 4] }, [0, 5])), 3, 12);
           return oneCall('W', [B(1, x), ov, 'P'], h, `LHO opened 1${SY[x]}; partner made a weak jump overcall, ${plain(ov)}.`, rng, { lens: sp({ [y]: [6, 6], [x]: [0, 3] }, [0, 4]), hcp: [5, 10] });
         },
-        ADV,
-        ADV,
+        want(ADV, 'F.advance-jump'),
+        want(ADV, 'F.advance-min'),
         CAP(r => rl(r, sp({ 2: [4, 5], 3: [4, 5] }, [0, 4])), 8, 14),
         CAP(r => { const M = ri(r, 2, 3), m = ri(r, 0, 1); return rl(r, sp({ [M]: [5, 6], [5 - M]: [0, 3], [m]: [4, 5] }, [0, 4])); }, 8, 14),
         CAP(r => { const s = ri(r, 0, 3); return rl(r, sp({ [s]: [6, 7] }, [0, 3])); }, 8, 13),

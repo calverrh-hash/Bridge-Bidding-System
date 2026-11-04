@@ -408,6 +408,14 @@ function rebid(h, o, r, lvl) {
     if (l[o] >= 6 && five !== undefined) { const b = B(cheapest(five, resp), five); return R(b, `${p} HCP, ${NUM[l[o]]} ${SN[o]} and five ${SN[five]}: 6-5, come alive. Show the second suit now, ${plain(b)} (below the barrier, no extra strength promised), and rebid your ${SN[o]} next time, so partner knows you're 6-5.`, 'D.new-suit'); }
     if (jumpByShape) return shapeJump();
     if (l[o] >= 6) return R(B(2, o), `Unbalanced 11-14 with ${NUM[l[o]]} ${SN[o]}: simple rebid of 2${SY[o]}.${others.some(s => s >= 2 && l[s] >= 4) ? ' Your 4-card major would be a reverse here (above the barrier, 16+), so rebid the long suit.' : ''}`, 'D.rebid-suit');
+    // 2/1 after a 2-over-1: game is forced, so there is no barrier. Describe the hand: a four-card
+    // second suit at the cheapest level, else a raise of partner's minor with three, before rebidding a five-card major.
+    if (gf21) {
+      const side = others.filter(s => l[s] >= 4);
+      if (side.length > 1) return amb('More than one four-card suit to show.');
+      if (side.length === 1) { const s = side[0], b = B(cheapest(s, resp), s); return R(b, `Game is forced by the 2-over-1, so there is no barrier: a new suit shows shape, not extra strength. Show your four ${SN[s]}: ${plain(b)}. You can support partner or rebid your ${SN[o]} next.`, 'D.21-describe'); }
+      if (o >= 2 && r < 2 && l[r] >= 3) { const b = B(3, r); return R(b, `Game is forced by the 2-over-1. With ${l[r]} ${SN[r]} you have a fit: show it now, ${plain(b)}. Rebidding 2${SY[o]} would say "nothing else to show", which isn't true.`, 'D.21-describe'); }
+    }
     const below = others.filter(s => l[s] >= 4 && bv(B(cheapest(s, resp), s)) <= bv(bar));
     if (below.length > 1) return amb('More than one four-card suit could be shown below the barrier.');
     if (below.length === 1) {
@@ -496,16 +504,19 @@ function minorSlamTry(h, T, pl, desc) {
 // hasn't bid stopped in your hand, and no singleton or void; otherwise show a second five-card
 // suit, show a stopper on the way (with a minor fit), or bid five of the minor.
 // used: suits your side has bid; fitM: an agreed minor (or -1). Returns null when 3NT is fine.
-function gameChoice(h, x, used, fitM, why, id, noNewSuit) {
+function gameChoice(h, x, used, fitM, why, id, noNewSuit, rl) {
   const l = L(h), unbid = [0, 1, 2, 3].filter(u => !used.includes(u));
   const open = unbid.filter(u => !stop(h, u)), short = l.some(n => n === 0);   // a singleton in partner's suit is fine; an unbid singleton shows up as unstopped
-  if (!open.length && !short) return null;
   const nm = a => a.map(u => SN[u]).join(' and ');
+  // No fit yet: a second five-card suit is shown before 3NT (length first, while looking for a fit).
   const sec = unbid.filter(u => l[u] >= 5 && bv(B(cheapest(u, x), u)) < bv('4C')).sort((a, b) => l[b] - l[a] || b - a)[0];
-  if (sec !== undefined && !noNewSuit && fitM < 0) { const b = B(Math.max(3, cheapest(sec, x)), sec); return R(b, `${why}. No-trumps doesn't suit this hand (${open.length ? `nothing in ${nm(open)}` : 'a void'}), so show your ${NUM[l[sec]]} ${SN[sec]}: ${plain(b)}, forcing. Partner raises with three, or picks the game.`, 'D.game-choice'); }
+  if (sec !== undefined && !noNewSuit && fitM < 0) { const b = B(Math.max(3, cheapest(sec, x)), sec); return R(b, `${why}. No fit has been found yet, so show your length before settling for no-trumps: your ${NUM[l[sec]]} ${SN[sec]}, ${plain(b)}, forcing. Partner raises with support, or picks the game.`, 'D.game-choice'); }
+  if (!open.length && !short) return null;
   if (fitM >= 0) {
-    const sh = [0, 1, 2, 3].filter(u => u !== fitM && stop(h, u) && bv(B(Math.max(3, cheapest(u, x)), u)) < bv('3N')).sort((a, b) => a - b)[0];
-    if (sh !== undefined && !noNewSuit && open.length && open.length < unbid.length + 1) { const b = B(Math.max(3, cheapest(sh, x)), sh); return R(b, `${why}. 3NT is only safe if partner covers ${nm(open)}, so show your ${SN[sh].replace(/s$/, '')} stopper first: ${plain(b)}. Partner bids 3NT with the other suits stopped, otherwise 5${SY[fitM]}.`, 'D.game-choice'); }
+    // Stoppers are shown only in suits nobody has bid, at the cheapest level (the 2-level is fine after a 2-level response: game is in view and a new suit is forcing).
+    const lo = rl === 2 ? 2 : 3;
+    const sh = unbid.filter(u => stop(h, u) && bv(B(Math.max(lo, cheapest(u, x)), u)) < bv('3N')).sort((a, b) => a - b)[0];
+    if (sh !== undefined && !noNewSuit && open.length) { const b = B(Math.max(lo, cheapest(sh, x)), sh); return R(b, `${why}. 3NT is only safe if partner covers ${nm(open)}, so show your ${SN[sh].replace(/s$/, '')} stopper first: ${plain(b)}. Partner bids 3NT with the other suits stopped; otherwise he goes back to ${SN[fitM]} and you play 5${SY[fitM]}.`, 'D.game-choice'); }
     return R(B(5, fitM), `${why}. With ${open.length ? `nothing in ${nm(open)}` : 'a void'}, no-trumps is risky: play in your minor fit, 5${SY[fitM]}.`, 'D.game-choice');
   }
   return null;
@@ -513,6 +524,14 @@ function gameChoice(h, x, used, fitM, why, id, noNewSuit) {
 // Opener's third call after responder's game-choice bids above (new suit at the 3-level, or a stopper).
 function openerAfterChoice(h, seq) {
   const p = hcp(h), l = L(h), o = ST.indexOf(seq[0][1]), r = seq[1], x = seq[2], a = seq[3];
+  // We rebid our minor after a 2-level response; partner (with a fit) shows a stopper in a new suit.
+  if (o < 2 && /^\d[CDHS]$/.test(r) && +r[0] === 2 && x === B(cheapest(o, r), o) && /^[23][CDHS]$/.test(a || '') && a[1] !== ST[o] && a[1] !== r[1]) {
+    const as = ST.indexOf(a[1]), rest = [0, 1, 2, 3].filter(u => u !== o && u !== as && u !== ST.indexOf(r[1]));
+    if (as >= 2 && l[as] >= 4) return R(B(4, as), `Partner's ${plain(a)} shows ${SN[as]} (a stopper at least), and you hold four: game in the major, 4${SY[as]}.`, 'D.game-choice');
+    if (rest.every(u => stop(h, u))) return R('3N', `Partner's ${plain(a)} shows a ${SN[as].replace(/s$/, '')} stopper and asks about the rest. You have ${rest.map(u => SN[u]).join(' and ')} stopped: 3NT.`, 'D.game-choice');
+    const b = B(cheapest(o, a), o);
+    return R(b, `Partner's ${plain(a)} shows a ${SN[as].replace(/s$/, '')} stopper, but you have nothing in ${rest.filter(u => !stop(h, u)).map(u => SN[u]).join(' or ')}. Go back to your ${SN[o]}: ${plain(b)} says "no stopper", and partner picks 5${SY[o]}.`, 'D.game-choice');
+  }
   if (!/^\d[CDHS]$/.test(r) || !/^3[CDHS]$/.test(a)) return undefined;
   const rs = ST.indexOf(r[1]), xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, as = ST.indexOf(a[1]);
   // 2/1: partner's slow 3M after our minimum rebid shows slam interest.
@@ -553,6 +572,7 @@ function openerAfterChoice(h, seq) {
     const rest = [0, 1, 2, 3].filter(u => ![o, rs, as, xs].includes(u));
     if (o < 2 && xs === o && rest.length && rest.every(u => stop(h, u))) return R('3N', `Partner's ${plain(a)} shows a stopper (or a second suit) and is forcing. You have ${rest.map(u => SN[u]).join(' and ')} stopped: 3NT.`, 'D.game-choice');
     if (as >= 2 && l[as] >= 3) return R(B(4, as), `Partner's ${plain(a)} shows a second long suit and is forcing. With ${l[as]} ${SN[as]}: 4${SY[as]}.`, 'D.game-choice');
+    if (rest.length && rest.every(u => stop(h, u)) && !(as < 2 && l[as] >= 4)) return R('3N', `Partner's ${plain(a)} is forcing. No major fit, and you hold the one suit nobody has bid (${rest.map(u => SN[u]).join(' and ')}) well stopped: 3NT. Nine tricks are easier than eleven, so don't bypass it for a minor.`, 'D.game-choice');
     if (rest.every(u => stop(h, u)) && l[as] >= 2 && l[rs] >= 2) return R('3N', `Partner's ${plain(a)} is forcing. You have ${rest.map(u => SN[u]).join(' and ') || 'the other suit'} stopped and something in his suits: 3NT.`, 'D.game-choice');
     if (l[rs] >= 3) { const b = B(cheapest(rs, a), rs); return R(b, `Partner's ${plain(a)} is forcing. With ${l[rs]} ${SN[rs]}, support his first suit: ${plain(b)}.`, 'D.game-choice'); }
     if (l[as] >= 4) { const b = B(cheapest(as, a), as); return R(b, `Partner's ${plain(a)} is forcing. With ${l[as]} ${SN[as]}, raise: ${plain(b)}.`, 'D.game-choice'); }
@@ -565,6 +585,13 @@ function openerAfterChoice(h, seq) {
 // Responder's third call after his game-choice bid: pick the game.
 function respAfterChoice(h, seq) {
   const l = L(h), o = ST.indexOf(seq[0][1]), r = seq[1], a = seq[3], z = seq[4];
+  // Our stopper show (fit for opener's rebid minor); opener went back to the minor: no stopper, so 5m.
+  if (o < 2 && /^\d[CDHS]$/.test(r) && +r[0] === 2 && seq[2] === B(cheapest(o, r), o) && /^2[CDHS]$/.test(a || '') && a[1] !== ST[o] && a[1] !== r[1]) {
+    if (z === 'P' || gameBid(z) || /^[567]/.test(z || '')) return AP('Partner chose the game.');
+    if (z === '2N') return R('3N', `Partner's 2NT shows the missing stopper: 3NT.`, 'D.game-choice');
+    if (z && z[1] === ST[o]) return R(B(5, o), `Partner went back to ${SN[o]}: no stopper in the open suit. Play the minor game, 5${SY[o]}.`, 'D.game-choice');
+    return R(B(5, o), `No sure stopper in every suit: play 5${SY[o]}.`, 'D.game-choice');
+  }
   if (!/^\d[CDHS]$/.test(r) || !/^3[CDHS]$/.test(a || '')) return undefined;
   // We raised opener's new minor slowly; he answered. Slam, 5m or 3NT.
   const xs2 = /^\d[CDHS]$/.test(seq[2]) ? ST.indexOf(seq[2][1]) : -1;
@@ -603,7 +630,7 @@ function respAfterRebid(h, seq) {
     if (rs < 2) {   // opener raised responder's minor: no-trump is the usual game
       const o0 = ST.indexOf(seq[0][1]), mj = o0 >= 2 && l[o0] >= 3;
       if (xl >= rl + 2) return p >= 10 ? R(mj ? B(4, o0) : '3N', `Opener's jump raise shows 15-19. With ${p} (10+) bid game: ${mj ? `4${SY[o0]}, with ${l[o0]} of opener's ${SN[o0]}` : '3NT, nine tricks instead of eleven'}.`, 'D.after-double-raise') : R('P', `Opener's jump raise shows 15-19. With ${p} (6-9), pass.`, 'D.after-double-raise');
-      const gc = why => gameChoice(h, x, [rs, o0], rs, why, 'D.after-raise');
+      const gc = why => gameChoice(h, x, [rs, o0], rs, why, 'D.after-raise', false, rl);
       if (!mj && ((xl >= rl + 2 && p >= 10) || (xl === 2 && p >= 13) || (xl !== 2 && xl < rl + 2 && p >= 12))) { const sl = minorSlamTry(h, rs, xl >= rl + 2 ? 6 : 7, `Opener raised your ${SN[rs]}`); if (sl) return sl; const c = gc(`Opener raised your ${SN[rs]}: a fit, and game values`); if (c) return c; }
       if (xl === 2) return p >= 13 ? R('3N', `Opener's raise shows 11-14. With ${p} (13+), bid 3NT.`, 'D.after-raise') : p >= 11 ? R('2N', `Opener's raise shows 11-14. With ${p} (11-12), invite with 2NT.`, 'D.after-raise') : R('P', `Opener's raise shows 11-14. With ${p} (10 or less), pass.`, 'D.after-raise');
       return p >= 12 ? R(mj ? B(4, o0) : '3N', `Opener's ${plain(x)} shows 11-14. With ${p} (12+) bid game: ${mj ? `4${SY[o0]}, with ${l[o0]} of opener's ${SN[o0]}` : '3NT'}.`, 'D.after-raise') : R('P', `Opener's ${plain(x)} shows 11-14. With ${p}, pass.`, 'D.after-raise');
@@ -672,7 +699,7 @@ function respAfterRebid(h, seq) {
       if (own6 && rs >= 2 && SYS.twoOne && rl === 2 && (p >= 16 || losers(h) <= 5)) return R(B(3, rs), `Opener's ${plain(x)} is a minimum, but game is already forced. With ${p} HCP and ${losers(h)} losers you have slam interest: bid slowly, 3${SY[rs]} (a good six-card suit, forcing). Jumping to 4${SY[rs]} would show a minimum (fast arrival).`, 'D.21-slow');
       if (own6 && rs >= 2) return R(B(4, rs), `Opener's ${plain(x)} is a minimum. With ${p} (13+) and ${NUM[l[rs]]} ${SN[rs]}, bid 4${SY[rs]}.`, 'D.after-minimum');
       if (o < 2 && l[o] >= 3) { const sl = minorSlamTry(h, o, 7, `Opener rebid his ${SN[o]} and you hold ${l[o]}`); if (sl) return sl; }
-      return gameChoice(h, x, [o, rs], o < 2 && l[o] >= 3 ? o : -1, `Opener's ${plain(x)} is a minimum (11-14) and you have game values (${p})`, 'D.after-minimum', rl === 1) || R('3N', `Opener's ${plain(x)} is a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
+      return gameChoice(h, x, [o, rs], o < 2 && l[o] >= 3 ? o : -1, `Opener's ${plain(x)} is a minimum (11-14) and you have game values (${p})`, 'D.after-minimum', rl === 1, rl) || R('3N', `Opener's ${plain(x)} is a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
     }
     if (xl === 3 && o < 2 && x === B(cheapest(o, r) + 1, o)) {   // jump rebid of a minor: 15-19, 6+ cards
       const unsafe = [0, 1, 2, 3].filter(u => u !== o && u !== rs).some(u => !stop(h, u)) || l.some(n => n === 0);
@@ -693,11 +720,15 @@ function respAfterRebid(h, seq) {
     return gap('The chart has no continuation after this rebid.');
   }
   if (x === '2N' && rl === 2) {   // 12-14 balanced after a 2-level response
+    // No fit yet: with a second five-card suit (or 6-5), show it before settling for 3NT.
+    const o2 = ST.indexOf(seq[0][1]), sec2 = [0, 1, 2, 3].filter(u => u !== rs && u !== o2 && l[u] >= 5 && l[rs] >= 5).sort((a, b) => l[b] - l[a] || b - a)[0];
+    if (p >= 11 && sec2 !== undefined && !(o2 >= 2 && l[o2] >= 3)) return R(B(3, sec2), `Opener's 2NT shows 12-14 balanced, and game is on. No fit has been found yet, so show your shape before settling for no-trumps: ${plain(B(3, sec2))} shows ${NUM[l[rs]]} ${SN[rs]} and ${NUM[l[sec2]]} ${SN[sec2]}, forcing. Partner supports one of your suits, or bids 3NT with the rest well held.`, 'D.game-choice');
     if (p >= 11) return o >= 2 && l[o] >= 3 ? R(B(4, o), `Opener's 2NT shows 12-14 balanced. With ${p} (11+) and ${l[o]} ${SN[o]}, bid 4${SY[o]}.`, 'D.after-1nt') : R('3N', `Opener's 2NT shows 12-14 balanced. With ${p} (11+), bid 3NT.`, 'D.after-1nt');
     return R('P', `Opener's 2NT shows 12-14 balanced. With ${p} (9-10), pass.`, 'D.after-1nt');
   }
   if (x === '3N' || gameBid(x)) return AP('Opener bid game.');
-  if (xs < 4 && xs !== rs && xs !== o && bv(x) > bv(B(2, o))) {   // reverse (15-19) or jump shift (20-22)
+  const low21 = SYS.twoOne && rl === 2 && xs < 4 && xs !== rs && xs !== o && xl === cheapest(xs, r);   // 2/1: no barrier after a 2-over-1
+  if (xs < 4 && xs !== rs && xs !== o && bv(x) > bv(B(2, o)) && !low21) {   // reverse (15-19) or jump shift (20-22)
     const js = xl === cheapest(xs, r) + 1, fitO = o >= 2 && l[o] >= 3, fitX = xs >= 2 && l[xs] >= 4;
     const tag = js ? "Opener's jump shift shows 20-22 and is game forcing" : "Opener's reverse shows 15-19 and is forcing";
     if (js || p >= 10) {
@@ -713,7 +744,7 @@ function respAfterRebid(h, seq) {
     if (l[rs] >= 5) return R(B(cheapest(rs, x), rs), `${tag}. With ${p} (6-9), rebid your ${SN[rs]}: ${plain(B(cheapest(rs, x), rs))}.`, 'D.after-reverse');
     return R(bv('2N') > bv(x) ? '2N' : '3N', `${tag}. With ${p} (6-9) and nothing else to say, ${bv('2N') > bv(x) ? '2NT' : '3NT'}.`, 'D.after-reverse');
   }
-  if (xs < 4 && xs !== rs && bv(x) <= bv(B(2, o))) {   // new suit below the barrier: 11-14
+  if (xs < 4 && xs !== rs && (bv(x) <= bv(B(2, o)) || low21)) {   // new suit below the barrier: 11-14
     if (p > 10) {
       if (p <= 12) {
         if (l[o] >= 3) return R(B(3, o), `Opener's ${plain(x)} shows a minimum with a second suit. With ${p} (11-12) and ${l[o]} ${SN[o]}, invite with 3${SY[o]}.`, 'D.after-minimum');
@@ -728,9 +759,9 @@ function respAfterRebid(h, seq) {
       if (xs < 2 && l[xs] >= 4) {
         if (rl === 2) return R(B(3, xs), `Opener's ${plain(x)} shows four or more ${SN[xs]}, and you have ${l[xs]}: a fit. Game is already forced, so raise slowly: 3${SY[xs]} sets the trumps and leaves room to look for slam (control bids) or choose between 3NT and 5${SY[xs]}.`, 'D.game-choice');
         const sl = minorSlamTry(h, xs, 7, `Opener's ${plain(x)} and your ${l[xs]} ${SN[xs]}`); if (sl) return sl;
-        const c = gameChoice(h, x, [o, rs, xs], xs, `Opener's ${plain(x)}: a ${SN[xs].replace(/s$/, '')} fit, and game values (${p})`, 'D.after-minimum', true); if (c) return c;
+        const c = gameChoice(h, x, [o, rs, xs], xs, `Opener's ${plain(x)}: a ${SN[xs].replace(/s$/, '')} fit, and game values (${p})`, 'D.after-minimum', true, rl); if (c) return c;
       }
-      return gameChoice(h, x, [o, rs, xs], -1, `Opener's ${plain(x)} shows a minimum (11-14) and you have game values (${p})`, 'D.after-minimum', rl === 1) || R('3N', `Opener's ${plain(x)} shows a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
+      return gameChoice(h, x, [o, rs, xs], -1, `Opener's ${plain(x)} shows a minimum (11-14) and you have game values (${p})`, 'D.after-minimum', rl === 1, rl) || R('3N', `Opener's ${plain(x)} shows a minimum (11-14). With ${p} (13+), bid 3NT.`, 'D.after-minimum');
     }
     if (l[o] >= l[xs] && l[o] >= 2) {
       const b = B(cheapest(o, x), o);

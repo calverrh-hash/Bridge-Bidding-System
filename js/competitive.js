@@ -130,8 +130,8 @@ function cueAnswer(h, x, calls) {
 }
 // Advancer with a 5-card major not yet shown: bid it at the 3-level (forcing), or 4 if no room.
 function showMajor(h, x, ans, om) {
-  const l = L(h), b3 = B(3, om);
-  if (bv(b3) > bv(ans)) return R(b3, `You have ${l[om]} ${SN[om]}. Bid ${plain(b3)}: natural and forcing (the cue bid set up a game force). Partner bids 4${SY[om]} with three or more, or 3NT with only two and a ${SN[x]} stopper.`, 'F.cue-major');
+  const l = L(h), b3 = B(cheapest(om, ans), om);
+  if (+b3[0] <= 3) return R(b3, `You have ${l[om]} ${SN[om]}. Bid ${plain(b3)}, the cheapest level: the cue bid has set up a game force, so it is forcing and there is no need to jump. Partner bids 4${SY[om]} with three or more, or 3NT with only two and a ${SN[x]} stopper.`, 'F.cue-major');
   return R(B(4, om), `You have ${l[om]} ${SN[om]} and no room to show them below game, and partner's double promised at least three: 4${SY[om]}.`, 'F.cue-major');
 }
 // Advancer places the contract after the doubler's answer `ans`.
@@ -155,7 +155,7 @@ function cuePlace(h, x, ans) {
 }
 // Doubler after advancer shows a 5-card major at the 3-level.
 function cueRaise(h, x, bid) {
-  const l = L(h), s = ST.indexOf(bid[1]);
+  const l = L(h), s = ST.indexOf(bid[1]);   // advancer's 2M or 3M after the cue bid: five+, forcing
   if (l[s] >= 3) return R(B(4, s), `Partner's ${plain(bid)} shows five or more ${SN[s]}, forcing. With ${l[s]} you have a fit: 4${SY[s]}.`, 'F.cue-raise');
   if (stop(h, x)) return R('3N', `Partner's ${plain(bid)} shows five ${SN[s]}, but you have only ${l[s]} and a ${SN[x]} stopper: 3NT.`, 'F.cue-raise');
   return R(B(4, s), `Partner's ${plain(bid)} shows five ${SN[s]}. With no ${SN[x]} stopper, the 5-2 fit is still the best game: 4${SY[s]}.`, 'F.cue-raise');
@@ -505,6 +505,9 @@ function contCall(st, h) {
   if (x0 !== undefined && his.length && his[his.length - 1].call[1] === ST[x0] && nat(his[his.length - 1].call) && mine.length && mine[0].call === 'X') {
     return cueAnswer(h, x0, tagged.map(t => t.call));
   }
+  // Advancer showed a five-card major after our cue-bid answer: raise with three, else 3NT / 4M.
+  if (x0 !== undefined && mine.length === 2 && mine[0].call === 'X' && his.length === 2 && his[0].call[1] === ST[x0] && nat(his[0].call)
+    && /^[23][HS]$/.test(his[1].call) && his[1].call[1] !== mine[1].call[1]) return cueRaise(h, x0, his[1].call);
   if (x0 !== undefined && mine.length >= 1 && mine[mine.length - 1].call[1] === ST[x0] && nat(mine[mine.length - 1].call) && his.length && his[0].call === 'X') {
     const ans = his[his.length - 1].call, r = cuePlace(h, x0, ans);
     if (isCall(r)) return r;
