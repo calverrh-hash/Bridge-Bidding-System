@@ -475,6 +475,14 @@ function supportAfterNewSuit(h, M, r, x) {
     || (xs < 4 && xs !== M && xs !== rs && +x[0] === cheapest(xs, r) && bv(x) <= bv(B(2, M)));
   // Opener's jump rebid in the major (15-19, six cards): a fit is known, so chart D ("10+ game")
   // and chart G (31+ with a fit asks 4NT) decide.
+  // 2/1: after a 2-over-1 game is forced and opener's new suit shows shape, not extras. Agree the major
+  // slowly with extras (slam interest), jump to game with a minimum (fast arrival).
+  if (SYS.twoOne && r[0] === '2' && x !== '3N' && x !== B(3, M) && x !== B(4, M) && bv(x) < bv(B(3, M))) {
+    const k = losers(h), what = xs === M ? `rebid his ${SN[M]}` : xs === 4 ? `shows a balanced hand` : `shows his ${SN[xs]}`;
+    const sl = ltcSlam(h, M, 7, `Opener's ${plain(x)} and your ${NUM[L(h)[M]]}-card support`); if (sl) return sl;
+    if (p >= 15 || k <= 6) return R(B(3, M), `Opener's ${plain(x)} ${what}. In 2/1 that promises no extra strength: game is already forced. You have ${NUM[L(h)[M]]}-card support, so agree ${SN[M]} now (the fit comes first), and with ${p} HCP and ${k} losers you have slam interest: bid slowly, ${plain(B(3, M))}. Partner starts control bids with extras, or signs off in 4${SY[M]}. Don't show side suits here: they come later as controls.`, 'D.21-slow');
+    return R(B(4, M), `Opener's ${plain(x)} ${what}. In 2/1 that promises no extra strength. With ${NUM[L(h)[M]]}-card support and a minimum (${k} losers), jump to game: 4${SY[M]} (fast arrival says "nothing more to say").`, 'B.support-after-new-suit');
+  }
   if (x === B(3, M) && r[0] === '1') return slamTry(h, M, 15, `Opener's jump to ${plain(x)} (15-19)`) || R(B(4, M), `Opener's jump to ${plain(x)} shows 15-19 with six ${SN[M]}. With three-card support and ${p}, bid game: 4${SY[M]}.`, 'D.after-jump-rebid');
   if (!minimum) {   // opener showed extras: 18-19 balanced (2NT, or 3NT after a 2-level response) or 15-19
     const mn = x === '3N' || x === '2N' ? 18 : 15;
@@ -523,6 +531,18 @@ function gameChoice(h, x, used, fitM, why, id, noNewSuit, rl) {
   return null;
 }
 // Opener's third call after responder's game-choice bids above (new suit at the 3-level, or a stopper).
+// 2/1: we cue-bid after partner's slow 3M; partner cue-bid back. Slam or 4M.
+function openerAfterCue21(h, seq) {
+  if (!SYS.twoOne || seq.length !== 6) return undefined;
+  const o = ST.indexOf(seq[0][1]), r = seq[1], a = seq[3], z = seq[4], c = seq[5];
+  if (!(+r[0] === 2 && o >= 2 && a === B(3, o) && isCue(z, o) && isCue(c, o) && bv(c) < bv(B(4, o)))) return undefined;
+  const k = losers(h), t = 24 - k - 6, shown = [ST.indexOf(z[1]), ST.indexOf(c[1])];
+  const open = [0, 1, 2, 3].filter(u => u !== o && !shown.includes(u) && !firstCtl(h, u) && !secondCtl(h, u));
+  if (t >= 12 && !open.length) return kcList(h, o).length + 1 >= 3 && !L(h).some(n => n === 0)
+    ? R('4N', `Partner's ${plain(c)} shows ${SN[ST.indexOf(c[1])]} control. Every suit is covered and your ${k} losers opposite his slam try (about 6) say ${t} tricks: ask for key cards, 4NT.`, 'G.rkcb-ask')
+    : R(B(6, o), `Partner's ${plain(c)} shows ${SN[ST.indexOf(c[1])]} control. Every suit is covered and your ${k} losers opposite about 6 say ${t} tricks: 6${SY[o]}.`, 'G.cue-bid-decide');
+  return R(B(4, o), `Partner's ${plain(c)} shows ${SN[ST.indexOf(c[1])]} control, but ${open.length ? `${open.map(u => SN[u]).join(' and ')} may be open` : `your ${k} losers opposite about 6 give only ${t} tricks`}: sign off in 4${SY[o]}.`, 'G.cue-bid-decide');
+}
 function openerAfterChoice(h, seq) {
   const p = hcp(h), l = L(h), o = ST.indexOf(seq[0][1]), r = seq[1], x = seq[2], a = seq[3];
   // After our jump shift, partner rebids his major: raise with three, else 3NT.
@@ -543,7 +563,7 @@ function openerAfterChoice(h, seq) {
   if (!/^\d[CDHS]$/.test(r) || !/^3[CDHS]$/.test(a)) return undefined;
   const rs = ST.indexOf(r[1]), xs = /^\d[CDHS]$/.test(x) ? ST.indexOf(x[1]) : -1, as = ST.indexOf(a[1]);
   // 2/1: partner's slow 3M after our minimum rebid shows slam interest.
-  if (SYS.twoOne && +r[0] === 2 && as === o && o >= 2 && xs !== o && +x[0] === 2 && a === B(3, o)) {
+  if (SYS.twoOne && +r[0] === 2 && as === o && o >= 2 && xs !== o && bv(x) < bv(a) && a === B(3, o)) {
     const c = cheapestCue(h, o, a);
     if (c && (p >= 13 || kcList(h, o).length >= 2)) return R(c[1], `Partner's slow 3${SY[o]} agrees your ${SN[o]} with slam interest. Show your cheapest ace or void: ${plain(c[1])} (a control bid).`, 'G.cue-bid-answer');
     return R(B(4, o), `Partner's 3${SY[o]} agrees your ${SN[o]} with slam interest. With a minimum and nothing to show, sign off: 4${SY[o]}.`, 'G.cue-bid-answer');
@@ -612,10 +632,13 @@ function respAfterChoice(h, seq) {
     return R(B(5, T), `${t >= 12 ? `Slam is possible on the losers, but ${open.map(u => SN[u]).join(' and ')} may be open` : `Your ${k} losers opposite about 7 say ${t} tricks`}: play 5${SY[T]}.`, 'G.cue-bid-decide');
   }
   // 2/1 slam try (3M): opener answered with a control bid.
-  const slowT = a === B(3, ST.indexOf(r[1])) ? ST.indexOf(r[1]) : a === B(3, o) && o >= 2 && /^2[CDHS]$/.test(seq[2]) && seq[2][1] !== seq[0][1] ? o : -1;
+  const slowT = a === B(3, ST.indexOf(r[1])) ? ST.indexOf(r[1]) : a === B(3, o) && o >= 2 && /^[23][CDHSN]$/.test(seq[2]) && seq[2][1] !== seq[0][1] && bv(seq[2]) < bv(a) ? o : -1;
   if (SYS.twoOne && +r[0] === 2 && slowT >= 2 && isCue(z, slowT)) {
     const T = slowT, zs = ST.indexOf(z[1]), k = losers(h);
     const open = [0, 1, 2, 3].filter(u => u !== T && u !== zs && u !== o && !firstCtl(h, u) && !secondCtl(h, u));
+    // Not enough on our own: show our own cheapest control below game, and let partner decide.
+    const myc = [0, 1, 2, 3].filter(u => u !== T && firstCtl(h, u) && bv(B(cheapest(u, z), u)) < bv(B(4, T))).sort((u, v) => bv(B(cheapest(u, z), u)) - bv(B(cheapest(v, z), v)))[0];
+    if (T === o && !(!open.length && 24 - k - 7 >= 12) && 24 - k - 7 >= 11 && myc !== undefined) { const b = B(cheapest(myc, z), myc); return R(b, `Partner's ${plain(z)} shows first-round control of ${SN[zs]} and some interest. Keep the conversation going below game: ${plain(b)} shows your ${SN[myc]} control (the place to show a good side suit). Partner bids the slam with extras, or signs off in 4${SY[T]}.`, 'G.cue-bid-answer'); }
     if (!open.length && 24 - k - 7 >= 12) return R(B(6, T), `Partner's ${plain(z)} shows first-round control of ${SN[zs]}. Every suit is now covered and your ${k} losers opposite about 7 say 12 tricks: bid the small slam, 6${SY[T]}.`, 'G.cue-bid-decide');
     return R(B(4, T), `Partner's ${plain(z)} shows ${SN[zs]} control, but ${open.length ? `${open.map(u => SN[u]).join(' and ')} may be open` : 'the losers don\'t quite reach 12 tricks'}: sign off in 4${SY[T]}.`, 'G.cue-bid-decide');
   }

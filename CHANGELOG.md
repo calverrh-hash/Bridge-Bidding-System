@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-11
+
+- 2/1: after 1M – 2x – (opener's new suit), opener's new suit no longer counts as 15+ (game is forced, so it shows shape only). Responder with three-card support agrees the major first: 3M slowly with extras (15+ or 6 losers), 4M with a minimum. Side suits are then shown as control bids: 1♠ – 2♥ – 3♣ – 3♠ – 4♣ – 4♦ with ♠764 ♥QJT85 ♦AKT3 ♣A. Opener decides after the control bids (4NT / 6M or 4M). 2/1 chart panel 4 and guide updated.
+
 ## 2026-11-04
 
 - Bidding on once game is in view (checked across all drill hands, both systems):

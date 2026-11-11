@@ -811,6 +811,15 @@ test('evening fixes: stoppers only in unbid suits, length before 3NT, 2/1 opener
     same(callFor('1S 2D', 'QJ965.8.A43.AQT9'), '3C', '2/1: show the four clubs, no barrier');
     same(callFor('1S 2D 2S 3H', 'QJ965.8.A43.AQT9'), '3N', 'clubs well stopped: 3NT, not 4♦');
   } finally { Object.assign(SYS, was); }
+  {
+    const was2 = { ...SYS };
+    try {
+      SYS.twoOne = true; SYS.acol = false;
+      same(callFor('1S 2H 3C', '764.QJT85.AKT3.A'), '3S', '2/1: agree spades slowly with extras (not 3♦, not 4♠)');
+      same(callFor('1S 2H 3C', '764.AJT85.KQ3.K2'), '4S', '2/1: minimum with support: 4♠ (fast arrival)');
+      same(callFor('1S 2H 3C 3S 4C', '764.QJT85.AKT3.A'), '4D', 'after partner\'s 4♣ control, show the diamond control');
+    } finally { Object.assign(SYS, was2); }
+  }
   same(cuePlace(parseHand('QJ542.A9.Q863.KT'), 0, '2H').bid, '2S', 'after the cue bid, five spades over 2♥: 2♠, no jump (already forcing)');
   same(cueRaise(parseHand('K93.KJ84.AJ72.65'), 0, '2S').bid, '4S', 'doubler raises the 2♠ with three');
 });

@@ -368,6 +368,7 @@ function after1Major(seq, h) {
   if (r === '2N' && n === 5 && isCue(seq[3], M)) return cueDecide(h, M, seq[3], seq[4], seq[2]);
   if (r === '2N' && n === 6 && isCue(seq[3], M)) return AP('Partner signed off.');
   if (n >= 4 && /^[67][CDHSN]$/.test(seq[n - 1]) && !seq.includes('4N')) return AP('Partner bid the slam.');
+  if (n === 6 && openerAfterCue21(h, seq)) return openerAfterCue21(h, seq);
   if (n === 4 && openerAfterChoice(h, seq)) return openerAfterChoice(h, seq);
   if (n === 5 && respAfterChoice(h, seq)) return respAfterChoice(h, seq);
   if (n === 4) {
