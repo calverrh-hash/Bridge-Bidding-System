@@ -20,7 +20,9 @@ const isObj = x => !!x && typeof x === 'object' && !Array.isArray(x);
 function loadDB() {
   const d = store.get(), o = (k) => isObj(d[k]) ? d[k] : {};
   return { seed: o('seed'), best: o('best'), prog: o('prog'), opts: { helvic: o('opts').helvic === true, acol: o('opts').acol === true, ogust: o('opts').ogust === true,
-    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false, acolTransfers: o('opts').acolTransfers !== false, acolJacoby: o('opts').acolJacoby !== false, twoOne: o('opts').twoOne === true } };
+    acolHelvic: o('opts').acolHelvic === true, acolOgust: o('opts').acolOgust !== false, acolTransfers: o('opts').acolTransfers !== false, acolJacoby: o('opts').acolJacoby !== false,
+    // 2/1 game forcing is the default (from 12 Nov 2026); a later choice of the standard chart is kept.
+    twoOne: o('opts').v21 === true ? o('opts').twoOne !== false : true, v21: true } };
 }
 let DB = loadDB();
 const save = () => store.set(DB);
@@ -148,7 +150,7 @@ const callsHTML = (title, list) => list.length ? `<div class="pcalls"><span clas
 
 // ---------- Views ----------
 function home() {
-  const list = [...sets()].sort((a, b) => (a.last ? 1 : 0) - (b.last ? 1 : 0));
+  const list = [...sets()].sort((a, b) => (a.mixed ? 0 : 1) - (b.mixed ? 0 : 1));   // mixed auctions first
   const cards = list.map(d => {
     const key = keyOf(d.id), done = playedCount(d.id), best = bestOf(key), size = setSize(d);
     const sys = d.helvic ? ` <b>${helvicOn(d) ? 'Playing Helvic Wriggle.' : 'Playing the chart system.'}</b>` : '';
@@ -352,7 +354,7 @@ function crashed(e) {
     <div class="actions"><button class="primary" id="home">Back to the drills</button><button class="ghost" id="reset">Reset saved progress</button></div>
     <p class="muted"><small>${String(e && e.message || e).replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;')}</small></p>`;
   document.getElementById('home').onclick = goHome;
-  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true, twoOne: DB.opts.twoOne === true } }; save(); goHome(); };
+  document.getElementById('reset').onclick = () => { DB = { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: DB.opts.acol, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true, twoOne: DB.opts.twoOne !== false, v21: true } }; save(); goHome(); };
 }
 
 function render() {

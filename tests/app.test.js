@@ -38,7 +38,7 @@ function playOut(missHands = []) {
 
 test('app: home lists every drill set', () => {
   resetApp();
-  same(document.querySelectorAll('#app .set').length, SETS.filter(d => !d.twoOne).length);
+  same(document.querySelectorAll('#app .set').length, SETS.length);
 });
 test('app: a level button greys out strains below the last bid', () => {
   resetApp();
@@ -58,7 +58,7 @@ test('app: perfect run scores a full set and saves the best score', () => {
   playOut();
   same(S.view, 'done');
   same(countOk(S.order, S.res), SET_SIZE);
-  same(loadDB().best['nt-resp'], SET_SIZE);
+  same(loadDB().best[keyOf('nt-resp')], SET_SIZE);
 });
 test('regression: best score is saved even if you leave before "See results"', () => {
   resetApp();
@@ -70,7 +70,7 @@ test('regression: best score is saved even if you leave before "See results"', (
     click('#next');
   }
   click('#back');   // leave without pressing "See results"
-  same(loadDB().best.comp, SET_SIZE);
+  same(loadDB().best[keyOf('comp')], SET_SIZE);
   check(/Best 15\/15/.test(document.querySelector('#app [data-set="comp"]').textContent), 'home card shows the best score');
 });
 test('app: progress resumes where you left off', () => {
@@ -100,7 +100,7 @@ test('app: playing hands out of order still finishes the set and saves the best 
   playOut();
   same(S.view, 'done');
   same(S.res.filter(Boolean).length, SET_SIZE, 'every hand played');
-  same(loadDB().best.comp, SET_SIZE);
+  same(loadDB().best[keyOf('comp')], SET_SIZE);
 });
 test('app: "See results" appears only when no hand is left unplayed', () => {
   resetApp();
@@ -121,7 +121,7 @@ test('app: a played hand can be bid again for practice; its first result stands'
   check($('.fb.ok'), 'feedback is still shown');
   click('#next');
   same(S.res[S.order[0]].ok, false, 'first result stands');
-  same(loadDB().prog.comp.res[S.order[0]].ok, false, 'saved result unchanged');
+  same(loadDB().prog[keyOf('comp')].res[S.order[0]].ok, false, 'saved result unchanged');
   same(S.pos, 1, 'next goes on to the next unplayed hand');
 });
 test('regression: bidding a missed hand again after seeing the answer does not raise the best score', () => {
@@ -130,10 +130,10 @@ test('regression: bidding a missed hand again after seeing the answer does not r
   playHand(true); click('#next');   // miss the first hand
   for (let guard = 0; guard < 100; guard++) { playHand(); if (nextUnplayed() < 0) break; click('#next'); }
   // Every hand is answered but "See results" has not been pressed, so the dots are still there.
-  same(loadDB().best.comp, SET_SIZE - 1);
+  same(loadDB().best[keyOf('comp')], SET_SIZE - 1);
   click(`[data-jump="${S.order[0]}"]`);
   playHand();
-  same(loadDB().best.comp, SET_SIZE - 1, 'best score unchanged');
+  same(loadDB().best[keyOf('comp')], SET_SIZE - 1, 'best score unchanged');
   same(countOk(S.order, S.res), SET_SIZE - 1, 'score unchanged');
 });
 test('app: retry replays only the missed hands, then a fresh deal resets', () => {
@@ -146,21 +146,21 @@ test('app: retry replays only the missed hands, then a fresh deal resets', () =>
   same(S.order.length, 2);
   playOut();
   same(S.view, 'done');
-  same(loadDB().best.comp, SET_SIZE - 2, 'retries do not change the best score');
+  same(loadDB().best[keyOf('comp')], SET_SIZE - 2, 'retries do not change the best score');
   click('#fresh');
-  same(loadDB().seed.comp, 2);
+  same(loadDB().seed[keyOf('comp')], 2);
   same(S.view, 'play');
   same(S.pos, 0);
 });
 test('app: damaged saved data is ignored, not fatal', () => {
   localStorage.setItem(KEY, '{not json');
-  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: false, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true, twoOne: false } });
+  same(loadDB(), { seed: {}, best: {}, prog: {}, opts: { helvic: false, acol: false, ogust: false, acolHelvic: false, acolOgust: true, acolTransfers: true, acolJacoby: true, twoOne: true, v21: true } });
   localStorage.setItem(KEY, JSON.stringify({ seed: 'x', best: [1], prog: { comp: { seed: 1, res: 'oops' } }, opts: 'bad' }));
   DB = loadDB();
   same(seedOf('comp'), 1);
   same(progressFor('comp'), null);
   goHome();
-  same(document.querySelectorAll('#app .set').length, SETS.filter(d => !d.twoOne).length);
+  same(document.querySelectorAll('#app .set').length, SETS.length);
   resetApp();
 });
 test('app: progress saved for different hands is discarded', () => {
@@ -176,10 +176,10 @@ test('app: an error shows a recovery screen instead of a blank page', () => {
   check(/Something went wrong/.test($('h1').textContent));
   check(!$('b'), 'error message is escaped');
   click('#home');
-  same(document.querySelectorAll('#app .set').length, SETS.filter(d => !d.twoOne).length);
+  same(document.querySelectorAll('#app .set').length, SETS.length);
 });
 test('app: every set opens and renders its first hand', () => {
-  for (const d of SETS.filter(d => !d.twoOne)) {
+  for (const d of SETS) {
     resetApp();
     click(`[data-set="${d.id}"]`);
     same(S.view, 'play', d.id);
@@ -195,10 +195,13 @@ test('app: the home screen does not deal the sets (so it opens quickly)', () => 
   try { goHome(); } finally { window.getSet = real; }
   same(calls, 0);
 });
-test('app: Mixed is listed last', () => {
+test('app: Mixed is listed first, and 2/1 is on by default (switchable)', () => {
   resetApp();
   const ids = [...document.querySelectorAll('#app .set')].map(b => b.dataset.set);
-  same(ids[ids.length - 1], 'mixed');
+  same(ids[0], 'mixed');
+  same(DB.opts.twoOne, true, '2/1 on for a new user');
+  click('#m-std'); same(loadDB().opts.twoOne, false, 'switching to the standard chart is kept');
+  DB.opts.twoOne = true; save();
 });
 test('app: the Helvic switch changes the system and keeps separate progress', () => {
   resetApp();
