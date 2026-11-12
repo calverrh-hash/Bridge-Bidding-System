@@ -181,7 +181,8 @@ test('app: an error shows a recovery screen instead of a blank page', () => {
 test('app: every set opens and renders its first hand', () => {
   for (const d of SETS) {
     resetApp();
-    click(`[data-set="${d.id}"]`);
+    if (d.mixed) { click(`[data-set="${d.id}"]`); check(/Dealing/.test($(`[data-set="${d.id}"]`).textContent), 'Mixed says it is dealing'); start(d.id); }
+    else click(`[data-set="${d.id}"]`);
     same(S.view, 'play', d.id);
     check($('.hand') && $('.box'), d.id + ' shows hand and the bidding box or number pad');
   }

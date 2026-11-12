@@ -2,6 +2,7 @@
 
 ## 2026-11-12
 
+- **Mixed auctions now rotates the drills' own hands** instead of dealing new ones. Each set has one hand from each drill, and the hands are ordered so that every rule on the chart comes up once before any repeat (about 12 sets in 5CM / 2/1, 4 in Acol), and no hand repeats. The first opening deals every drill once, so it says "Dealing hands from every drill…" for a moment.
 - The app now starts in **2/1 game forcing** (switch to the standard chart under Responses to 1♥/1♠; your choice is remembered).
 - **Mixed auctions** is listed first on the home screen, in both systems.
 

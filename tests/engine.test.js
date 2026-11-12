@@ -390,7 +390,7 @@ for (const { d, helvic, ogust, transfers, jacoby, twoOne } of VARIANTS) {
       const was = { ...SYS }; SYS.acol = !!d.acol; SYS.ogust = ogust; SYS.transfers = !!d.acol && transfers !== false; SYS.jacoby = !!d.acol && jacoby !== false; SYS.twoOne = !d.acol && !!twoOne;
       try {
       same(qs.length, setSize(d), `seed ${seed} size`);
-      check(ms < 1000, `seed ${seed} took ${ms.toFixed(0)} ms`);
+      check(ms < (d.mixed && seed === 1 ? 4000 : 1000), `seed ${seed} took ${ms.toFixed(0)} ms`);   // Mixed deals every drill once, on first use
       const keys = new Set(qs.map(q => JSON.stringify(q.hand)));
       check(keys.size === qs.length || /comp|mixed/.test(d.id), `seed ${seed}: repeated hand`);
       if (!d.slam) qs.forEach((q, i) => check(!slamHand(q), `${name}#${seed}/${i}: a slam hand in a non-slam drill`));
@@ -796,6 +796,19 @@ test('game choice: 3NT only with the unbid suits stopped and no shortness; other
   same(callFor('1D 2C 3C 3D', 'K4.KJ8.Q865.KQ96'), '3N', 'majors stopped: 3NT');
   same(callFor('1S 2D 2S', '-.AQ8652.AKJ984.Q'), '3H', 'void in his suit, 6-6: show hearts');
   same(callFor('1D 2C 3C', 'KT.Q4.AJ9.AJ8752'), '3S', 'hearts thin: show the spade stopper (an unbid suit) first');
+});
+
+test('mixed: hands come from the drills, one per drill per set, and rules do not repeat before the round is done', () => {
+  const was = { ...SYS };
+  try {
+    const qs = buildSet(MIXED, 1, { twoOne: true });
+    same(new Set(qs.map(q => q.src)).size, qs.length, 'every hand from a different drill');
+    const d = SETS.find(x => x.id === qs[0].src), own = [1, 2].flatMap(s => buildSet(d, s, { twoOne: true })).map(q => q.hand.join('|'));
+    check(own.includes(qs[0].hand.join('|')), 'a Mixed hand is one of its drill\'s own hands');
+    SYS.twoOne = true; SYS.acol = false;
+    const seq = mixSequence(MIXED, 3 * setSize(MIXED), { twoOne: true }), keys = seq.map(q => q.hand.join('|') + q.src);
+    same(new Set(keys).size, keys.length, 'no hand repeats');
+  } finally { Object.assign(SYS, was); }
 });
 
 test('evening fixes: stoppers only in unbid suits, length before 3NT, 2/1 opener describes, 3NT with the unbid suit held', () => {

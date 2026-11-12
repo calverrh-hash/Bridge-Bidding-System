@@ -177,7 +177,12 @@ function home() {
     <div class="actions" style="margin-top:4px"><button class="ghost" id="newall">New hands for every drill</button></div></div>
     ${sysBox}${twoOneBox}${xferBox}${jacBox}${helvicBox}${ogustBox}
     <div class="sets">${cards}</div>`;
-  app.querySelectorAll('.set').forEach(b => b.onclick = () => start(b.dataset.set));
+  app.querySelectorAll('.set').forEach(b => b.onclick = () => {
+    const id = b.dataset.set, d = setDef(id), k = keyOf(id) + '#' + seedOf(keyOf(id));
+    // Mixed deals every drill the first time, which takes a moment: say so, then deal.
+    if (d && d.mixed && !cache[k]) { b.querySelector('p').textContent = 'Dealing hands from every drill…'; b.disabled = true; setTimeout(() => start(id), 30); }
+    else start(id);
+  });
   const opt = (k, v) => () => { DB.opts[k] = v; save(); render(); };
   const on = (id, f) => { const b = document.getElementById(id); if (b) b.onclick = f; };
   on('m-5cm', opt('acol', false)); on('m-acol', opt('acol', true));

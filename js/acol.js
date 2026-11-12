@@ -901,7 +901,7 @@ const ACOL_SETS = (() => {
     recipes: ['values', 'one', 'two', 'wriggle', 'one', 'two', 'wriggle'].flatMap(k => [ourNT('resp', k), ourNT('open', k)])
       .concat([ourNT('open', 'one', true), ourNT('open', 'two', true)]) });
   const MIX = { id: 'a-mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, acol: true, helvic: true, mixed: true,
-    blurb: 'A hand from every Acol drill, shuffled together. Each new deal moves on to the next kind of hand in each drill.',
+    blurb: 'Hands from every Acol drill, one per drill in each set. Every bid on the chart comes up once before similar hands repeat.',
     get sources() { return sets; }, get recipes() { return sets.map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts)); } };
   return sets.concat(MIX);
 })();

@@ -486,11 +486,10 @@ SETS.push({
 });
 
 // ---------- Mixed ----------
-// Ten hands, each from a different drill (every drill except LTC). Each new deal moves on to the
-// drills the last deal left out, so a few deals in a row cover them all. See buildMixed.
+// Hands taken from every drill except LTC, ordered so every rule comes up before any repeats. See mixSequence.
 const MIXED = {
   id: 'mixed', name: 'Mixed auctions', refs: 'All', last: true, slam: true, helvic: true, mixed: true,
-  blurb: 'Ten hands, each from a different drill, shuffled together. Each new deal moves on to the drills the last one left out.',
+  blurb: 'Hands from every drill, one per drill in each set. Every bid on the chart comes up once before similar hands repeat.',
   get sources() { return SETS.filter(d => d !== MIXED && d.id !== 'ltc' && (!d.twoOne || SYS.twoOne)); },
   get recipes() { return this.sources.map(d => (rng, opts) => pick(rng, d.recipes)(rng, opts)); },
 };
@@ -587,50 +586,47 @@ function buildPlain(def, seed, opts) {
 // order and seed n starts where seed n-1 stopped, so consecutive deals cover different drills
 // (14 drills: seed 1 has drills 1-10, seed 2 has 11-14 and 1-6, and so on). Within a drill, the
 // hand chosen is the one that adds the most situations (recipes, calls, auctions) not yet in the set.
-const MIX_CANDS = 12;       // hands dealt per drill before choosing one
-function buildMixed(def, seed, opts) {
-  const src = def.sources, size = setSize(def);
-  const order = shuffle(mulberry(20261026), src.map((_, k) => k));
-  const start = ((Math.max(1, seed) - 1) * size) % order.length;
-  const rng = mulberry(seed * 7919 + 4242), got = new Set(), out = [];
-  for (let k = 0; k < Math.min(size, order.length * 4); k++) {
-    const di = order[(start + k) % order.length], d = src[di];
-    // Each time a drill comes round in Mixed, it moves on to its next kind of hand (recipe),
-    // so rarer topics (Cappelletti, Michaels...) take their turn too.
-    const uniq = [...new Set(d.recipes)], app = Math.floor(((Math.max(1, seed) - 1) * size + k) / order.length);
-    const target = d.recipes.indexOf(uniq[shuffle(mulberry(9001 + di), uniq.map((_, u) => u))[app % uniq.length]]);
-    const recs = shuffle(rng, d.recipes.map((_, r) => r)), cands = [];
-    let tries = 0, i = 0;
-    while (cands.length < MIX_CANDS && tries < 60) {
-      tries++;
-      const q = d.recipes[target](rng, opts);
-      if (q && q.steps && q.steps.length && (d.slam || !slamHand(q))) { q.rec = d.id + ':' + target; q.src = d.id; cands.push(q); }
+// Mixed takes its hands from the drills' own deals (deal 1 of every drill, then deal 2, ...), so it
+// rotates the exercises' hands rather than dealing new ones. They are put in one long order, the
+// same on every device: each pick is the unused hand with the most chart rules (the rule id of each
+// call) not yet met this round, from a drill not already in this set. A round ends when every rule the
+// hands can show has come up once; only then do rules repeat. Mixed deal n is hands (n-1)*size .. n*size-1.
+const MIX_MAX_DEALS = 6;    // drill deals drawn on at most
+const MIX_SEQ = {};
+function mixSequence(def, need, opts) {
+  const src = def.sources, key = def.id + '|' + src.map(d => d.id).join(',') + '|' + JSON.stringify(opts || {});
+  const st = MIX_SEQ[key] || (MIX_SEQ[key] = { pool: [], used: new Set(), seen: new Set(), out: [], deals: 0, rng: mulberry(20261112) });
+  const more = () => {
+    st.deals++;
+    for (const d of src) buildSet(d, st.deals, opts).forEach(q => { q.src = q.src || d.id; q.ids = [...new Set(q.steps.map(x => x.ans.id))]; st.pool.push(q); });
+  };
+  if (!st.deals) more();
+  const size = setSize(def);
+  while (st.out.length < need) {
+    const setStart = st.out.length - (st.out.length % size), inSet = new Set(st.out.slice(setStart).map(q => q.src));
+    const recent = new Set(st.out.slice(-size).map(q => q.src));
+    const fresh = q => q.ids.filter(x => !st.seen.has(x)).length;
+    let best = -Infinity, pick = -1, top = 0;
+    st.pool.forEach((q, k) => {
+      if (st.used.has(k)) return;
+      const n = fresh(q); top = Math.max(top, n);
+      const sc = n * 10 - (inSet.has(q.src) ? 40 : 0) - (recent.has(q.src) ? 4 : 0) + st.rng();
+      if (sc > best) { best = sc; pick = k; }
+    });
+    if (top === 0) {
+      // Every rule in reach has come up this round: draw on another deal of every drill if allowed,
+      // else start a new round.
+      if (st.seen.size && !st.grown && st.deals < MIX_MAX_DEALS) { st.grown = true; more(); continue; }
+      if (st.seen.size) { st.seen.clear(); st.grown = false; continue; }
     }
-    tries = 0;
-    while (!cands.length && tries < 3000) {
-      tries++;
-      const r = recs[i % recs.length], q = d.recipes[r](rng, opts);
-      if (q && q.steps && q.steps.length && (d.slam || !slamHand(q))) { q.rec = d.id + ':' + r; q.src = d.id; cands.push(q); i++; }
-      else if (tries % 300 === 0) i++;
-    }
-    if (!cands.length) continue;
-    // From the slam drill, two deals in three take a small slam (the greedy pick otherwise
-    // favours grand slams, whose auctions have more distinct calls).
-    let pool = cands;
-    if (d.id === 'slam') {
-      const want = seed % 3 === 0 ? /^7/ : /^6/, w = cands.filter(q => want.test(q.contract || ''));
-      if (w.length) pool = w;
-    }
-    let best = -1, pickQ = pool[0];
-    for (const q of pool) {
-      let sc = rng() * 0.5;
-      for (const x of features(q)) if (!got.has(x)) sc += weight(x);
-      if (sc > best) { best = sc; pickQ = q; }
-    }
-    features(pickQ).forEach(x => got.add(x));
-    out.push(pickQ);
-    if (out.length >= size) break;
+    if (pick < 0) { if (st.deals < MIX_MAX_DEALS) { more(); continue; } st.used.clear(); continue; }
+    st.used.add(pick); st.pool[pick].ids.forEach(x => st.seen.add(x)); st.out.push(st.pool[pick]);
+    if (st.pool.length - st.used.size < size && st.deals < MIX_MAX_DEALS) more();
   }
-  return shuffle(rng, out);
+  return st.out;
+}
+function buildMixed(def, seed, opts) {
+  const size = setSize(def), n = Math.max(1, seed), seq = mixSequence(def, n * size, opts);
+  return shuffle(mulberry(n * 7919 + 4242), seq.slice((n - 1) * size, n * size));
 }
 
