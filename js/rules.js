@@ -490,7 +490,7 @@ function supportAfterNewSuit(h, M, r, x) {
   }
   // As after Jacoby: at most 16 + 14 = 30 combined, so no slam.
   if (p >= 17) return slamTry(h, M, 11, "Opener's minimum rebid (11-14)") || R(B(4, M), `Opener's rebid shows a minimum. With ${p} and ${NUM[L(h)[M]]}-card support, bid game: 4${SY[M]}.`, 'B.support-after-new-suit');
-  return R(B(4, M), `You bid a new suit first, holding ${NUM[L(h)[M]]}-card support for ${SN[M]} and game values. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
+  return ltcSlam(h, M, 7, "Opener's minimum rebid (11-14)") || R(B(4, M), `You bid a new suit first, holding ${NUM[L(h)[M]]}-card support for ${SN[M]} and game values. Opener's rebid shows a minimum (11-14), so now support: 4${SY[M]}.`, 'B.support-after-new-suit');
 }
 // With a fit, the losers can show slam where the points don't: ask with 4NT when they say 12 tricks,
 // you hold 2+ key cards and no void (a void makes RKCB unreliable). Returns null otherwise.
@@ -648,9 +648,10 @@ function respAfterChoice(h, seq) {
   const own6 = [0, 1, 2, 3].filter(u => u !== o && l[u] >= 6).sort((u, v) => l[v] - l[u] || v - u)[0];
   if (zs === o && o >= 2 && l[o] === 1 && own6 !== undefined) { const g = own6 >= 2 ? B(4, own6) : B(5, own6); return R(g, `Partner rebids his ${SN[o]}, but you have only one, and ${NUM[l[own6]]} ${SN[own6]} of your own: play there, ${plain(g)}.`, 'D.game-choice'); }
   if (zs === o && o >= 2 && l[o] <= 1 && seq[2][1] !== seq[0][1]) return R('3N', `Partner's ${plain(z)} shows a fifth ${SN[o].replace(/s$/, '')}, but with ${cardsOf(l[o], o)} there's no fit: 3NT.`, 'D.game-choice');
+  if (zs === o && o >= 2 && l[o] >= 2 && SYS.twoOne && +r[0] === 2) { const sl = ltcSlam(h, o, 7, `Partner rebids his ${SN[o]}`); if (sl) return sl; }
   if (zs === o && o >= 2 && l[o] >= 1) return R(B(4, o), `Partner rebids his ${SN[o]}: five or more${l[o] ? ` opposite your ${l[o]}` : ''}. The major game: 4${SY[o]}.`, 'D.game-choice');
   if (zs === o && o < 2 && l[o] >= 3) return R(B(5, o), `Partner has no stopper for 3NT and rebids his ${SN[o]}. With ${l[o]} of them: 5${SY[o]}.`, 'D.game-choice');
-  if (zs === rs || zs === as) { const g = zs >= 2 ? B(4, zs) : B(5, zs); return R(g, `Partner supports your ${SN[zs]}: game, ${plain(g)}.`, 'D.game-choice'); }
+  if (zs === rs || zs === as) { const g = zs >= 2 ? B(4, zs) : B(5, zs); const sl = SYS.twoOne && +r[0] === 2 && bv('4N') > bv(z) ? ltcSlam(h, zs, 7, `Partner supports your ${SN[zs]}`) : null; if (sl) return sl; return R(g, `Partner supports your ${SN[zs]}: game, ${plain(g)}.`, 'D.game-choice'); }
   const best = [rs, as].sort((u, v) => l[v] - l[u] || v - u)[0], g = best >= 2 ? B(4, best) : B(5, best);
   return R(bv(g) > bv(z) ? g : 'P', `No fit for partner: play game in your longest suit, ${plain(g)}.`, 'D.game-choice');
 }
@@ -902,7 +903,8 @@ function wtAns(h, M) {
 // Returns null below 31, so the caller's normal rule applies.
 function slamTry(h, T, minP, desc) {
   const p = hcp(h);
-  if (p + minP < 31) return null;
+  // Points short of 31: with a fit the losers decide. Partner's losers: about 7 for a minimum, 6 with extras.
+  if (p + minP < 31) return ltcSlam(h, T, minP >= 15 ? 6 : 7, desc);
   const kc = kcList(h, T).length, g = B(T >= 2 ? 4 : 5, T);
   if (kc < 2) return R(g, `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you, enough to think about slam, but you hold only ${kc} key card${kc === 1 ? '' : 's'}, so don't ask: bid game, ${plain(g)}.`, 'G.slam-game');
   return R('4N', `${desc} shows at least ${minP}. With ${p} that's ${p + minP}+ between you and a ${SN[T]} fit: ask for key cards with 4NT (RKCB).`, 'G.rkcb-ask');

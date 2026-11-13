@@ -252,7 +252,7 @@ test('regression: "new suit first, then support" keeps its promise', () => {
   same(callFor('1H 1S 1N', h), '4H', 'opposite a minimum 1NT: support hearts, not 3NT');
   same(callFor('1H 1S 2C', h), '4H');
   same(callFor('1H 1S 2S', h), '4S', 'opener raised spades: the 4-4 fit will do');
-  same(callFor('1H 1S 3H', h), '4H', 'opener jumped in hearts: 14 + 15 is short of slam, so game');
+  same(callFor('1H 1S 3H', h), '4N', 'opener jumped in hearts (15-19, about 6 losers): your 6 losers say 12 tricks, so ask');
   same(callFor('1H 1S 2N', h), '4N', 'opener has 18-19: 14 + 18 = 32 with a fit, so ask for key cards');
   same(callFor('1H 1S 1N', 'AQ52.Q63.KQ4.A92'), '4H', '17 opposite 11-14 is under 31: game');
 });
@@ -796,6 +796,15 @@ test('game choice: 3NT only with the unbid suits stopped and no shortness; other
   same(callFor('1D 2C 3C 3D', 'K4.KJ8.Q865.KQ96'), '3N', 'majors stopped: 3NT');
   same(callFor('1S 2D 2S', '-.AQ8652.AKJ984.Q'), '3H', 'void in his suit, 6-6: show hearts');
   same(callFor('1D 2C 3C', 'KT.Q4.AJ9.AJ8752'), '3S', 'hearts thin: show the spade stopper (an unbid suit) first');
+});
+
+test('slam by losers once a fit is found, whatever the points', () => {
+  const was = { ...SYS };
+  try {
+    SYS.twoOne = false; SYS.acol = false;
+    same(callFor('1H 1S 2H', 'AK654.AK74.A7.32'), '4N', '18 HCP, 5 losers opposite a minimum (7): 12 tricks, ask');
+    same(callFor('1H 2H', '2.AKQJ97.5.AKQ75'), '4N', '2 losers opposite a single raise (9): ask');
+  } finally { Object.assign(SYS, was); }
 });
 
 test('mixed: hands come from the drills, one per drill per set, and rules do not repeat before the round is done', () => {

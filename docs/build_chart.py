@@ -38,7 +38,7 @@ fixes = '<br>'.join(H(t) for t in [
  '• Weak-two ask lowered to 14+. RKCB counts key cards and flags the 5♠ problem. LTC gets an 11 row and a formula.'])
 updates = '<br>'.join(H(t) for t in [
  '• <b>5-5: open the higher-ranking suit</b> (was 1♥ with 5-5 majors).',
- '• <b>Slam:</b> fit + 31+ combined → 4NT, with 2+ key cards; read an unclear reply low; grand = all 5 key cards + trump Q + a side king (G). Jacoby 18+: 4NT at once (B).',
+ '• <b>Slam:</b> fit + 31+ combined, or losers say 12 tricks (24 − yours − partner’s) → 4NT, with 2+ key cards; read an unclear reply low; grand = all 5 key cards + trump Q + a side king (G). Jacoby 18+: 4NT at once (B).',
  '• <b>Added (H):</b> support double/redouble, unassuming cue bid, Helvic option, opener reopening, bidding on after penalty doubles.',
  '• <b>Takeout double advancer:</b> 4-card major first; 12+ cue-bid; a 5-card major then at the 3-level. After our redouble, pass is forcing (F).',
  '• Over 2NT: transfer then 3NT = choice (E). Over 1♣: 4-card major before 4♦ (C).',
@@ -193,7 +193,7 @@ table.lt th{{background:#f3d98b;border:.6pt solid #b08c2f;padding:1pt 6pt}} tabl
 .foot{{position:absolute;right:16pt;top:819pt;font-size:7.4pt;color:#333}}
 </style></head><body>
 <div class="top"><h1>5-CARD MAJORS · STRONG NT  -  CORRECTED BIDDING FLOWCHART</h1>
-<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, Smolen, McKendrick, Jacoby, 3♣/3♦ raises, weak twos, 2♣, negative and support doubles, unassuming cue bid, Helvic.</p><span class="ver">Updated 4 Nov 2026</span></div>
+<p>Letters A-H link each opening bid to its response flowchart. Points are HCP. Alertable: transfers, Smolen, McKendrick, Jacoby, 3♣/3♦ raises, weak twos, 2♣, negative and support doubles, unassuming cue bid, Helvic.</p><span class="ver">Updated 13 Nov 2026</span></div>
 {panel(16,60,204,338,'pO','','OPENING BIDS','<div class="pb" style="gap:5pt;padding:0">'+op+'</div>')}
 {panel(212,60,689,375,'pA','A','RESPONSES TO 1NT (15-17)',A)}
 {panel(697,60,932,375,'pB','B','RESPONSES TO 1♥/♠',B)}

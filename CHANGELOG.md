@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-13
+
+- **Slam by losers, not just points.** Once a fit is agreed, every route to game now checks the losers first: if 24 − (yours + partner's) reaches 12 and you hold 2+ key cards with no void, ask with 4NT. 1♥ – 1♠ – 2♥ – 4NT with ♠AK654 ♥AK74 ♦A7 ♣32 (5 losers opposite a minimum, about 7). Covers: opener after a single, limit or Bergen raise; responder after opener's minimum rebid (new suit first, then support); invitation answers with a fit (5CM and 2/1 1NT forcing); 2/1 game-forced fits; the general fit check in every system (it was Acol only). Partner's losers: about 9 for 6-9, 8 for 10-12 or an invitation, 7 for a minimum opener, 6 for 15+. 5CM chart updated.
+
 ## 2026-11-12
 
 - **Mixed auctions now rotates the drills' own hands** instead of dealing new ones. Each set has one hand from each drill, and the hands are ordered so that every rule on the chart comes up once before any repeat (about 12 sets in 5CM / 2/1, 4 in Acol), and no hand repeats. The first opening deals every drill once, so it says "Dealing hands from every drill…" for a moment.

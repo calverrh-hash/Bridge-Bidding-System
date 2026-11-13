@@ -262,6 +262,7 @@ function openerAfterInvite(h, seq) {
   // 1m – 1M – 2NT (18-19) – 3M: five cards, forcing.
   if (x === '2N' && rsuit >= 2 && +r[0] === 1 && a === B(3, rsuit)) return l[rsuit] >= 3 ? R(B(4, rsuit), `Partner's 3${SY[rsuit]} shows five and asks: with ${l[rsuit]} ${SN[rsuit]}, bid 4${SY[rsuit]}.`, 'D.after-2nt-answer') : R('3N', `Partner's 3${SY[rsuit]} shows five ${SN[rsuit]}. With only ${l[rsuit]}, bid 3NT.`, 'D.after-2nt-answer');
   // 1x – 1M – 1NT – 3M: six cards, invitational.
+  if ((x === '1N' && rsuit >= 2 && a === B(3, rsuit)) && L(h)[rsuit] >= 2) { const sl = ltcSlam(h, rsuit, 8, `Partner's ${plain(a)} invitation`); if (sl) return sl; }
   if (x === '1N' && rsuit >= 2 && a === B(3, rsuit)) return p >= 13 && l[rsuit] >= 2 ? R(B(4, rsuit), `Partner's 3${SY[rsuit]} invites with six. With ${p} (13-14) and ${l[rsuit]} ${SN[rsuit]}, accept: 4${SY[rsuit]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[rsuit]} invites. With ${p}${l[rsuit] < 2 ? ` and ${cardsOf(l[rsuit], rsuit)}` : ', a minimum'}, pass.`, 'GUIDE.invite-answer');
   // After a minimum rebid or a raise: 2NT or 3 of a suit invites (11-12). Accept with 13-14.
   const minRebid = x === '1N' || (xs >= 0 && bv(x) <= bv(B(2, o)) && !(+x[0] === 3));
@@ -277,7 +278,9 @@ function openerAfterInvite(h, seq) {
   // After opener raised a minor: 2NT invites.
   if (xs >= 0 && xs === rsuit && rsuit < 2 && a === '2N') return p >= 13 ? R('3N', `Partner's 2NT invites (11-12). With ${p} (13-14), accept: 3NT.`, 'GUIDE.invite-answer') : R('P', `Partner's 2NT invites. With ${p}, pass.`, 'GUIDE.invite-answer');
   if (x === '1N' && a === '2N') return p >= 13 ? R('3N', `Partner's 2NT invites opposite your 12-14. With ${p} (13-14), accept: 3NT.`, 'GUIDE.invite-answer') : R('P', `Partner's 2NT invites opposite your 12-14. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
+  if ((o >= 2 && x === B(2, o) && a === B(3, o)) && L(h)[o] >= 2) { const sl = ltcSlam(h, o, 8, `Partner's ${plain(a)} invitation`); if (sl) return sl; }
   if (o >= 2 && x === B(2, o) && a === B(3, o)) return p >= 13 || losers(h) <= 6 ? R(B(4, o), `Partner's 3${SY[o]} invites opposite your 2${SY[o]} rebid. With ${p} HCP and ${losers(h)} losers, accept: 4${SY[o]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[o]} invites opposite your 2${SY[o]} rebid. With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
+  if ((rs >= 2 && +x[0] === 2 && a === B(3, rs)) && L(h)[rs] >= 2) { const sl = ltcSlam(h, rs, 8, `Partner's ${plain(a)} invitation`); if (sl) return sl; }
   if (rs >= 2 && +x[0] === 2 && a === B(3, rs)) return p >= 13 ? R(B(4, rs), `Partner's 3${SY[rs]} invites opposite your simple raise (11-14). With ${p} (13-14), accept: 4${SY[rs]}.`, 'GUIDE.invite-answer') : R('P', `Partner's 3${SY[rs]} invites opposite your simple raise (11-14). With ${p}, a minimum, pass.`, 'GUIDE.invite-answer');
   return undefined;
 }
@@ -309,6 +312,9 @@ function after1Major(seq, h) {
   if (isSplinter(r, M) && n >= 5) return AP('The contract is set.');
   if (n === 1) return r1M(h, M);
   if (n === 2) {   // opener's rebid
+    // A raise: the fit is known, so the losers decide. Partner's losers: about 9 for 6-9, 8 for 10-12.
+    const plR = r === B(2, M) || r === '3D' ? 9 : r === B(3, M) || r === '3C' ? 8 : 0;
+    if (plR) { const sl = ltcSlam(h, M, plR, `Partner's ${plain(r)} raise`); if (sl) return sl; }
     if (r === B(2, M)) {
       // Partner's simple raise is about 9 losers. 24 − (yours + 9) = tricks.
       const k = losers(h), t = 24 - k - 9, lb = `${k} losers (${loserBreak(h)}): 24 − (${k} + 9) = ${t} tricks`;
@@ -440,6 +446,7 @@ function opener1NTF(h, M, x, a) {
   if (a === '2N') return p >= 14 ? G('3N', `Partner's 2NT invites (10-12). With ${p}, accept: 3NT.`) : G('P', `Partner's 2NT invites. With ${p}, a minimum, pass.`);
   if (+a[0] === 3 && as >= 0) {
     const g = as === M || as >= 2 && l[as] >= 2 ? B(4, as) : '3N', k = losers(h);
+    if (as >= 2 && (as === M || l[as] >= 2)) { const sl = ltcSlam(h, as, 8, `Partner's ${plain(a)} invitation (10-12)`); if (sl) return sl; }
     if (p < 14 && as === M && k <= 6) return G(B(4, M), `Partner's ${plain(a)} invites (10-12, about 8 losers). You have ${p} HCP but ${k} losers: 24 − (${k} + 8) = ${16 - k} tricks, so accept: 4${SY[M]}.`);
     return p >= 14 ? G(g, `Partner's ${plain(a)} invites (10-12). With ${p}, accept: ${plain(g)}.`) : G('P', `Partner's ${plain(a)} invites. With ${p}, a minimum, pass.`);
   }
@@ -599,7 +606,7 @@ function fitGame(seq, h, c) {
     if (s <= 1 && seq.length === 2 && (SYS.acol || /^2[CDH]$/.test(seq[1]))) continue;   // opener's first rebid (Acol, or after a 2-level response): show the hand first, partner may still have a major fit
     const g = B(game, s);
     if (bv(g) <= bv(lastBid)) continue;
-    if (SYS.acol && t >= 12 && bv('4N') > bv(lastBid)) return R('4N', `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks: enough for slam if you're not missing two key cards. Ask with 4NT (RKCB).`, 'G.acol-blackwood');
+    if (t >= 12 && bv('4N') > bv(lastBid) && (SYS.acol || (kcList(h, s).length >= 2 && !l.some(n => n === 0)))) return R('4N', `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks: enough for slam if you're not missing two key cards. Ask with 4NT (RKCB).`, 'G.acol-blackwood');
     return R(g, `${len[s]}+ ${SN[s]} shown by partner and ${l[s]} in your hand: a ${len[s] + l[s]}-card fit. Count losers: yours ${k} (${loserBreak(h)}), partner's about ${los}. 24 − (${k} + ${los}) = ${t} tricks, enough for ${plain(g)}. With a fit, shape counts more than points.`, 'LTC.fit-game');
   }
   return c;
