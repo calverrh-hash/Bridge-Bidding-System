@@ -45,7 +45,7 @@ D = f'''{box('obk','1M – <b>2x</b> (13+, <b>game forcing</b>)')}
 {arrow}
 {box('reb','<b>Opener bids naturally, no jumps:</b><br>• 11-14: raise his minor with 4 (2♥ with 3) · rebid a 6-card major · else a 4-card side suit (<b>no barrier</b> once game is forced) · else raise his minor with 3 · 2NT balanced<br>• 15-19: show your shape · 18-19 balanced: 3NT')}
 {arrow}
-{box('rsp','<b>Responder:</b> 4M with 3-card support (2 opposite six) · <b>go slow</b> with extras (3M, even over his new suit, or raise his minor to 3; side suits come later as controls); a jump to game = minimum · <b>no fit yet: show a 2nd 5+ suit before 3NT</b> · 3NT with the unbid suit stopped, no void · minor fit: a stopper in an <b>unbid</b> suit (opener 3NT, or back to the minor → 5m).<br><b>Slam:</b> a fit and 12 tricks on losers → RKCB or control bids.')}'''
+{box('rsp','<b>Responder:</b> 4M with 3-card support (2 opposite six) · <b>go slow</b> with extras (3M, even over his new suit, or raise his minor to 3; side suits come later as controls); a jump to game = minimum · <b>no fit yet: show a 2nd 5+ suit before 3NT</b> (only below it) · 3NT with the unbid suit stopped, no void · minor fit: a stopper in an <b>unbid</b> suit (opener 3NT, or back to the minor → 5m).<br><b>Slam:</b> a fit and 12 tricks on losers → RKCB or control bids.')}'''
 
 E = f'''{box('obk','Partner opens <b>1♦</b>')}
 {arrow}

@@ -2,6 +2,7 @@
 
 ## 2026-11-13
 
+- **Length is shown below 3NT, not past it.** With no fit, a hand that would rebid its long suit at the 4-level bids 3NT instead when every unbid suit is held and there's no void: 1♣ – 1♥ – 2♠ – 3♦ – 3NT with ♠A1053 ♥K ♦AQ ♣AQJ972. Checked across all drill hands; the other 4-level minor bids all have a fit. 5CM and 2/1 charts updated.
 - **Slam by losers, not just points.** Once a fit is agreed, every route to game now checks the losers first: if 24 − (yours + partner's) reaches 12 and you hold 2+ key cards with no void, ask with 4NT. 1♥ – 1♠ – 2♥ – 4NT with ♠AK654 ♥AK74 ♦A7 ♣32 (5 losers opposite a minimum, about 7). Covers: opener after a single, limit or Bergen raise; responder after opener's minimum rebid (new suit first, then support); invitation answers with a fit (5CM and 2/1 1NT forcing); 2/1 game-forced fits; the general fit check in every system (it was Acol only). Partner's losers: about 9 for 6-9, 8 for 10-12 or an invitation, 7 for a minimum opener, 6 for 15+. 5CM chart updated.
 
 ## 2026-11-12

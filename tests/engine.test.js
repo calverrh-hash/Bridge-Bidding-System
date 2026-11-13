@@ -804,6 +804,7 @@ test('slam by losers once a fit is found, whatever the points', () => {
     SYS.twoOne = false; SYS.acol = false;
     same(callFor('1H 1S 2H', 'AK654.AK74.A7.32'), '4N', '18 HCP, 5 losers opposite a minimum (7): 12 tricks, ask');
     same(callFor('1H 2H', '2.AKQJ97.5.AKQ75'), '4N', '2 losers opposite a single raise (9): ask');
+    same(callFor('1C 1H 2S 3D', 'AT53.K.AQ.AQJ972'), '3N', 'misfit, every suit bid: 3NT, not a 4♣ rebid past it');
   } finally { Object.assign(SYS, was); }
 });
 
